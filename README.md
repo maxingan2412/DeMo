@@ -141,7 +141,7 @@ If you find **DeMo** helpful in your research, please consider citing:
 ```bibtex
 @inproceedings{wang2025DeMo,
   title={DeMo: Decoupled Feature-Based Mixture of Experts for Multi-Modal Object Re-Identification},
-  author={Wang, Yuhao and Liu, Yang and Zheng, Aihua and Zhang Pingping},
+  author={Wang, Yuhao and Liu, Yang and Zheng, Aihua and Zhang, Pingping},
   booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
   year={2025}
 }
