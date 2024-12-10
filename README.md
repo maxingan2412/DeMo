@@ -58,33 +58,49 @@ Multi-modal object ReID combines the strengths of different modalities (e.g., RG
 ## **Results**
 ### Multi-Modal Object ReID
 #### Multi-Modal Person ReID [RGBNT201]
-![RGBNT201 Results](results/RGBNT201.png)
+<p align="center">
+  <img src="results/RGBNT201.png" alt="RGBNT201 Results" style="width:100%;">
+</p>
 
 #### Multi-Modal Vehicle ReID [RGBNT100 & MSVR310]
-![RGBNT100 Results](results/RGBNT100_MSVR310.png)
+<p align="center">
+    <img src="results/RGBNT100_MSVR310.png" alt="RGBNT100 Results" style="width:100%;">
+</p>
 
 ### Missing-Modality Object ReID
 #### Missing-Modality Performance [RGBNT201]
-![Missing-Modality RGBNT201](results/RGBNT201_M.png)
+<p align="center">
+    <img src="results/RGBNT201_M.png" alt="RGBNT201 Missing-Modality" style="width:100%;">
+</p>
 
 #### Missing-Modality Performance [RGBNT100]
-![Missing-Modality RGBNT100](results/RGBNT100_M.png)
+<p align="center">
+    <img src="results/RGBNT100_M.png" alt="RGBNT100 Missing-Modality" style="width:100%;">
+</p>
 
 ### Ablation Studies [RGBNT201]
-![Ablation RGBNT201](results/Ablation.png)
+<p align="center">
+    <img src="results/Ablation.png" alt="RGBNT201 Ablation" style="width:100%;">
+</p>
 
 ---
 
 ## **Visualizations**
 
 ### Feature Distribution (t-SNE)
-![t-SNE](results/tsne.png)
+<p align="center">
+    <img src="results/tsne.png" alt="t-SNE" style="width:100%;">
+</p>
 
 ### Decoupled Features
-![Grad-CAM](results/Decoupled.png)
+<p align="center">
+    <img src="results/Decoupled.png" alt="Decoupled Features" style="width:100%;">
+</p>
 
 ### Rank-list Visualization
-![Rank-list](results/rank-list.png)
+<p align="center">
+    <img src="results/rank-list.png" alt="Rank-list" style="width:100%;">
+</p>
 
 ---
 
