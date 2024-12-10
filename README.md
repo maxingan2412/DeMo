@@ -19,7 +19,7 @@
 <p align="center">
     <a href="https://arxiv.org/abs/2312.09612" rel="external nofollow noopener" target="_blank">AAAI 2025 Paper</a>
 
-![DeMo](https://github.com/924973292/DeMo/results/Overall.png)
+![DeMo](results/Overall.png)
 
 **DeMo** is an advanced multi-modal object Re-Identification (ReID) framework designed to tackle dynamic imaging quality variations across modalities. By employing decoupled features and a novel Attention-Triggered Mixture of Experts (ATMoE), DeMo dynamically balances modality-specific and modality-shared information, enabling robust performance even under missing modality conditions. The framework sets new benchmarks for multi-modal and missing-modality object ReID.
 
