@@ -29,8 +29,7 @@
 **DeMo** is an advanced multi-modal object Re-Identification (ReID) framework designed to tackle dynamic imaging quality variations across modalities. By employing decoupled features and a novel Attention-Triggered Mixture of Experts (ATMoE), DeMo dynamically balances modality-specific and modality-shared information, enabling robust performance even under missing modality conditions. The framework sets new benchmarks for multi-modal and missing-modality object ReID.
 
 ## News
-Great news! Our paper has been accepted to **AAAI 2025**! 🎉 [Paper](https://arxiv.org/abs/2312.09612)
-
+- Great news! Our paper has been accepted to **AAAI 2025**! 🎉 [Paper](https://arxiv.org/abs/2312.09612)
 ---
 
 ## Table of Contents
@@ -132,6 +131,15 @@ source activate (your_env)
 cd (your_path)
 python train_net.py --config_file configs/RGBNT201/DeMo.yml
 ```
+### Notes
+This repository is based on [MambaPro](https://github.com/924973292/MambaPro).
+The prompt and adapter tuning on the CLIP backbone are reserved (the corresponding hyperparameters are set to `False`), allowing users to explore them independently.  
+Additionally, this code provides multi-modal Grad-CAM visualization, multi-modal ranking list generation, and t-SNE visualization tools to facilitate further research.  
+Finally, the hyperparameter configuration is designed to ensure compatibility with devices equipped with less than 24GB of memory.
+Thank you for your attention and interest!  
+
+---
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=924973292/DeMo&type=Date)](https://star-history.com/#924973292/DeMo&Date)
@@ -149,3 +157,4 @@ If you find **DeMo** helpful in your research, please consider citing:
   year={2025}
 }
 ```
+
