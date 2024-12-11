@@ -136,8 +136,6 @@ python train_net.py --config_file configs/RGBNT201/DeMo.yml
 - This code provides multi-modal Grad-CAM visualization, multi-modal ranking list generation, and t-SNE visualization tools to facilitate further research.  
 - The hyperparameter configuration is designed to ensure compatibility with devices equipped with less than 24GB of memory.   
 - Thank you for your attention and interest!
-
-
 ---
 
 ## Star History
