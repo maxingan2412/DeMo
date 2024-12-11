@@ -1,6 +1,9 @@
 <p align="center">
 
   <h1 align="center">DeMo: Decoupled Feature-Based Mixture of Experts for Multi-Modal Object Re-Identification</h1>
+  <p align="center">
+    <img src="results/logo.png" alt="Description of the image" style="width:54%;">
+  <p align="center">
 
 [//]: # (  <p align="center">)
 
