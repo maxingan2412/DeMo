@@ -132,11 +132,11 @@ cd (your_path)
 python train_net.py --config_file configs/RGBNT201/DeMo.yml
 ```
 ### Notes
-This repository is based on [MambaPro](https://github.com/924973292/MambaPro).
-The prompt and adapter tuning on the CLIP backbone are reserved (the corresponding hyperparameters are set to `False`), allowing users to explore them independently.  
-Additionally, this code provides multi-modal Grad-CAM visualization, multi-modal ranking list generation, and t-SNE visualization tools to facilitate further research.  
-Finally, the hyperparameter configuration is designed to ensure compatibility with devices equipped with less than 24GB of memory.
-Thank you for your attention and interest!  
+- This repository is based on [MambaPro](https://github.com/924973292/MambaPro). The prompt and adapter tuning on the CLIP backbone are reserved (the corresponding hyperparameters are set to `False`), allowing users to explore them independently.  
+- This code provides multi-modal Grad-CAM visualization, multi-modal ranking list generation, and t-SNE visualization tools to facilitate further research.  
+- The hyperparameter configuration is designed to ensure compatibility with devices equipped with less than 24GB of memory.   
+- Thank you for your attention and interest!
+
 
 ---
 
