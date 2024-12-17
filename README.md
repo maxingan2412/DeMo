@@ -20,7 +20,7 @@
     <a href="https://scholar.google.com/citations?user=MfbIbuEAAAAJ&hl=zh-CN" rel="external nofollow noopener" target="_blank"><strong>Pingping Zhang*</strong></a>
   </p>
 <p align="center">
-    <a href="https://arxiv.org/abs/2312.09612" rel="external nofollow noopener" target="_blank">AAAI 2025 Paper</a>
+    <a href="https://arxiv.org/pdf/2412.10650" rel="external nofollow noopener" target="_blank">AAAI 2025 Paper</a>
 
 <p align="center">
     <img src="results/Overall.png" alt="RGBNT201 Results" style="width:100%;">
@@ -29,7 +29,8 @@
 **DeMo** is an advanced multi-modal object Re-Identification (ReID) framework designed to tackle dynamic imaging quality variations across modalities. By employing decoupled features and a novel Attention-Triggered Mixture of Experts (ATMoE), DeMo dynamically balances modality-specific and modality-shared information, enabling robust performance even under missing modality conditions. The framework sets new benchmarks for multi-modal and missing-modality object ReID.
 
 ## News
-- Great news! Our paper has been accepted to **AAAI 2025**! 🎉 [Paper](https://arxiv.org/abs/2312.09612)
+- We released the **DeMo** codebase and paper! 🚀 [Paper](https://arxiv.org/pdf/2412.10650)
+- Great news! Our paper has been accepted to **AAAI 2025**! 🎉
 ---
 
 ## Table of Contents
