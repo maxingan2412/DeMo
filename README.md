@@ -128,8 +128,11 @@ Multi-modal object ReID combines the strengths of different modalities (e.g., RG
 ### Training
 ```bash
 #!/bin/bash
+# python = 3.10.13
+# cuda = 11.8
 source activate (your_env)
 cd (your_path)
+pip install -r requirements.txt
 python train_net.py --config_file configs/RGBNT201/DeMo.yml
 ```
 ### Notes
