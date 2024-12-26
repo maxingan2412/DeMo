@@ -125,6 +125,7 @@ Multi-modal object ReID combines the strengths of different modalities (e.g., RG
 - RGBNT100: `configs/RGBNT100/DeMo.yml`  
 - MSVR310: `configs/MSVR310/DeMo.yml`
 
+
 ### Training
 ```bash
 #!/bin/bash
