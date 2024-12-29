@@ -3,7 +3,7 @@ from modeling.backbones.vit_pytorch import vit_base_patch16_224, vit_small_patch
     deit_small_patch16_224
 from modeling.backbones.t2t import t2t_vit_t_14, t2t_vit_t_24
 from fvcore.nn import flop_count
-from basic_cnn_params.flops import give_supported_ops
+from modeling.backbones.basic_cnn_params.flops import give_supported_ops
 import copy
 from modeling.meta_arch import build_transformer, weights_init_classifier, weights_init_kaiming
 from modeling.moe.AttnMOE import GeneralFusion, QuickGELU
