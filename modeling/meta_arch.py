@@ -39,9 +39,6 @@ class build_transformer(nn.Module):
         self.neck_feat = cfg.TEST.NECK_FEAT
         self.model_name = cfg.MODEL.TRANSFORMER_TYPE
         self.direct = cfg.MODEL.DIRECT
-        if self.fowrard_type == 'new':
-            print('using new forward')
-            self.pooling = nn.AdaptiveAvgPool1d(1)
         print('using Transformer_type: {} as a backbone'.format(cfg.MODEL.TRANSFORMER_TYPE))
 
         if cfg.MODEL.SIE_CAMERA:
