@@ -116,8 +116,7 @@ class DeMo(nn.Module):
                 NI_global = self.nir_reduce(torch.cat([NI_global, NI_local], dim=-1))
                 TI_global = self.tir_reduce(torch.cat([TI_global, TI_local], dim=-1))
             if self.HDM or self.ATM:
-                moe_feat, loss_moe = self.generalFusion(RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global,
-                                                        label)
+                moe_feat, loss_moe = self.generalFusion(RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
                 moe_score = self.classifier_moe(self.bottleneck_moe(moe_feat))
             if self.direct:
                 ori = torch.cat([RGB_global, NI_global, TI_global], dim=-1)
