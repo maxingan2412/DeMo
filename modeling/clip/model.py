@@ -433,11 +433,9 @@ class VisionTransformer(nn.Module):
                                bias=False)
 
         scale = width ** -0.5
-        if self.forward_type == 'new':
-            self.positional_embedding = nn.Parameter(scale * torch.randn(h_resolution * w_resolution, width))
-        else:
-            self.class_embedding = nn.Parameter(scale * torch.randn(width))
-            self.positional_embedding = nn.Parameter(scale * torch.randn(h_resolution * w_resolution + 1, width))
+
+        self.class_embedding = nn.Parameter(scale * torch.randn(width))
+        self.positional_embedding = nn.Parameter(scale * torch.randn(h_resolution * w_resolution + 1, width))
         self.ln_pre = LayerNorm(width)
 
         self.transformer = Transformer(width, layers, heads, pattern=self.pattern)
