@@ -1,5 +1,5 @@
 from fvcore.nn.jit_handles import elementwise_flop_counter
-from modeling.fusion_part.mamba import selective_scan_flop_jit
+# from modeling.fusion_part.mamba import selective_scan_flop_jit
 
 def give_supported_ops():
     return{
@@ -46,8 +46,9 @@ def give_supported_ops():
             "aten::adaptive_max_pool2d": elementwise_flop_counter(1, 0),
             "prim::PythonOp.CrossScan": None,  # just some add or reshape transform
             "prim::PythonOp.CrossMerge": None,  # just some add or reshape transform
-            "prim::PythonOp.SelectiveScanMamba": selective_scan_flop_jit,
-            "prim::PythonOp.SelectiveScanOflex": selective_scan_flop_jit,
-            "prim::PythonOp.SelectiveScanCore": selective_scan_flop_jit,
-            "prim::PythonOp.SelectiveScanNRow": selective_scan_flop_jit,
+            # No use in DeMo
+            # "prim::PythonOp.SelectiveScanMamba": selective_scan_flop_jit,
+            # "prim::PythonOp.SelectiveScanOflex": selective_scan_flop_jit,
+            # "prim::PythonOp.SelectiveScanCore": selective_scan_flop_jit,
+            # "prim::PythonOp.SelectiveScanNRow": selective_scan_flop_jit,
         }
