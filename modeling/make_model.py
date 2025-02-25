@@ -18,7 +18,7 @@ class DeMo(nn.Module):
         elif 'ViT-B-16' in cfg.MODEL.TRANSFORMER_TYPE:
             self.feat_dim = 512
         self.BACKBONE = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
-        self.num_classes = num_classes
+        self.num_classes = num_classes #
         self.cfg = cfg
         self.num_instance = cfg.DATALOADER.NUM_INSTANCE
         self.camera = camera_num
@@ -33,7 +33,7 @@ class DeMo(nn.Module):
         self.ATM = cfg.MODEL.ATM
         self.GLOBAL_LOCAL = cfg.MODEL.GLOBAL_LOCAL
         self.head = cfg.MODEL.HEAD
-        if self.GLOBAL_LOCAL:
+        if self.GLOBAL_LOCAL:   # 
             self.pool = nn.AdaptiveAvgPool1d(1)
             self.rgb_reduce = nn.Sequential(nn.LayerNorm(2 * self.feat_dim),
                                             nn.Linear(2 * self.feat_dim, self.feat_dim),QuickGELU())
