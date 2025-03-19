@@ -137,7 +137,7 @@ _C.SOLVER.WARMUP_METHOD = "linear"
 
 _C.SOLVER.COSINE_MARGIN = 0.5
 _C.SOLVER.COSINE_SCALE = 30
-_C.SOLVER.SEED = 1111
+_C.SOLVER.SEED = 3407  # here to set seed  mxa  default 1111
 _C.MODEL.NO_MARGIN = True
 # epoch number of saving checkpoints
 _C.SOLVER.CHECKPOINT_PERIOD = 10

@@ -7,6 +7,7 @@ from utils.meter import AverageMeter
 from utils.metrics import R1_mAP_eval, R1_mAP
 from torch.cuda import amp
 import torch.distributed as dist
+from datetime import datetime
 
 
 def do_train(cfg,
@@ -134,8 +135,16 @@ def do_train(cfg,
                     best_index['Rank-1'] = cmc[0]
                     best_index['Rank-5'] = cmc[4]
                     best_index['Rank-10'] = cmc[9]
-                    torch.save(model.state_dict(),
-                               os.path.join(cfg.OUTPUT_DIR, cfg.MODEL.NAME + 'best.pth'))
+                    current_date = datetime.now().strftime("%Y_%m_%d")
+
+                    # 格式化 mAP 和 Rank-1，保留 1 位小数
+                    map_value = best_index['mAP']   # 转换为百分比
+                    rank1_value = best_index['Rank-1']   # 转换为百分比
+                    best_model_filename = f"{cfg.MODEL.NAME}_best_map{map_value:.1f}_rank1{rank1_value:.1f}_{current_date}.pth"
+                    torch.save(model.state_dict(), os.path.join(cfg.OUTPUT_DIR, best_model_filename))
+
+                    #torch.save(model.state_dict(),
+                               #os.path.join(cfg.OUTPUT_DIR, cfg.MODEL.NAME + 'best.pth'))
                 logger.info("~" * 50)
                 logger.info("Best mAP: {:.1%}".format(best_index['mAP']))
                 logger.info("Best Rank-1: {:.1%}".format(best_index['Rank-1']))
