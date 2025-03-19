@@ -128,9 +128,9 @@ Multi-modal object ReID combines the strengths of different modalities (e.g., RG
 
 ### Training
 ```bash
-conda create -n DeMo python=3.10.13
+conda create -n DeMo python=3.8.12 -y 
 conda activate DeMo
-pip install torch==2.1.1+cu118 torchvision==0.16.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1+cu117 --extra-index-url https://download.pytorch.org/whl/cu117
 cd (your_path)
 pip install -r requirements.txt
 python train_net.py --config_file configs/RGBNT201/DeMo.yml
