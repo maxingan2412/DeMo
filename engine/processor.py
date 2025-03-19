@@ -137,10 +137,14 @@ def do_train(cfg,
                     best_index['Rank-10'] = cmc[9]
                     current_date = datetime.now().strftime("%Y_%m_%d")
 
-                    # 格式化 mAP 和 Rank-1，保留 1 位小数
-                    map_value = best_index['mAP']   # 转换为百分比
-                    rank1_value = best_index['Rank-1']   # 转换为百分比
-                    best_model_filename = f"{cfg.MODEL.NAME}_best_map{map_value:.1f}_rank1{rank1_value:.1f}_{current_date}.pth"
+                    # 不进行四舍五入，直接输出完整的浮点数
+                    map_value = best_index['mAP']
+                    rank1_value = best_index['Rank-1']
+
+                    # 生成带完整小数位的文件名
+                    best_model_filename = f"{cfg.MODEL.NAME}_best_map{map_value}_rank1{rank1_value}_{current_date}.pth"
+
+                    # 保存模型
                     torch.save(model.state_dict(), os.path.join(cfg.OUTPUT_DIR, best_model_filename))
 
                     #torch.save(model.state_dict(),
