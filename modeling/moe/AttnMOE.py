@@ -41,7 +41,7 @@ class ExpertHead(nn.Module):
         self.expertHead = nn.ModuleList([Expert(input_dim) for _ in range(num_experts)])
 
     def forward(self, x_chunk, gate_head):
-        expert_outputs = [expert(x_chunk[i]) for i, expert in enumerate(self.expertHead)]
+        expert_outputs = [expert(x_chunk[i]) for i, expert in enumerate(self.expertHead)] #这里相对于把 x_chunk[i] 都做了个MLP
         expert_outputs = torch.stack(expert_outputs, dim=1)
         expert_outputs = expert_outputs * gate_head.squeeze(1).unsqueeze(2)
         return expert_outputs
@@ -64,7 +64,7 @@ class CrossAttention(nn.Module):
         q = self.q_(x).reshape(B, 1, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
         k = self.k_(y).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
         attn = (q @ k.transpose(-2, -1)) * self.scale
-        gates = attn.softmax(dim=-1)
+        gates = attn.softmax(dim=-1) #其实就是拿attn做门控gates
         return gates
 
     def forward_(self, x):
@@ -109,10 +109,10 @@ class MoM(nn.Module):
         x6_chunk = torch.chunk(x6, self.head, dim=-1)
         x7_chunk = torch.chunk(x7, self.head, dim=-1)
         head_input = [[x1_chunk[i], x2_chunk[i], x3_chunk[i], x4_chunk[i], x5_chunk[i], x6_chunk[i], x7_chunk[i]] for i
-                      in range(self.head)]
+                      in range(self.head)] #按head 分块，每个head 有7个输入
         query = torch.cat([x1, x2, x3, x4, x5, x6, x7], dim=-1)
         key = torch.stack([x1, x2, x3, x4, x5, x6, x7], dim=1)
-        gate_heads = self.gating_network(query, key)
+        gate_heads = self.gating_network(query, key) # Multi-HeadAttentionGating 似乎思这个，就是拿 query 和key 生成的attn作为门控
         expert_outputs = [expert(head_input[i], gate_heads[:, i]) for i, expert in enumerate(self.experts)]
         outputs = torch.cat(expert_outputs, dim=-1).flatten(start_dim=1, end_dim=-1)
         loss = 0
@@ -178,7 +178,7 @@ class GeneralFusion(nn.Module):
         rnt_embedding = self.rnt_token.repeat(1, batch, 1)
 
         # for single modality
-        RGB_special = (self.r(r_embedding, RGB, RGB)[0]).permute(1, 2, 0).squeeze()
+        RGB_special = (self.r(r_embedding, RGB, RGB)[0]).permute(1, 2, 0).squeeze() #r_embedding, RGB, RGB 是 query, key, value, [0] 是 attn_output, 通用做法， permute(1, 2, 0) 是将 batch_size 放到最前面
         NI_special = (self.n(n_embedding, NI, NI)[0]).permute(1, 2, 0).squeeze()
         TI_special = (self.t(t_embedding, TI, TI)[0]).permute(1, 2, 0).squeeze()
         # for double modality
@@ -201,7 +201,7 @@ class GeneralFusion(nn.Module):
 
     def forward(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDM(
-            RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+            RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global) #融合
         if self.training:
             if self.HDM and not self.ATM:
                 moe_feat = torch.cat(

@@ -105,7 +105,7 @@ class DeMo(nn.Module):
             RGB = x['RGB']
             NI = x['NI']
             TI = x['TI']
-            RGB_cash, RGB_global = self.BACKBONE(RGB, cam_label=cam_label, view_label=view_label)
+            RGB_cash, RGB_global = self.BACKBONE(RGB, cam_label=cam_label, view_label=view_label) #RGB_cash 是除了cls token之外的所有token的特征
             NI_cash, NI_global = self.BACKBONE(NI, cam_label=cam_label, view_label=view_label)
             TI_cash, TI_global = self.BACKBONE(TI, cam_label=cam_label, view_label=view_label)
             if self.GLOBAL_LOCAL:
@@ -114,7 +114,7 @@ class DeMo(nn.Module):
                 TI_local = self.pool(TI_cash.permute(0, 2, 1)).squeeze(-1)
                 RGB_global = self.rgb_reduce(torch.cat([RGB_global, RGB_local], dim=-1))
                 NI_global = self.nir_reduce(torch.cat([NI_global, NI_local], dim=-1))
-                TI_global = self.tir_reduce(torch.cat([TI_global, TI_local], dim=-1))
+                TI_global = self.tir_reduce(torch.cat([TI_global, TI_local], dim=-1)) #到这里 应该就是论文的前面的 PIFE部分 HDM ATM 文中也都有提到
             if self.HDM or self.ATM:
                 moe_feat, loss_moe = self.generalFusion(RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
                 moe_score = self.classifier_moe(self.bottleneck_moe(moe_feat))

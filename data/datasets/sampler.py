@@ -7,8 +7,8 @@ import numpy as np
 
 class RandomIdentitySampler(Sampler):
     """
-    Randomly sample N identities, then for each identity,
-    randomly sample K instances, therefore batch size is N*K.
+    Randomly sample N identities, then for each identity, （表示要采样多少个不同的身份 ID）。
+    randomly sample K instances, therefore batch size is N*K. （表示每个身份 ID 采样 K 张图像）。 最终 batch 大小 = N × K。
     Args:
     - data_source (list): list of (img_path, pid, camid).
     - num_instances (int): number of instances per identity in a batch.

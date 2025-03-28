@@ -90,7 +90,7 @@ class build_transformer(nn.Module):
 
     def forward(self, x, label=None, cam_label=None, view_label=None, modality=None):
         if self.clip == 0:
-            x = self.base(x, cam_label=cam_label, view_label=view_label)
+            x = self.base(x, cam_label=cam_label, view_label=view_label) #这里base叫 visiontransformer，应该就是clip的 vision部分，在上面有 self.base = clip_model.visual
         else:
             if self.cv_embed_sign:
                 cv_embed = self.sie_xishu * self.cv_embed[cam_label]

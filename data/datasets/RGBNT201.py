@@ -60,12 +60,12 @@ class RGBNT201(BaseImageDataset):
 
     def _process_dir(self, dir_path, relabel=False):
         img_paths_RGB = glob.glob(osp.join(dir_path, 'RGB', '*.jpg'))
-        pid_container = set()
+        pid_container = set() #这个东西自动去重，而且从小到大排序
         for img_path_RGB in img_paths_RGB:
             jpg_name = img_path_RGB.split('/')[-1]
             pid = int(jpg_name.split('_')[0][0:6])
             pid_container.add(pid)
-        pid2label = {pid: label for label, pid in enumerate(pid_container)}
+        pid2label = {pid: label for label, pid in enumerate(pid_container)} #把不连续的不是非得从0开始的pid转换成连续的从0开始的label，pid2label是一个字典
 
         data = []
         for img_path_RGB in img_paths_RGB:
@@ -82,6 +82,6 @@ class RGBNT201(BaseImageDataset):
             camid -= 1  # index starts from 0
             if relabel:
                 pid = pid2label[pid]
-            data.append((img, pid, camid, trackid))
+            data.append((img, pid, camid, trackid)) #img是一个list ，trackid没什么用
             # print("11111")
         return data
