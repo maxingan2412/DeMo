@@ -538,18 +538,6 @@ class DAttentionBaseline(nn.Module):
             grid=pos_z[..., (1, 0)],  # y, x -> x, y
             mode='bilinear', align_corners=True)
 
-        # sampled_x = sampled_x.reshape(B, C, 1, n_sample)
-        # sampled_y = sampled_y.reshape(B, C, 1, n_sample)
-        # sampled_z = sampled_z.reshape(B, C, 1, n_sample)
-        #
-        # sampled_x = sampled_x.squeeze(2)
-        # sampled_y = sampled_y.squeeze(2)
-        # sampled_z = sampled_z.squeeze(2)
-        #
-        # sampled_x = sampled_x.permute(2,0,1)
-        # sampled_y = sampled_y.permute(2,0,1)
-        # sampled_z = sampled_z.permute(2,0,1)
-
         sampled_x, sampled_y, sampled_z = [
             t.reshape(B, C, 1, n_sample).squeeze(2).permute(2, 0, 1)
             for t in [sampled_x, sampled_y, sampled_z]
