@@ -138,17 +138,16 @@ def do_train(cfg,
                     current_date = datetime.now().strftime("%Y_%m_%d")
 
                     # 不进行四舍五入，直接输出完整的浮点数
-                    map_value = best_index['mAP']
-                    rank1_value = best_index['Rank-1']
-
-                    # 生成带完整小数位的文件名
-                    best_model_filename = f"{cfg.MODEL.NAME}_best_map{map_value}_rank1{rank1_value}_{current_date}.pth"
+                    # map_value = best_index['mAP']
+                    # rank1_value = best_index['Rank-1']
+                    #
+                    # # 生成带完整小数位的文件名
+                    # best_model_filename = f"{cfg.MODEL.NAME}_best_map{map_value}_rank1{rank1_value}_{current_date}.pth"
 
                     # 保存模型
-                    torch.save(model.state_dict(), os.path.join(cfg.OUTPUT_DIR, best_model_filename))
+                    #torch.save(model.state_dict(), os.path.join(cfg.OUTPUT_DIR, best_model_filename))
 
-                    #torch.save(model.state_dict(),
-                               #os.path.join(cfg.OUTPUT_DIR, cfg.MODEL.NAME + 'best.pth'))
+                    torch.save(model.state_dict(), os.path.join(cfg.OUTPUT_DIR, cfg.MODEL.NAME + 'best.pth'))
                 logger.info("~" * 50)
                 logger.info("Best mAP: {:.1%}".format(best_index['mAP']))
                 logger.info("Best Rank-1: {:.1%}".format(best_index['Rank-1']))

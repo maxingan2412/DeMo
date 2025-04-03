@@ -538,19 +538,22 @@ class DAttentionBaseline(nn.Module):
             grid=pos_z[..., (1, 0)],  # y, x -> x, y
             mode='bilinear', align_corners=True)
 
-        sampled_x = sampled_x.reshape(B, C, 1, n_sample)
-        sampled_y = sampled_y.reshape(B, C, 1, n_sample)
-        sampled_z = sampled_z.reshape(B, C, 1, n_sample)
+        # sampled_x = sampled_x.reshape(B, C, 1, n_sample)
+        # sampled_y = sampled_y.reshape(B, C, 1, n_sample)
+        # sampled_z = sampled_z.reshape(B, C, 1, n_sample)
+        #
+        # sampled_x = sampled_x.squeeze(2)
+        # sampled_y = sampled_y.squeeze(2)
+        # sampled_z = sampled_z.squeeze(2)
+        #
+        # sampled_x = sampled_x.permute(2,0,1)
+        # sampled_y = sampled_y.permute(2,0,1)
+        # sampled_z = sampled_z.permute(2,0,1)
 
-        sampled_x = sampled_x.squeeze(2)
-        sampled_y = sampled_y.squeeze(2)
-        sampled_z = sampled_z.squeeze(2)
-
-        sampled_x = sampled_x.permute(2,0,1)
-        sampled_y = sampled_y.permute(2,0,1)
-        sampled_z = sampled_z.permute(2,0,1)
-
-
+        sampled_x, sampled_y, sampled_z = [
+            t.reshape(B, C, 1, n_sample).squeeze(2).permute(2, 0, 1)
+            for t in [sampled_x, sampled_y, sampled_z]
+        ]
 
         # sampled = torch.cat([sampled_x, sampled_y, sampled_z], dim=-1)
         #
@@ -881,7 +884,7 @@ class GeneralFusion(nn.Module):
                 5.0, 4, True
             )
 
-    def forward_HDM(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+    def forward_HDMNew(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
         r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
         n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
@@ -941,7 +944,7 @@ class GeneralFusion(nn.Module):
 
 
 
-    def forward_HDMO(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+    def forward_HDM(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
         r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
         n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
