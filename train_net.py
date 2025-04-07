@@ -72,8 +72,8 @@ if __name__ == '__main__':
         logger.info(str(model))
         n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
         logger.info(f"number of parameters:{n_parameters / 1e6}")
-        flops = model.flops()
-        logger.info(f"number of GFLOPs: {flops / 1e9}")
+        # flops = model.flops()
+        # logger.info(f"number of GFLOPs: {flops / 1e9}")
     else:
         print("model has no flops")
     loss_func, center_criterion = make_loss(cfg, num_classes=num_classes)
