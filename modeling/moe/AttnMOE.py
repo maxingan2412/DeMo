@@ -1079,106 +1079,6 @@ class DAttentionBaseline(nn.Module):
         return out.squeeze(2)
 
 
-# class CDA(nn.Module):
-#
-#     def __init__(self, window_size=(5, 5), q_size=(16, 8), n_heads=1, n_head_channels=512, n_groups=1, attn_drop=0.,
-#                  proj_drop=0., stride=2, stride_block=(4, 4),
-#                  offset_range_factor=5, ksize=5, share=False):
-#         super(CDA, self).__init__()
-#         self.q_size = q_size
-#         self.window_size = window_size
-#         self.stride_block = stride_block
-#         self.feat_dim = n_head_channels * n_heads
-#         self.num_da = self.calculate_num_blocks(q_size, window_size, stride_block)
-#         self.da_group = nn.ModuleList([
-#             DAttentionBaseline(
-#                 window_size, n_heads, n_head_channels, n_groups, attn_drop, proj_drop, stride,
-#                 offset_range_factor, ksize, share
-#             ) for _ in range(self.num_da)
-#         ])
-#
-#     def calculate_num_blocks(self, input_size, block_size, stride):
-#         H, W = input_size  # 输入特征图的高和宽
-#         block_h, block_w = block_size  # 块的高和宽
-#         stride_h, stride_w = stride  # 步长的高和宽
-#
-#         # 计算在高度和宽度方向上的块数
-#         num_blocks_h = (H - block_h) // stride_h + 1
-#         num_blocks_w = (W - block_w) // stride_w + 1
-#
-#         # 总块数
-#         return num_blocks_h * num_blocks_w
-#
-#     def split_into_blocks_with_overlap(self, input_tensor, block_size=(4, 4), stride=(4, 4)):
-#         """
-#         将输入特征图分割成指定大小的重叠块。
-#
-#         :param input_tensor: 输入特征图，形状为 (B, C, H, W)
-#         :param block_size: 块的大小，默认为 (4, 4)，表示高和宽
-#         :param stride: 块的滑动步长，默认为 (2, 2)，表示高和宽
-#         :return: 分割后的块，形状为 (B, num_blocks_h, num_blocks_w, C, block_h, block_w)
-#         """
-#         B, C, H, W = input_tensor.shape
-#         block_h, block_w = block_size
-#         stride_h, stride_w = stride
-#
-#         # 确保输入的高宽能够支持步长和块大小
-#         assert H >= block_h and W >= block_w, "Block size should be smaller than the input feature map."
-#
-#         # 使用 unfold 操作实现滑动窗口式的分割
-#         # unfold(2) 是在高度 H 维度上分块, unfold(3) 是在宽度 W 维度上分块
-#         unfolded = input_tensor.unfold(2, block_h, stride_h).unfold(3, block_w, stride_w) #64 512 16 8 --> 64 , 512, 1,1, 16, 8
-#
-#         # 结果的形状为 (B, C, num_blocks_h, num_blocks_w, block_h, block_w)
-#         # 需要将通道 C 维度移到最后，符合 (B, num_blocks_h, num_blocks_w, C, block_h, block_w)
-#         unfolded = unfolded.permute(0, 2, 3, 1, 4, 5).contiguous()
-#
-#         return unfolded
-#
-#     def visualize_blocks(self, input_tensor, block_size=(4, 4)):
-#         """
-#         可视化输入特征图的分块结果。
-#
-#         :param input_tensor: 输入特征图，形状为 (B, C, H, W)
-#         :param block_size: 块的大小，默认为 (4, 4)，表示高和宽
-#         """
-#         # 分块
-#         blocks = self.split_into_blocks(input_tensor, block_size)
-#
-#         B, num_blocks_h, num_blocks_w, C, block_h, block_w = blocks.shape
-#         fig, axes = plt.subplots(num_blocks_h, num_blocks_w, figsize=(10, 10))
-#
-#         for i in range(num_blocks_h):
-#             for j in range(num_blocks_w):
-#                 # 选择第一个batch中的一个块进行可视化
-#                 block = blocks[0, i, j].detach().cpu().numpy()
-#
-#                 # 将块中的通道数据降维到单通道（选择第一个通道或使用平均值）
-#                 block_image = block.mean(axis=0)  # 这里用通道平均值进行可视化
-#                 axes[i, j].imshow(block_image, cmap='gray')
-#                 axes[i, j].axis('off')
-#
-#         plt.suptitle('Visualization of Blocks', fontsize=16)
-#         plt.show()
-#
-#     def forward(self, x, y, z, boss, writer=None, epoch=None, img_path=None, texts=''):
-#         x = x.reshape(x.size(0), self.q_size[0], self.q_size[1], -1).permute(0, 3, 1, 2)
-#         y = y.reshape(y.size(0), self.q_size[0], self.q_size[1], -1).permute(0, 3, 1, 2)
-#         z = z.reshape(z.size(0), self.q_size[0], self.q_size[1], -1).permute(0, 3, 1, 2)
-#         x_blocks = self.split_into_blocks_with_overlap(x, self.window_size, self.stride_block).flatten(1, 2) # x: 64 512 16 8 , (16,8),(16,8)
-#         y_blocks = self.split_into_blocks_with_overlap(y, self.window_size, self.stride_block).flatten(1, 2)
-#         z_blocks = self.split_into_blocks_with_overlap(z, self.window_size, self.stride_block).flatten(1, 2)
-#         boss = boss.permute(0, 2, 1).unsqueeze(-2)
-#         query_cash = []
-#         for i in range(self.num_da):
-#             query_cash.append(
-#                 self.da_group[i](boss, x_blocks[:, i], y_blocks[:, i], z_blocks[:, i], writer=writer, epoch=epoch,
-#                                  img_path=img_path, text=texts).squeeze(-1))
-#         fea = query_cash[0].permute(0, 2, 1)
-#         vision = torch.flatten(fea[:, :3], start_dim=1, end_dim=2)
-#         text = torch.flatten(fea[:, 3:], start_dim=1, end_dim=2)
-#         return vision, text
-
 
 
 class GeneralFusion(nn.Module):
@@ -1186,6 +1086,7 @@ class GeneralFusion(nn.Module):
         super(GeneralFusion, self).__init__()
         self.reg_weight = reg_weight
         self.feat_dim = feat_dim
+        self.datasetsname = cfg.DATASETS.NAMES
 
         self.HDM = cfg.MODEL.HDM
         self.ATM = cfg.MODEL.ATM
@@ -1217,123 +1118,35 @@ class GeneralFusion(nn.Module):
                 5.0, 4, True
             )
 
-        self.rwkvblock_r = Block(
-            n_embd=feat_dim,
-            n_head=8,
+        rwkv_cfg = dict(
+            #n_embd=feat_dim,
+            #n_head=12,
             n_layer=12,
             layer_id=0,
             shift_mode='q_shift_multihead',
             shift_pixel=1,
-            drop_path=0.,
+            drop_path=0,
             hidden_rate=4,
             init_mode='fancy',
-            init_values=None,
-            post_norm=False,
             key_norm=False,
             with_cls_token=False,
-            with_cp=False
+            with_cp=False,
+
+            ########
+            n_embd=feat_dim,
+            n_head=8,
+            init_values=1e-5,
+            post_norm=True,
+
         )
 
-        self.rwkvblock_n = Block(
-            n_embd=feat_dim,
-            n_head=8,
-            n_layer=12,
-            layer_id=0,
-            shift_mode='q_shift_multihead',
-            shift_pixel=1,
-            drop_path=0.,
-            hidden_rate=4,
-            init_mode='fancy',
-            init_values=None,
-            post_norm=False,
-            key_norm=False,
-            with_cls_token=False,
-            with_cp=False
-        )
-
-        self.rwkvblock_t = Block(
-            n_embd=feat_dim,
-            n_head=8,
-            n_layer=12,
-            layer_id=0,
-            shift_mode='q_shift_multihead',
-            shift_pixel=1,
-            drop_path=0.,
-            hidden_rate=4,
-            init_mode='fancy',
-            init_values=None,
-            post_norm=False,
-            key_norm=False,
-            with_cls_token=False,
-            with_cp=False
-        )
-
-        self.rwkvblock_rn = Block(
-            n_embd=feat_dim,
-            n_head=8,
-            n_layer=12,
-            layer_id=0,
-            shift_mode='q_shift_multihead',
-            shift_pixel=1,
-            drop_path=0.,
-            hidden_rate=4,
-            init_mode='fancy',
-            init_values=None,
-            post_norm=False,
-            key_norm=False,
-            with_cls_token=False,
-            with_cp=False
-        )
-
-        self.rwkvblock_rt = Block(
-            n_embd=feat_dim,
-            n_head=8,
-            n_layer=12,
-            layer_id=0,
-            shift_mode='q_shift_multihead',
-            shift_pixel=1,
-            drop_path=0.,
-            hidden_rate=4,
-            init_mode='fancy',
-            init_values=None,
-            post_norm=False,
-            key_norm=False,
-            with_cls_token=False,
-            with_cp=False
-        )
-
-        self.rwkvblock_nt = Block(
-            n_embd=feat_dim,
-            n_head=8,
-            n_layer=12,
-            layer_id=0,
-            shift_mode='q_shift_multihead',
-            shift_pixel=1,
-            drop_path=0.,
-            hidden_rate=4,
-            init_mode='fancy',
-            init_values=None,
-            post_norm=False,
-            key_norm=False,
-            with_cls_token=False,
-            with_cp=False
-        )
-        self.rwkvblock_rnt = Block(
-            n_embd=feat_dim,
-            n_head=8,
-            n_layer=12,
-            layer_id=0,
-            shift_mode='q_shift_multihead',
-            shift_pixel=1,
-            drop_path=0.,
-            hidden_rate=4,
-            init_mode='fancy',
-            init_values=None,
-            post_norm=False,
-            key_norm=False,
-            with_cls_token=False,
-            with_cp=False
-        )
+        self.rwkvblock_r = Block(**rwkv_cfg)
+        self.rwkvblock_n = Block(**rwkv_cfg)
+        self.rwkvblock_t = Block(**rwkv_cfg)
+        self.rwkvblock_rn = Block(**rwkv_cfg)
+        self.rwkvblock_rt = Block(**rwkv_cfg)
+        self.rwkvblock_nt = Block(**rwkv_cfg)
+        self.rwkvblock_rnt = Block(**rwkv_cfg)
 
     def forward_HDMDeform(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
@@ -1400,7 +1213,7 @@ class GeneralFusion(nn.Module):
         t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
         # permute for the cross attn input
 
-        RGB_cash = RGB_cash.permute(1, 0, 2)
+        RGB_cash = RGB_cash.permute(1, 0, 2) # tokenamount BATCH DIM
         NI_cash = NI_cash.permute(1, 0, 2)
         TI_cash = TI_cash.permute(1, 0, 2)
 
@@ -1411,7 +1224,22 @@ class GeneralFusion(nn.Module):
         NI_TI_cash =  torch.cat([NI_cash, TI_cash], dim=0)
         RGB_NI_TI_cash =  torch.cat([RGB_cash, NI_cash, TI_cash], dim=0)
 
-        patch_resolution = (8, 8)
+        if self.datasetsname == 'RGBNT100':
+            patch_resolution = (8, 16)
+        elif self.datasetsname == 'RGBNT201':
+            patch_resolution = (16, 8)
+        else:
+            patch_resolution = (16, 8)
+
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+        RGB_NI_cash = RGB_NI_cash.permute(1, 0, 2)
+        RGB_TI_cash = RGB_TI_cash.permute(1, 0, 2)
+        NI_TI_cash = NI_TI_cash.permute(1, 0, 2)
+        RGB_NI_TI_cash = RGB_NI_TI_cash.permute(1, 0, 2)
+
+        #patch_resolution = (8, 8)
         RGB_cash = self.rwkvblock_r(RGB_cash, patch_resolution)
         NI_cash = self.rwkvblock_n(NI_cash, patch_resolution)
         TI_cash = self.rwkvblock_t(TI_cash, patch_resolution)
@@ -1420,13 +1248,13 @@ class GeneralFusion(nn.Module):
         NI_TI_cash = self.rwkvblock_nt(NI_TI_cash, patch_resolution)
         RGB_NI_TI_cash = self.rwkvblock_rnt(RGB_NI_TI_cash, patch_resolution)
 
-        # RGB_cash = RGB_cash.permute(1, 0, 2)
-        # NI_cash = NI_cash.permute(1, 0, 2)
-        # TI_cash = TI_cash.permute(1, 0, 2)
-        # RGB_NI_cash = RGB_NI_cash.permute(1, 0, 2)
-        # RGB_TI_cash = RGB_TI_cash.permute(1, 0, 2)
-        # NI_TI_cash = NI_TI_cash.permute(1, 0, 2)
-        # RGB_NI_TI_cash = RGB_NI_TI_cash.permute(1, 0, 2)
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+        RGB_NI_cash = RGB_NI_cash.permute(1, 0, 2)
+        RGB_TI_cash = RGB_TI_cash.permute(1, 0, 2)
+        NI_TI_cash = NI_TI_cash.permute(1, 0, 2)
+        RGB_NI_TI_cash = RGB_NI_TI_cash.permute(1, 0, 2)
 
         RGB = torch.cat([r_global, RGB_cash], dim=0)
         NI = torch.cat([n_global, NI_cash], dim=0)

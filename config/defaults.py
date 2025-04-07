@@ -140,7 +140,7 @@ _C.SOLVER.COSINE_SCALE = 30
 _C.SOLVER.SEED = 1111  # here to set seed  mxa  default 1111
 _C.MODEL.NO_MARGIN = True
 # epoch number of saving checkpoints
-_C.SOLVER.CHECKPOINT_PERIOD = 10
+_C.SOLVER.CHECKPOINT_PERIOD = 60
 # iteration of display training log
 _C.SOLVER.LOG_PERIOD = 10
 # epoch number of validation
