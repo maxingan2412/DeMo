@@ -185,7 +185,7 @@ class VRWKV_SpatialMix_V6(BaseModule):
         B, T, C = x.size()
 
         xx = self.shift_func(x, self.shift_pixel, patch_resolution=patch_resolution,
-                             with_cls_token=self.with_cls_token) - x
+                             with_cls_token=self.with_cls_token) - x  # shiftq - x
         xxx = x + xx * self.time_maa_x  # [B, T, C]
         xxx = torch.tanh(xxx @ self.time_maa_w1).view(B * T, 5, -1).transpose(0, 1)
         # [5, B*T, TIME_MIX_EXTRA_DIM]
@@ -1256,9 +1256,12 @@ class GeneralFusion(nn.Module):
         NI_TI_cash = NI_TI_cash.permute(1, 0, 2)
         RGB_NI_TI_cash = RGB_NI_TI_cash.permute(1, 0, 2)
 
-        RGB = torch.cat([r_global, RGB_cash], dim=0)
-        NI = torch.cat([n_global, NI_cash], dim=0)
-        TI = torch.cat([t_global, TI_cash], dim=0)
+        # RGB = torch.cat([r_global, RGB_cash], dim=0)
+        # NI = torch.cat([n_global, NI_cash], dim=0)
+        # TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB = RGB_cash
+        NI = NI_cash
+        TI = TI_cash
         RGB_NI = RGB_NI_cash
         RGB_TI = RGB_TI_cash
         NI_TI = NI_TI_cash
@@ -1291,6 +1294,94 @@ class GeneralFusion(nn.Module):
 
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
 
+
+    def forward_HDMrwcls(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+
+        RGB_cash = RGB_cash.permute(1, 0, 2) # tokenamount BATCH DIM
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+
+
+
+        RGB_NI_cash =  torch.cat([RGB_cash, NI_cash], dim=0)
+        RGB_TI_cash =  torch.cat([RGB_cash, TI_cash], dim=0)
+        NI_TI_cash =  torch.cat([NI_cash, TI_cash], dim=0)
+        RGB_NI_TI_cash =  torch.cat([RGB_cash, NI_cash, TI_cash], dim=0)
+
+        if self.datasetsname == 'RGBNT100':
+            patch_resolution = (8, 16)
+        elif self.datasetsname == 'RGBNT201':
+            patch_resolution = (16, 8)
+        else:
+            patch_resolution = (16, 8)
+
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+        RGB_NI_cash = RGB_NI_cash.permute(1, 0, 2)
+        RGB_TI_cash = RGB_TI_cash.permute(1, 0, 2)
+        NI_TI_cash = NI_TI_cash.permute(1, 0, 2)
+        RGB_NI_TI_cash = RGB_NI_TI_cash.permute(1, 0, 2)
+
+        #patch_resolution = (8, 8)
+        RGB_cash = self.rwkvblock_r(RGB_cash, patch_resolution)  # input : tokenamount BATCH DIM
+        NI_cash = self.rwkvblock_n(NI_cash, patch_resolution)
+        TI_cash = self.rwkvblock_t(TI_cash, patch_resolution)
+        RGB_NI_cash = self.rwkvblock_rn(RGB_NI_cash, patch_resolution)
+        RGB_TI_cash = self.rwkvblock_rt(RGB_TI_cash, patch_resolution)
+        NI_TI_cash = self.rwkvblock_nt(NI_TI_cash, patch_resolution)
+        RGB_NI_TI_cash = self.rwkvblock_rnt(RGB_NI_TI_cash, patch_resolution)
+
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+        RGB_NI_cash = RGB_NI_cash.permute(1, 0, 2)
+        RGB_TI_cash = RGB_TI_cash.permute(1, 0, 2)
+        NI_TI_cash = NI_TI_cash.permute(1, 0, 2)
+        RGB_NI_TI_cash = RGB_NI_TI_cash.permute(1, 0, 2)
+
+        # RGB = torch.cat([r_global, RGB_cash], dim=0)
+        # NI = torch.cat([n_global, NI_cash], dim=0)
+        # TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB = RGB_cash
+        NI = NI_cash
+        TI = TI_cash
+        RGB_NI = RGB_NI_cash
+        RGB_TI = RGB_TI_cash
+        NI_TI = NI_TI_cash
+        RGB_NI_TI = RGB_NI_TI_cash
+
+        batch = RGB.size(1)
+
+
+
+
+        # get the learnable token
+        r_embedding = self.r_token.repeat(1, batch, 1)
+        n_embedding = self.n_token.repeat(1, batch, 1)
+        t_embedding = self.t_token.repeat(1, batch, 1)
+        rn_embedding = self.rn_token.repeat(1, batch, 1)
+        rt_embedding = self.rt_token.repeat(1, batch, 1)
+        nt_embedding = self.nt_token.repeat(1, batch, 1)
+        rnt_embedding = self.rnt_token.repeat(1, batch, 1)
+
+        # for single modality
+        RGB_special = (self.r(r_embedding, RGB, RGB)[0]).permute(1, 2, 0).squeeze() #r_embedding, RGB, RGB 是 query, key, value, [0] 是 attn_output, 通用做法， permute(1, 2, 0) 是将 batch_size 放到最前面
+        NI_special = (self.n(n_embedding, NI, NI)[0]).permute(1, 2, 0).squeeze()
+        TI_special = (self.t(t_embedding, TI, TI)[0]).permute(1, 2, 0).squeeze()
+        # for double modality
+        RN_shared = (self.rn(rn_embedding, RGB_NI, RGB_NI)[0]).permute(1, 2, 0).squeeze()
+        RT_shared = (self.rt(rt_embedding, RGB_TI, RGB_TI)[0]).permute(1, 2, 0).squeeze()
+        NT_shared = (self.nt(nt_embedding, NI_TI, NI_TI)[0]).permute(1, 2, 0).squeeze()
+        # for triple modality
+        RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
     def forward_HDM(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
         r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
@@ -1342,7 +1433,7 @@ class GeneralFusion(nn.Module):
             return moe_feat
 
     def forward(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
-        RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrw(
+        RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrwcls(
             RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global) #融合
         if self.training:
             if self.HDM and not self.ATM:
