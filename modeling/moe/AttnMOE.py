@@ -1147,6 +1147,8 @@ class GeneralFusion(nn.Module):
         self.rwkvblock_rt = Block(**rwkv_cfg)
         self.rwkvblock_nt = Block(**rwkv_cfg)
         self.rwkvblock_rnt = Block(**rwkv_cfg)
+        #in_features = 128 +128 +128 + 256 +256 +256 + 384
+        self.linearrwkv = nn.Linear(feat_dim, feat_dim)
 
     def forward_HDMDeform(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
@@ -1295,7 +1297,7 @@ class GeneralFusion(nn.Module):
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
 
 
-    def forward_HDMrwcls(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+    def forward_HDMrwpluslinear(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
         r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
         n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
@@ -1329,13 +1331,32 @@ class GeneralFusion(nn.Module):
         RGB_NI_TI_cash = RGB_NI_TI_cash.permute(1, 0, 2)
 
         #patch_resolution = (8, 8)
-        RGB_cash = self.rwkvblock_r(RGB_cash, patch_resolution)  # input : tokenamount BATCH DIM
+        RGB_cash = self.rwkvblock_r(RGB_cash, patch_resolution)  # input : B T dim
         NI_cash = self.rwkvblock_n(NI_cash, patch_resolution)
         TI_cash = self.rwkvblock_t(TI_cash, patch_resolution)
         RGB_NI_cash = self.rwkvblock_rn(RGB_NI_cash, patch_resolution)
         RGB_TI_cash = self.rwkvblock_rt(RGB_TI_cash, patch_resolution)
         NI_TI_cash = self.rwkvblock_nt(NI_TI_cash, patch_resolution)
         RGB_NI_TI_cash = self.rwkvblock_rnt(RGB_NI_TI_cash, patch_resolution)
+
+        T_list = [RGB_cash.shape[1], NI_cash.shape[1], TI_cash.shape[1],
+                  RGB_NI_cash.shape[1], RGB_TI_cash.shape[1],
+                  NI_TI_cash.shape[1], RGB_NI_TI_cash.shape[1]]
+        concat_tensor = torch.cat([
+            RGB_cash, NI_cash, TI_cash,
+            RGB_NI_cash, RGB_TI_cash,
+            NI_TI_cash, RGB_NI_TI_cash
+        ], dim=1)
+
+        projected = self.linearrwkv(concat_tensor)
+        splits = torch.split(projected, T_list, dim=1)
+        RGB_cash, NI_cash, TI_cash, RGB_NI_cash, RGB_TI_cash, NI_TI_cash, RGB_NI_TI_cash = splits
+
+
+
+
+
+
 
         RGB_cash = RGB_cash.permute(1, 0, 2)
         NI_cash = NI_cash.permute(1, 0, 2)
@@ -1433,7 +1454,7 @@ class GeneralFusion(nn.Module):
             return moe_feat
 
     def forward(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
-        RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrwcls(
+        RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrwpluslinear(
             RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global) #融合
         if self.training:
             if self.HDM and not self.ATM:
