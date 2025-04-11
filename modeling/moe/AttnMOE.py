@@ -1078,7 +1078,77 @@ class DAttentionBaseline(nn.Module):
         out = query + out
         return out.squeeze(2)
 
+class RWKV_CrossAttention(nn.Module):
+    def __init__(self, dim, n_query=1):
+        super().__init__()
+        self.dim = dim
+        self.n_query = n_query
 
+        # 可学习的 query
+        self.query = nn.Parameter(torch.randn(1, n_query, dim))
+
+        # 用于计算 key/value/receptance/decay
+        self.key = nn.Linear(dim, dim, bias=False)
+        self.value = nn.Linear(dim, dim, bias=False)
+        self.receptance = nn.Linear(dim, dim, bias=False)
+        self.time_decay = nn.Linear(dim, dim, bias=False)
+
+    def forward(self, kv_feats):
+        """
+        kv_feats: [B, T, C] 来自另一个结构的特征（比如 CNN 或 ViT）
+        return: [B, n_query, C]
+        """
+        B, T, C = kv_feats.shape
+
+        # 扩展 query 为 batch 尺寸
+        q = self.query.expand(B, -1, -1)  # [B, n_query, C]
+
+        # 得到 key / value / decay
+        k = self.key(kv_feats)            # [B, T, C]
+        v = self.value(kv_feats)          # [B, T, C]
+        w = self.time_decay(kv_feats)     # [B, T, C]
+        ew = torch.exp(-torch.relu(w))    # 控制每个 token 的衰减
+
+        # 计算门控 r（由 query 控制）
+        r = torch.sigmoid(self.receptance(q))  # [B, n_query, C]
+
+        # 衰减加权的 key * value（RWKV 样式）
+        weighted_kv = k * v * ew  # [B, T, C]
+
+        # 总加权：每个 query 对所有 kv 进行 sum（或你可以用 dot-product kernel）
+        out = r * torch.sum(weighted_kv, dim=1, keepdim=True)  # [B, n_query, C]
+
+        return out
+
+
+class EMA(nn.Module):
+    def __init__(self, channels, factor=8):
+        super(EMA, self).__init__()
+        self.groups = factor
+        assert channels // self.groups > 0
+        self.softmax = nn.Softmax(-1)
+        self.agp = nn.AdaptiveAvgPool2d((1, 1))
+        self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
+        self.pool_w = nn.AdaptiveAvgPool2d((1, None))
+        self.gn = nn.GroupNorm(channels // self.groups, channels // self.groups)
+        self.conv1x1 = nn.Conv2d(channels // self.groups, channels // self.groups, kernel_size=1, stride=1, padding=0)
+        self.conv3x3 = nn.Conv2d(channels // self.groups, channels // self.groups, kernel_size=3, stride=1, padding=1)
+
+    def forward(self, x):
+        b, c, h, w = x.size()
+        group_x = x.reshape(b * self.groups, -1, h, w)  # b*g,c//g,h,w
+        x_h = self.pool_h(group_x)
+        x_w = self.pool_w(group_x).permute(0, 1, 3, 2)
+        hw = self.conv1x1(torch.cat([x_h, x_w], dim=2))
+        x_h, x_w = torch.split(hw, [h, w], dim=2)
+        x1 = self.gn(group_x * x_h.sigmoid() * x_w.permute(0, 1, 3, 2).sigmoid())
+        x2 = self.conv3x3(group_x)
+        x11 = self.softmax(self.agp(x1).reshape(b * self.groups, -1, 1).permute(0, 2, 1))
+        x12 = x2.reshape(b * self.groups, c // self.groups, -1)  # b*g, c//g, hw
+        x21 = self.softmax(self.agp(x2).reshape(b * self.groups, -1, 1).permute(0, 2, 1))
+        x22 = x1.reshape(b * self.groups, c // self.groups, -1)  # b*g, c//g, hw
+        weights = (torch.matmul(x11, x12) + torch.matmul(x21, x22)).reshape(b * self.groups, 1, h, w)
+        return (group_x * weights.sigmoid()).reshape(b, c, h, w)
 
 
 class GeneralFusion(nn.Module):
@@ -1113,42 +1183,58 @@ class GeneralFusion(nn.Module):
 
 
 
-        self.deformselect = DAttentionBaseline(
-                (16,8), 1, 512, 1, 0.0, 0.0, 2,
+        self.combineway = 'EMA'
+        print('combineway:', self.combineway)
+
+        if self.combineway == 'deform':
+            self.deformselect = DAttentionBaseline(
+                (16, 8), 1, 512, 1, 0.0, 0.0, 2,
                 5.0, 4, True
             )
+        elif self.combineway == 'rwkvadd' or self.combineway == 'rwkvaddlinear':
+            rwkv_cfg = dict(
+                #n_embd=feat_dim,
+                #n_head=12,
+                n_layer=12,
+                layer_id=0,
+                shift_mode='q_shift_multihead',
+                shift_pixel=1,
+                drop_path=0,
+                hidden_rate=4,
+                init_mode='fancy',
+                key_norm=False,
+                with_cls_token=False,
+                with_cp=False,
 
-        rwkv_cfg = dict(
-            #n_embd=feat_dim,
-            #n_head=12,
-            n_layer=12,
-            layer_id=0,
-            shift_mode='q_shift_multihead',
-            shift_pixel=1,
-            drop_path=0,
-            hidden_rate=4,
-            init_mode='fancy',
-            key_norm=False,
-            with_cls_token=False,
-            with_cp=False,
+                ########
+                n_embd=feat_dim,
+                n_head=8,
+                init_values=1e-5,
+                post_norm=True,
 
-            ########
-            n_embd=feat_dim,
-            n_head=8,
-            init_values=1e-5,
-            post_norm=True,
+            )
 
-        )
+            self.rwkvblock_r = Block(**rwkv_cfg)
+            self.rwkvblock_n = Block(**rwkv_cfg)
+            self.rwkvblock_t = Block(**rwkv_cfg)
+            self.rwkvblock_rn = Block(**rwkv_cfg)
+            self.rwkvblock_rt = Block(**rwkv_cfg)
+            self.rwkvblock_nt = Block(**rwkv_cfg)
+            self.rwkvblock_rnt = Block(**rwkv_cfg)
+            #in_features = 128 +128 +128 + 256 +256 +256 + 384
+            self.linearrwkv = nn.Linear(feat_dim, feat_dim)
+        elif self.combineway == 'rwkvcross':
+            self.rwkvcross_r = RWKV_CrossAttention(feat_dim, n_query=1)
+            self.rwkvcross_n = RWKV_CrossAttention(feat_dim, n_query=1)
+            self.rwkvcross_t = RWKV_CrossAttention(feat_dim, n_query=1)
+            self.rwkvcross_rn = RWKV_CrossAttention(feat_dim, n_query=1)
+            self.rwkvcross_rt = RWKV_CrossAttention(feat_dim, n_query=1)
+            self.rwkvcross_nt = RWKV_CrossAttention(feat_dim, n_query=1)
+            self.rwkvcross_rnt = RWKV_CrossAttention(feat_dim, n_query=1)
+        elif self.combineway == 'EMA':
+            self.ema = EMA(feat_dim, factor=8)
 
-        self.rwkvblock_r = Block(**rwkv_cfg)
-        self.rwkvblock_n = Block(**rwkv_cfg)
-        self.rwkvblock_t = Block(**rwkv_cfg)
-        self.rwkvblock_rn = Block(**rwkv_cfg)
-        self.rwkvblock_rt = Block(**rwkv_cfg)
-        self.rwkvblock_nt = Block(**rwkv_cfg)
-        self.rwkvblock_rnt = Block(**rwkv_cfg)
-        #in_features = 128 +128 +128 + 256 +256 +256 + 384
-        self.linearrwkv = nn.Linear(feat_dim, feat_dim)
+
 
     def forward_HDMDeform(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
@@ -1403,6 +1489,104 @@ class GeneralFusion(nn.Module):
         RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
 
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
+    def forward_HDMcrossrwkv(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1)
+        n_global = NI_global.unsqueeze(1)
+        t_global = TI_global.unsqueeze(1)
+
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=1)
+        NI = torch.cat([n_global, NI_cash], dim=1)
+        TI = torch.cat([t_global, TI_cash], dim=1)
+        RGB_NI = torch.cat([RGB, NI], dim=1)
+        RGB_TI = torch.cat([RGB, TI], dim=1)
+        NI_TI = torch.cat([NI, TI], dim=1)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=1)
+        batch = RGB.size(0)
+
+        RGB_special = self.rwkvcross_r(RGB).squeeze()
+        NI_special = self.rwkvcross_n(NI).squeeze()
+        TI_special = self.rwkvcross_t(TI).squeeze()
+        RN_shared = self.rwkvcross_rn(RGB_NI).squeeze()
+        RT_shared = self.rwkvcross_rt(RGB_TI).squeeze()
+        NT_shared = self.rwkvcross_nt(NI_TI).squeeze()
+        RNT_shared = self.rwkvcross_rnt(RGB_NI_TI).squeeze()
+
+
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+    
+    
+    def forward_HDMema(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+
+        if self.datasetsname == 'RGBNT100':
+            height = 8
+        elif self.datasetsname == 'RGBNT201':
+            height = 16
+        else:
+            height = 16
+
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), height,-1,RGB_cash.size(2))
+        RGB_cash = RGB_cash.permute(0, 3, 1, 2)
+        RGB_cash = self.ema(RGB_cash)
+        RGB_cash = RGB_cash.permute(0, 2, 3, 1)
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), -1, RGB_cash.size(3))
+
+        NI_cash = NI_cash.reshape(NI_cash.size(0), height,-1,NI_cash.size(2))
+        NI_cash = NI_cash.permute(0, 3, 1, 2)
+        NI_cash = self.ema(NI_cash)
+        NI_cash = NI_cash.permute(0, 2, 3, 1)
+        NI_cash = NI_cash.reshape(NI_cash.size(0), -1, NI_cash.size(3))
+
+        TI_cash = TI_cash.reshape(TI_cash.size(0), height,-1,TI_cash.size(2))
+        TI_cash = TI_cash.permute(0, 3, 1, 2)
+        TI_cash = self.ema(TI_cash)
+        TI_cash = TI_cash.permute(0, 2, 3, 1)
+        TI_cash = TI_cash.reshape(TI_cash.size(0), -1, TI_cash.size(3))
+
+
+
+        # permute for the cross attn input
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+        batch = RGB.size(1)
+        # get the learnable token
+        r_embedding = self.r_token.repeat(1, batch, 1)
+        n_embedding = self.n_token.repeat(1, batch, 1)
+        t_embedding = self.t_token.repeat(1, batch, 1)
+        rn_embedding = self.rn_token.repeat(1, batch, 1)
+        rt_embedding = self.rt_token.repeat(1, batch, 1)
+        nt_embedding = self.nt_token.repeat(1, batch, 1)
+        rnt_embedding = self.rnt_token.repeat(1, batch, 1)
+
+        #从这里开始拿到的都是 BS 512 的特征也就是  B dIM
+        # for single modality
+        RGB_special = (self.r(r_embedding, RGB, RGB)[0]).permute(1, 2, 0).squeeze() #r_embedding, RGB, RGB 是 query, key, value, [0] 是 attn_output, 通用做法， permute(1, 2, 0) 是将 batch_size 放到最前面
+        NI_special = (self.n(n_embedding, NI, NI)[0]).permute(1, 2, 0).squeeze()
+        TI_special = (self.t(t_embedding, TI, TI)[0]).permute(1, 2, 0).squeeze()
+        # for double modality
+        RN_shared = (self.rn(rn_embedding, RGB_NI, RGB_NI)[0]).permute(1, 2, 0).squeeze()
+        RT_shared = (self.rt(rt_embedding, RGB_TI, RGB_TI)[0]).permute(1, 2, 0).squeeze()
+        NT_shared = (self.nt(nt_embedding, NI_TI, NI_TI)[0]).permute(1, 2, 0).squeeze()
+        # for triple modality
+        RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
     def forward_HDM(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
         r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
@@ -1454,8 +1638,26 @@ class GeneralFusion(nn.Module):
             return moe_feat
 
     def forward(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
-        RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrwpluslinear(
-            RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global) #融合
+        if self.combineway == 'deform':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMDeform(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'rwkvadd':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrw(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'rwkvaddlinear':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrwpluslinear(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'rwkvcross':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMcrossrwkv(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'EMA':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMema(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+            
+        else:
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDM(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+
         if self.training:
             if self.HDM and not self.ATM:
                 moe_feat = torch.cat(

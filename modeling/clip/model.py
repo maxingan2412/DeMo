@@ -456,7 +456,7 @@ class VisionTransformer(nn.Module):
 
         x = self.ln_pre(x)
 
-        x = x.permute(1, 0, 2)  # NLD -> LND
+        x = x.permute(1, 0, 2)  # NLD -> LND (LND = tokenamount,batch,dim)
         for i in range(len(self.transformer.resblocks)):
             if self.prompt_sign and self.adapter_sign:
                 if i == 0:
