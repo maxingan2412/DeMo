@@ -5,7 +5,7 @@ from modeling.backbones.t2t import t2t_vit_t_14, t2t_vit_t_24
 from fvcore.nn import flop_count
 from modeling.backbones.basic_cnn_params.flops import give_supported_ops
 import copy
-from modeling.meta_arch import build_transformer, weights_init_classifier, weights_init_kaiming
+from modeling.meta_arch import build_transformer, weights_init_classifier, weights_init_kaiming,VRWKV6
 from modeling.moe.AttnMOE import GeneralFusion, QuickGELU
 import torch
 
