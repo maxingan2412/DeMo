@@ -600,21 +600,43 @@ class VRWKV6(BaseBackbone):
                 outs.append(out)
         return tuple(outs)
 
+    # def load_param(self, trained_path):
+    #     print(f'Loading pretrained model from {trained_path}')
+    #     param_dict = torch.load(trained_path, map_location='cpu')
+    #     if 'state_dict' in param_dict:
+    #         param_dict = param_dict['state_dict']
+    #     model_dict = self.state_dict()
+    #
+    #     # 匹配形状再载入
+    #     for k in param_dict:
+    #         if k in model_dict and model_dict[k].shape == param_dict[k].shape:
+    #             model_dict[k].copy_(param_dict[k])
+    #         else:
+    #             print(f'Skip loading parameter: {k}')
     def load_param(self, trained_path):
         print(f'Loading pretrained model from {trained_path}')
-        param_dict = torch.load(trained_path, map_location='cpu')
-        if 'state_dict' in param_dict:
-            param_dict = param_dict['state_dict']
-        model_dict = self.state_dict()
+        checkpoint = torch.load(trained_path, map_location='cpu')
+        if 'state_dict' in checkpoint:
+            checkpoint = checkpoint['state_dict']
 
-        # 匹配形状再载入
-        for k in param_dict:
-            if k in model_dict and model_dict[k].shape == param_dict[k].shape:
-                model_dict[k].copy_(param_dict[k])
+        own_state = self.state_dict()
+        loaded_keys = []
+        skipped_keys = []
+
+        for name, param in checkpoint.items():
+            if name in own_state:
+                if own_state[name].shape == param.shape:
+                    own_state[name].copy_(param)
+                    loaded_keys.append(name)
+                else:
+                    skipped_keys.append(name)
+                    print(f' Shape mismatch for {name}: checkpoint {param.shape} != model {own_state[name].shape}')
             else:
-                print(f'Skip loading parameter: {k}')
+                skipped_keys.append(name)
+                print(f' Skipped {name} (not in current model)')
 
-
+        print(f'Loaded {len(loaded_keys)} params | ❌ Skipped {len(skipped_keys)}')
 
 # model = VRWKV6(embed_dims=768, num_heads=12, depth=12, with_cls_token=True)
 # model.load_param("path/to/vrwkv_pretrained.pth")
+# todo 把VRWKV6(embed_dims=768, num_heads=12, depth=12, with_cls_token=True) 参数搞对 写到里面 ，pretrain要加载进去， 2 修改v6可以读取 cvembed

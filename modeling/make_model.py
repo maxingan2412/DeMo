@@ -25,6 +25,7 @@ class DeMo(nn.Module):
             self.BACKBONE_T = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
         else:
             self.BACKBONE = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim) #bulid_transformer actually is backbone
+        # self.BACKBONE = VRWKV6(img_size=cfg.MODEL.IMG_SIZE, patch_size=cfg.MODEL.PATCH_SIZE,)  #写这里
         self.num_classes = num_classes #
         self.num_instance = cfg.DATALOADER.NUM_INSTANCE
         self.camera = camera_num
