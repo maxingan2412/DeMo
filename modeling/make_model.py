@@ -17,9 +17,15 @@ class DeMo(nn.Module):
             self.feat_dim = 768
         elif 'ViT-B-16' in cfg.MODEL.TRANSFORMER_TYPE:
             self.feat_dim = 512
-        self.BACKBONE = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
-        self.num_classes = num_classes #
+        #self.frozen = cfg.MODEL.FROZEN
         self.cfg = cfg
+        if cfg.MODEL.FROZEN:
+            self.BACKBONE_R = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
+            self.BACKBONE_N = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
+            self.BACKBONE_T = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
+        else:
+            self.BACKBONE = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim) #bulid_transformer actually is backbone
+        self.num_classes = num_classes #
         self.num_instance = cfg.DATALOADER.NUM_INSTANCE
         self.camera = camera_num
         self.view = view_num
@@ -105,9 +111,14 @@ class DeMo(nn.Module):
             RGB = x['RGB']
             NI = x['NI']
             TI = x['TI']
-            RGB_cash, RGB_global = self.BACKBONE(RGB, cam_label=cam_label, view_label=view_label) #RGB_cash 是除了cls token之外的所有token的特征
-            NI_cash, NI_global = self.BACKBONE(NI, cam_label=cam_label, view_label=view_label)
-            TI_cash, TI_global = self.BACKBONE(TI, cam_label=cam_label, view_label=view_label)
+            if self.cfg.MODEL.FROZEN:
+                RGB_cash, RGB_global = self.BACKBONE_R(RGB, cam_label=cam_label, view_label=view_label) #RGB_cash 是除了cls token之外的所有token的特征
+                NI_cash, NI_global = self.BACKBONE_N(NI, cam_label=cam_label, view_label=view_label)
+                TI_cash, TI_global = self.BACKBONE_T(TI, cam_label=cam_label, view_label=view_label)
+            else:
+                RGB_cash, RGB_global = self.BACKBONE(RGB, cam_label=cam_label, view_label=view_label) #RGB_cash 是除了cls token之外的所有token的特征
+                NI_cash, NI_global = self.BACKBONE(NI, cam_label=cam_label, view_label=view_label)
+                TI_cash, TI_global = self.BACKBONE(TI, cam_label=cam_label, view_label=view_label)
             if self.GLOBAL_LOCAL:
                 RGB_local = self.pool(RGB_cash.permute(0, 2, 1)).squeeze(-1)
                 NI_local = self.pool(NI_cash.permute(0, 2, 1)).squeeze(-1)
@@ -157,9 +168,14 @@ class DeMo(nn.Module):
 
             if 'cam_label' in x:
                 cam_label = x['cam_label']
-            RGB_cash, RGB_global = self.BACKBONE(RGB, cam_label=cam_label, view_label=view_label)
-            NI_cash, NI_global = self.BACKBONE(NI, cam_label=cam_label, view_label=view_label)
-            TI_cash, TI_global = self.BACKBONE(TI, cam_label=cam_label, view_label=view_label)
+            if self.cfg.MODEL.FROZEN:
+                RGB_cash, RGB_global = self.BACKBONE_R(RGB, cam_label=cam_label, view_label=view_label)
+                NI_cash, NI_global = self.BACKBONE_N(NI, cam_label=cam_label, view_label=view_label)
+                TI_cash, TI_global = self.BACKBONE_T(TI, cam_label=cam_label, view_label=view_label)
+            else:
+                RGB_cash, RGB_global = self.BACKBONE(RGB, cam_label=cam_label, view_label=view_label)
+                NI_cash, NI_global = self.BACKBONE(NI, cam_label=cam_label, view_label=view_label)
+                TI_cash, TI_global = self.BACKBONE(TI, cam_label=cam_label, view_label=view_label)
             if self.GLOBAL_LOCAL:
                 RGB_local = self.pool(RGB_cash.permute(0, 2, 1)).squeeze(-1)
                 NI_local = self.pool(NI_cash.permute(0, 2, 1)).squeeze(-1)

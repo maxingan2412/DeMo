@@ -21,7 +21,7 @@ import os
 from mmcv.runner.base_module import BaseModule, ModuleList
 
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 T_MAX = 256
 HEAD_SIZE = 64
@@ -478,7 +478,7 @@ class MoM(nn.Module):
 
 
 
-
+##
 class DAttentionBaseline(nn.Module):
 
     def __init__(
@@ -865,7 +865,7 @@ class DAttentionBaseline(nn.Module):
         dtype, device = x.dtype, x.device
         data = torch.cat([x, y, z], dim=1)
         reference = self._get_ref_points(H, W, B, self.ksize, self.stride, dtype, device) #这里好像是论文中的local mixer
-        if self.share_offset:
+        if self.share_offset: # shared
             pos_x, pos_y, pos_z, Hk, Wk = self.off_set_shared(data, reference)
         else:
             pos_x, pos_y, pos_z, Hk, Wk = self.off_set_unshared(data, reference)
@@ -1183,12 +1183,23 @@ class GeneralFusion(nn.Module):
 
 
 
-        self.combineway = 'EMA'
+        self.combineway = 'rwkvcross'
         print('combineway:', self.combineway)
+        logger = logging.getLogger("DeMo")
+        logger.info(f'combineway: {self.combineway}')
+        # loggernew = logging.getLogger("DeMo")
+        # loggernew.info(f'combineway: {self.combineway}')
 
         if self.combineway == 'deform':
+            if self.datasetsname == 'RGBNT201':
+                q_size = (16,8)
+            elif self.datasetsname == 'RGBNT100':
+                q_size = (8, 16)
+            else:
+                q_size = (8, 16)
+
             self.deformselect = DAttentionBaseline(
-                (16, 8), 1, 512, 1, 0.0, 0.0, 2,
+                q_size, 1, 512, 1, 0.0, 0.0, 2,
                 5.0, 4, True
             )
         elif self.combineway == 'rwkvadd' or self.combineway == 'rwkvaddlinear':
@@ -1233,6 +1244,27 @@ class GeneralFusion(nn.Module):
             self.rwkvcross_rnt = RWKV_CrossAttention(feat_dim, n_query=1)
         elif self.combineway == 'EMA':
             self.ema = EMA(feat_dim, factor=8)
+            self.ema_r = EMA(feat_dim, factor=8)
+            self.ema_n = EMA(feat_dim, factor=8)
+            self.ema_t = EMA(feat_dim, factor=8)
+        elif self.combineway == 'deema':
+            if self.datasetsname == 'RGBNT201':
+                q_size = (16,8)
+            elif self.datasetsname == 'RGBNT100':
+                q_size = (8, 16)
+            else:
+                q_size = (8, 16)
+
+            self.deformselect = DAttentionBaseline(
+                q_size, 1, 512, 1, 0.0, 0.0, 2,
+                5.0, 4, True
+            )
+            self.ema = EMA(feat_dim, factor=8)
+            self.ema_r = EMA(feat_dim, factor=8)
+            self.ema_n = EMA(feat_dim, factor=8)
+            self.ema_t = EMA(feat_dim, factor=8)
+
+
 
 
 
@@ -1252,9 +1284,16 @@ class GeneralFusion(nn.Module):
         NI_cash = NI_cash.permute(1, 2, 0)
         TI_cash = TI_cash.permute(1, 2, 0)
 
-        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), 16, 8)
-        NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), 16, 8)
-        TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), 16, 8)
+        if self.datasetsname == 'RGBNT100':
+            q_size = (8, 16)
+        elif self.datasetsname == 'RGBNT201':
+            q_size = (16, 8)
+        else:
+            q_size = (8, 16)
+
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), q_size[0], q_size[1])
+        NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), q_size[0], q_size[1])
+        TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), q_size[0], q_size[1])
 
         # B, C, H, W = RGB_cash.size()
         # dtype, device = RGB_cash.dtype, RGB_cash.device
@@ -1294,6 +1333,104 @@ class GeneralFusion(nn.Module):
 
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
 
+    def forward_HDMDeema(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+
+        # ema module-------------------------------------------
+        if self.datasetsname == 'RGBNT100':
+            height = 8
+        elif self.datasetsname == 'RGBNT201':
+            height = 16
+        else:
+            height = 8
+
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), height,-1,RGB_cash.size(2))
+        RGB_cash = RGB_cash.permute(0, 3, 1, 2)
+        RGB_cash = self.ema_r(RGB_cash)
+        RGB_cash = RGB_cash.permute(0, 2, 3, 1)
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), -1, RGB_cash.size(3))
+
+        NI_cash = NI_cash.reshape(NI_cash.size(0), height,-1,NI_cash.size(2))
+        NI_cash = NI_cash.permute(0, 3, 1, 2)
+        NI_cash = self.ema_n(NI_cash)
+        NI_cash = NI_cash.permute(0, 2, 3, 1)
+        NI_cash = NI_cash.reshape(NI_cash.size(0), -1, NI_cash.size(3))
+
+        TI_cash = TI_cash.reshape(TI_cash.size(0), height,-1,TI_cash.size(2))
+        TI_cash = TI_cash.permute(0, 3, 1, 2)
+        TI_cash = self.ema_t(TI_cash)
+        TI_cash = TI_cash.permute(0, 2, 3, 1)
+        TI_cash = TI_cash.reshape(TI_cash.size(0), -1, TI_cash.size(3))
+        #-------------------------------------------
+
+        # permute for the cross attn input
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+
+        # token selectect 用可变哪个东西
+        RGB_cash = RGB_cash.permute(1, 2, 0)
+        NI_cash = NI_cash.permute(1, 2, 0)
+        TI_cash = TI_cash.permute(1, 2, 0)
+
+        if self.datasetsname == 'RGBNT100':
+            q_size = (8, 16)
+        elif self.datasetsname == 'RGBNT201':
+            q_size = (16, 8)
+        else:
+            q_size = (8, 16)
+
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), q_size[0], q_size[1])
+        NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), q_size[0], q_size[1])
+        TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), q_size[0], q_size[1])
+
+        # B, C, H, W = RGB_cash.size()
+        # dtype, device = RGB_cash.dtype, RGB_cash.device
+        # data = torch.cat([RGB_cash, NI_cash, TI_cash], dim=1)
+        RGB_cash, NI_cash, TI_cash = self.deformselect(RGB_cash, NI_cash, TI_cash)
+
+        # get the embedding
+        withglobal = False
+        if withglobal:
+            RGB = torch.cat([r_global, RGB_cash], dim=0)
+            NI = torch.cat([n_global, NI_cash], dim=0)
+            TI = torch.cat([t_global, TI_cash], dim=0)
+        else:
+            RGB = RGB_cash
+            NI = NI_cash
+            TI = TI_cash
+
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+        batch = RGB.size(1)
+        # get the learnable token
+        r_embedding = self.r_token.repeat(1, batch, 1)
+        n_embedding = self.n_token.repeat(1, batch, 1)
+        t_embedding = self.t_token.repeat(1, batch, 1)
+        rn_embedding = self.rn_token.repeat(1, batch, 1)
+        rt_embedding = self.rt_token.repeat(1, batch, 1)
+        nt_embedding = self.nt_token.repeat(1, batch, 1)
+        rnt_embedding = self.rnt_token.repeat(1, batch, 1)
+
+        # for single modality
+        RGB_special = (self.r(r_embedding, RGB, RGB)[0]).permute(1, 2,
+                                                                 0).squeeze()  # r_embedding, RGB, RGB 是 query, key, value, [0] 是 attn_output, 通用做法， permute(1, 2, 0) 是将 batch_size 放到最前面
+        NI_special = (self.n(n_embedding, NI, NI)[0]).permute(1, 2, 0).squeeze()
+        TI_special = (self.t(t_embedding, TI, TI)[0]).permute(1, 2, 0).squeeze()
+        # for double modality
+        RN_shared = (self.rn(rn_embedding, RGB_NI, RGB_NI)[0]).permute(1, 2, 0).squeeze()
+        RT_shared = (self.rt(rt_embedding, RGB_TI, RGB_TI)[0]).permute(1, 2, 0).squeeze()
+        NT_shared = (self.nt(nt_embedding, NI_TI, NI_TI)[0]).permute(1, 2, 0).squeeze()
+        # for triple modality
+        RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
     def forward_HDMrw(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
         r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
@@ -1317,7 +1454,7 @@ class GeneralFusion(nn.Module):
         elif self.datasetsname == 'RGBNT201':
             patch_resolution = (16, 8)
         else:
-            patch_resolution = (16, 8)
+            patch_resolution = (8, 16)
 
         RGB_cash = RGB_cash.permute(1, 0, 2)
         NI_cash = NI_cash.permute(1, 0, 2)
@@ -1406,7 +1543,7 @@ class GeneralFusion(nn.Module):
         elif self.datasetsname == 'RGBNT201':
             patch_resolution = (16, 8)
         else:
-            patch_resolution = (16, 8)
+            patch_resolution = (8, 16)
 
         RGB_cash = RGB_cash.permute(1, 0, 2)
         NI_cash = NI_cash.permute(1, 0, 2)
@@ -1530,23 +1667,23 @@ class GeneralFusion(nn.Module):
         elif self.datasetsname == 'RGBNT201':
             height = 16
         else:
-            height = 16
+            height = 8
 
         RGB_cash = RGB_cash.reshape(RGB_cash.size(0), height,-1,RGB_cash.size(2))
         RGB_cash = RGB_cash.permute(0, 3, 1, 2)
-        RGB_cash = self.ema(RGB_cash)
+        RGB_cash = self.ema_r(RGB_cash)
         RGB_cash = RGB_cash.permute(0, 2, 3, 1)
         RGB_cash = RGB_cash.reshape(RGB_cash.size(0), -1, RGB_cash.size(3))
 
         NI_cash = NI_cash.reshape(NI_cash.size(0), height,-1,NI_cash.size(2))
         NI_cash = NI_cash.permute(0, 3, 1, 2)
-        NI_cash = self.ema(NI_cash)
+        NI_cash = self.ema_n(NI_cash)
         NI_cash = NI_cash.permute(0, 2, 3, 1)
         NI_cash = NI_cash.reshape(NI_cash.size(0), -1, NI_cash.size(3))
 
         TI_cash = TI_cash.reshape(TI_cash.size(0), height,-1,TI_cash.size(2))
         TI_cash = TI_cash.permute(0, 3, 1, 2)
-        TI_cash = self.ema(TI_cash)
+        TI_cash = self.ema_t(TI_cash)
         TI_cash = TI_cash.permute(0, 2, 3, 1)
         TI_cash = TI_cash.reshape(TI_cash.size(0), -1, TI_cash.size(3))
 
@@ -1652,6 +1789,9 @@ class GeneralFusion(nn.Module):
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
         elif self.combineway == 'EMA':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMema(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'deema':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMDeema(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
             
         else:
