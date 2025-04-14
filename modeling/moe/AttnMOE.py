@@ -25,20 +25,22 @@ from mmcv.runner.base_module import BaseModule, ModuleList
 
 T_MAX = 256
 HEAD_SIZE = 64
-from torch.utils.cpp_extension import load
+userwkvblock = False
+if userwkvblock:
+    from torch.utils.cpp_extension import load
 
-cur_dir = os.path.dirname(os.path.abspath(__file__))  # 当前是 backbones/
-cuda_dir = os.path.join(cur_dir, "cuda_v6")
-wkv6_cuda = load(name="wkv6",
-                 sources=[
-                     os.path.join(cuda_dir, "wkv6_op.cpp"),
-                     os.path.join(cuda_dir, "wkv6_cuda.cu"),
-                 ],
-                 verbose=True, extra_cuda_cflags=["-res-usage", "--use_fast_math",
-                 "-O3", "-Xptxas -O3",
-                 "--extra-device-vectorization", f"-D_N_={HEAD_SIZE}",
-                 f"-D_T_={T_MAX}"])
-
+    cur_dir = os.path.dirname(os.path.abspath(__file__))  # 当前是 backbones/
+    cuda_dir = os.path.join(cur_dir, "cuda_v6")
+    wkv6_cuda = load(name="wkv6",
+                     sources=[
+                         os.path.join(cuda_dir, "wkv6_op.cpp"),
+                         os.path.join(cuda_dir, "wkv6_cuda.cu"),
+                     ],
+                     verbose=True, extra_cuda_cflags=["-res-usage", "--use_fast_math",
+                     "-O3", "-Xptxas -O3",
+                     "--extra-device-vectorization", f"-D_N_={HEAD_SIZE}",
+                     f"-D_T_={T_MAX}"])
+#
 class WKV_6(torch.autograd.Function):
     @staticmethod
     def forward(ctx, B, T, C, H, r, k, v, w, u):
