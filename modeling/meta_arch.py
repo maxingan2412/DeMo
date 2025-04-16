@@ -50,19 +50,21 @@ from mmcls.models.backbones.base_backbone import BaseBackbone
 
 T_MAX = 256
 HEAD_SIZE = 64
-from torch.utils.cpp_extension import load
+rwkvbackbone = False
+if rwkvbackbone:
+    from torch.utils.cpp_extension import load
 
-cur_dir = os.path.dirname(os.path.abspath(__file__))  # 当前是 backbones/
-cuda_dir = os.path.join(cur_dir, "cuda_v6")
-wkv6_cuda = load(name="wkv6",
-                 sources=[
-                     os.path.join(cuda_dir, "wkv6_op.cpp"),
-                     os.path.join(cuda_dir, "wkv6_cuda.cu"),
-                 ],
-                 verbose=True, extra_cuda_cflags=["-res-usage", "--use_fast_math",
-                 "-O3", "-Xptxas -O3",
-                 "--extra-device-vectorization", f"-D_N_={HEAD_SIZE}",
-                 f"-D_T_={T_MAX}"])
+    cur_dir = os.path.dirname(os.path.abspath(__file__))  # 当前是 backbones/
+    cuda_dir = os.path.join(cur_dir, "cuda_v6")
+    wkv6_cuda = load(name="wkv6",
+                     sources=[
+                         os.path.join(cuda_dir, "wkv6_op.cpp"),
+                         os.path.join(cuda_dir, "wkv6_cuda.cu"),
+                     ],
+                     verbose=True, extra_cuda_cflags=["-res-usage", "--use_fast_math",
+                     "-O3", "-Xptxas -O3",
+                     "--extra-device-vectorization", f"-D_N_={HEAD_SIZE}",
+                     f"-D_T_={T_MAX}"])
 
 class WKV_6(torch.autograd.Function):
     @staticmethod
@@ -470,33 +472,46 @@ class build_transformer(nn.Module):
 @BACKBONES.register_module()
 class VRWKV6(BaseBackbone):
     def __init__(self,
-                 img_size=224,
+                 img_size=(128,256),
                  patch_size=16,
                  in_channels=3,
                  out_indices=-1,
                  drop_rate=0.,
-                 embed_dims=192,
-                 num_heads=3,
+                 embed_dims=1024,
+                 num_heads=16,
                  depth=12,
-                 drop_path_rate=0.,
+                 drop_path_rate=0.5,
                  shift_pixel=1,
                  shift_mode='q_shift_multihead',
                  init_mode='fancy',
-                 post_norm=False,
+                 post_norm=True,
                  key_norm=False,
-                 init_values=None,
+                 init_values=1e-5,
                  hidden_rate=4,
                  final_norm=True,
                  interpolate_mode='bicubic',
-                 output_cls_token=False,
-                 with_cls_token=False,
+
+                 output_cls_token=True,
+                 with_cls_token=True,
                  with_cp=False,
-                 init_cfg=None):
+                 init_cfg=None,
+                 #######
+                 camera_num=0,
+                 cfg = None,
+                 num_classes=0,):
         super().__init__(init_cfg)
         self.embed_dims = embed_dims
         self.num_extra_tokens = 0
         self.num_layers = depth
         self.drop_path_rate = drop_path_rate
+
+        ######
+        self.camera_num = camera_num
+        self.cv_embed = nn.Parameter(torch.zeros(camera_num, 1, embed_dims))
+        trunc_normal_(self.cv_embed, std=.02)
+        print('camera number is : {}'.format(camera_num))
+        self.num_classes = num_classes
+
 
         # Set cls token
         if output_cls_token:
@@ -561,21 +576,28 @@ class VRWKV6(BaseBackbone):
         if final_norm:
             self.ln1 = nn.LayerNorm(self.embed_dims)
 
-    def forward(self, x):
+    def forward(self, x, cam_label=None,view_label=None):
         B = x.shape[0]
         x, patch_resolution = self.patch_embed(x)
 
+        ########
+        cv_embed = self.cv_embed[cam_label]
+
+
+        # pos embed
         x = x + resize_pos_embed(
             self.pos_embed,
             self.patch_resolution,
             patch_resolution,
             mode=self.interpolate_mode,
             num_extra_tokens=self.num_extra_tokens)
+        # cls added
         if self.with_cls_token:
             cls_tokens = self.cls_token.expand(B, -1, -1)
             x = torch.cat((x, cls_tokens), dim=1)  # post cls_token
-
+        x[:, 0] = x[:, 0] + cv_embed.squeeze(1)
         x = self.drop_after_pos(x)
+
 
         outs = []
         for i, layer in enumerate(self.layers):
@@ -598,7 +620,8 @@ class VRWKV6(BaseBackbone):
                 else:
                     out = patch_token
                 outs.append(out)
-        return tuple(outs)
+        return tuple(outs[0])
+        #return outs[0]
 
     # def load_param(self, trained_path):
     #     print(f'Loading pretrained model from {trained_path}')
@@ -614,28 +637,61 @@ class VRWKV6(BaseBackbone):
     #         else:
     #             print(f'Skip loading parameter: {k}')
     def load_param(self, trained_path):
-        print(f'Loading pretrained model from {trained_path}')
+        print(f'🔄 Loading pretrained model from {trained_path}')
         checkpoint = torch.load(trained_path, map_location='cpu')
         if 'state_dict' in checkpoint:
             checkpoint = checkpoint['state_dict']
 
-        own_state = self.state_dict()
-        loaded_keys = []
-        skipped_keys = []
+        # 去掉前缀 'backbone.'
+        new_state_dict = {}
+        for k, v in checkpoint.items():
+            if k.startswith('backbone.'):
+                new_key = k[len('backbone.'):]  # 删除前缀
+                new_state_dict[new_key] = v
 
-        for name, param in checkpoint.items():
-            if name in own_state:
-                if own_state[name].shape == param.shape:
-                    own_state[name].copy_(param)
+        model_state = self.state_dict()
+        loaded_keys = []
+        shape_mismatch = []
+        not_in_model = []
+        not_in_ckpt = []
+
+        # 加载 checkpoint 中有的参数
+        for name, param in new_state_dict.items():
+            if name in model_state:
+                if model_state[name].shape == param.shape:
+                    model_state[name].copy_(param)
                     loaded_keys.append(name)
                 else:
-                    skipped_keys.append(name)
-                    print(f' Shape mismatch for {name}: checkpoint {param.shape} != model {own_state[name].shape}')
+                    shape_mismatch.append((name, model_state[name].shape, param.shape))
             else:
-                skipped_keys.append(name)
-                print(f' Skipped {name} (not in current model)')
+                not_in_model.append((name, param.shape))
 
-        print(f'Loaded {len(loaded_keys)} params | ❌ Skipped {len(skipped_keys)}')
+        # 额外：模型中有，但 ckpt 中没有的 key
+        for name in model_state.keys():
+            if name not in new_state_dict:
+                not_in_ckpt.append((name, model_state[name].shape))
+
+        # 输出统计信息
+        print(f'✅ Loaded {len(loaded_keys)} params')
+        print(f'❌ Skipped shape mismatches: {len(shape_mismatch)}')
+        print(f'❌ Skipped (not in model): {len(not_in_model)}')
+        print(f'❌ Model params missing in ckpt: {len(not_in_ckpt)}')
+
+        # 详细打印
+        if shape_mismatch:
+            print(f'\n⚠️ Shape mismatches:')
+            for name, m_shape, c_shape in shape_mismatch:
+                print(f' - {name}\n     🧩 model: {m_shape}, 📦 ckpt: {c_shape}')
+
+        if not_in_model:
+            print(f'\n⛔ Params in ckpt but not in model:')
+            for name, shape in not_in_model:
+                print(f' - {name}\n     📦 ckpt shape: {shape}')
+
+        if not_in_ckpt:
+            print(f'\n🟡 Params in model but not in ckpt:')
+            for name, shape in not_in_ckpt:
+                print(f' - {name}\n     🧩 model shape: {shape}')
 
 # model = VRWKV6(embed_dims=768, num_heads=12, depth=12, with_cls_token=True)
 # model.load_param("path/to/vrwkv_pretrained.pth")

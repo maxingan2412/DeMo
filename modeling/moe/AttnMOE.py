@@ -1185,7 +1185,7 @@ class GeneralFusion(nn.Module):
 
 
 
-        self.combineway = 'rwkvcross'
+        self.combineway = 'normal'
         print('combineway:', self.combineway)
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')

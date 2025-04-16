@@ -8,6 +8,7 @@ import copy
 from modeling.meta_arch import build_transformer, weights_init_classifier, weights_init_kaiming,VRWKV6
 from modeling.moe.AttnMOE import GeneralFusion, QuickGELU
 import torch
+import os
 
 
 class DeMo(nn.Module):
@@ -17,15 +18,29 @@ class DeMo(nn.Module):
             self.feat_dim = 768
         elif 'ViT-B-16' in cfg.MODEL.TRANSFORMER_TYPE:
             self.feat_dim = 512
+
         #self.frozen = cfg.MODEL.FROZEN
+        self.rwkvbackbone = False
+        if self.rwkvbackbone:
+            # for rwkv
+            self.feat_dim = 1024
+
+        print('using rwkv backbone',self.rwkvbackbone)
         self.cfg = cfg
         if cfg.MODEL.FROZEN:
             self.BACKBONE_R = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
             self.BACKBONE_N = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
             self.BACKBONE_T = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
         else:
-            self.BACKBONE = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim) #bulid_transformer actually is backbone
-        # self.BACKBONE = VRWKV6(img_size=cfg.MODEL.IMG_SIZE, patch_size=cfg.MODEL.PATCH_SIZE,)  #写这里
+
+            if self.rwkvbackbone:
+                self.BACKBONE = VRWKV6(img_size=(cfg.INPUT.SIZE_TRAIN[0],cfg.INPUT.SIZE_TRAIN[1]), cfg =cfg,num_classes = num_classes, camera_num = camera_num,embed_dims = self.feat_dim)  #写这里
+                current_dir = os.getcwd()
+                model_path = os.path.join(current_dir, 'vrwkv_l_in22k_192.pth')
+                self.BACKBONE.load_param(model_path)
+            else:
+                self.BACKBONE = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim) #bulid_transformer actually is backbone
+
         self.num_classes = num_classes #
         self.num_instance = cfg.DATALOADER.NUM_INSTANCE
         self.camera = camera_num
@@ -120,6 +135,13 @@ class DeMo(nn.Module):
                 RGB_cash, RGB_global = self.BACKBONE(RGB, cam_label=cam_label, view_label=view_label) #RGB_cash 是除了cls token之外的所有token的特征
                 NI_cash, NI_global = self.BACKBONE(NI, cam_label=cam_label, view_label=view_label)
                 TI_cash, TI_global = self.BACKBONE(TI, cam_label=cam_label, view_label=view_label)
+                if self.rwkvbackbone:
+                    RGB_cash = RGB_cash.reshape(RGB_cash.shape[0], RGB_cash.shape[1], -1).permute(0, 2, 1)
+                    NI_cash = NI_cash.reshape(NI_cash.shape[0], NI_cash.shape[1], -1).permute(0, 2, 1)
+                    TI_cash = TI_cash.reshape(TI_cash.shape[0], TI_cash.shape[1], -1).permute(0, 2, 1)
+
+
+
             if self.GLOBAL_LOCAL:
                 RGB_local = self.pool(RGB_cash.permute(0, 2, 1)).squeeze(-1)
                 NI_local = self.pool(NI_cash.permute(0, 2, 1)).squeeze(-1)
@@ -177,6 +199,11 @@ class DeMo(nn.Module):
                 RGB_cash, RGB_global = self.BACKBONE(RGB, cam_label=cam_label, view_label=view_label)
                 NI_cash, NI_global = self.BACKBONE(NI, cam_label=cam_label, view_label=view_label)
                 TI_cash, TI_global = self.BACKBONE(TI, cam_label=cam_label, view_label=view_label)
+                if self.rwkvbackbone:
+                    RGB_cash = RGB_cash.reshape(RGB_cash.shape[0], RGB_cash.shape[1], -1).permute(0, 2, 1)
+                    NI_cash = NI_cash.reshape(NI_cash.shape[0], NI_cash.shape[1], -1).permute(0, 2, 1)
+                    TI_cash = TI_cash.reshape(TI_cash.shape[0], TI_cash.shape[1], -1).permute(0, 2, 1)
+
             if self.GLOBAL_LOCAL:
                 RGB_local = self.pool(RGB_cash.permute(0, 2, 1)).squeeze(-1)
                 NI_local = self.pool(NI_cash.permute(0, 2, 1)).squeeze(-1)
