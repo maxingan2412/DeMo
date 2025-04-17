@@ -50,7 +50,7 @@ from mmcls.models.backbones.base_backbone import BaseBackbone
 
 T_MAX = 256
 HEAD_SIZE = 64
-rwkvbackbone = False
+rwkvbackbone = True
 if rwkvbackbone:
     from torch.utils.cpp_extension import load
 
@@ -467,6 +467,27 @@ class build_transformer(nn.Module):
         print('Loading pretrained model for finetuning from {}'.format(model_path))
 
 
+import math
+import torch.nn.functional as F
+
+def resize_pos_embedfromclip(posemb, posemb_new, hight, width,cfg=None):
+    # Rescale the grid of position embeddings when loading from state_dict. Adapted from
+    # https://github.com/google-research/vision_transformer/blob/00883dd691c63a6830751563748663526e811cee/vit_jax/checkpoint.py#L224
+
+    print('Resized position embedding: %s to %s', posemb.shape, posemb_new.shape)
+
+    ntok_new = posemb_new.shape[0]  # 129,2048
+
+    posemb_token, posemb_grid = posemb[:1], posemb[1:]
+    ntok_new -= 1
+
+    gs_old = int(math.sqrt(len(posemb_grid)))  # 14
+    print('Position embedding resize to height:{} width: {}'.format(hight, width))
+    posemb_grid = posemb_grid.reshape(1, gs_old, gs_old, -1).permute(0, 3, 1, 2)
+    posemb_grid = F.interpolate(posemb_grid, size=(hight, width), mode='bilinear')
+    posemb_grid = posemb_grid.permute(0, 2, 3, 1).reshape(1, hight * width, -1)
+    posemb = torch.cat([posemb_token, posemb_grid.squeeze()], dim=0)
+    return posemb
 
 
 @BACKBONES.register_module()
@@ -477,8 +498,8 @@ class VRWKV6(BaseBackbone):
                  in_channels=3,
                  out_indices=-1,
                  drop_rate=0.,
-                 embed_dims=1024,
-                 num_heads=16,
+                 embed_dims=768,
+                 num_heads=12,
                  depth=12,
                  drop_path_rate=0.5,
                  shift_pixel=1,
@@ -578,7 +599,7 @@ class VRWKV6(BaseBackbone):
 
     def forward(self, x, cam_label=None,view_label=None):
         B = x.shape[0]
-        x, patch_resolution = self.patch_embed(x)
+        x, patch_resolution = self.patch_embed(x) # patch_resolution = (16, 8)
 
         ########
         cv_embed = self.cv_embed[cam_label]
@@ -648,6 +669,19 @@ class VRWKV6(BaseBackbone):
             if k.startswith('backbone.'):
                 new_key = k[len('backbone.'):]  # 删除前缀
                 new_state_dict[new_key] = v
+
+        # posembedding
+        # new_state_dict['pos_embed'] = resize_pos_embed(
+        #     new_state_dict['pos_embed'], self.pos_embed, self.patch_resolution[0], self.patch_resolution[1], cfg=None)
+
+        # resize_pos_embed(
+        #     new_state_dict['pos_embed'],
+        #     self.patch_resolution,
+        #     patch_resolution,
+        #     mode=self.interpolate_mode,
+        #     num_extra_tokens=self.num_extra_tokens)
+        new_state_dict['pos_embed'] = resize_pos_embed(new_state_dict['pos_embed'],(14,14), (self.patch_resolution[0], self.patch_resolution[1]), mode=self.interpolate_mode, num_extra_tokens=self.num_extra_tokens)
+
 
         model_state = self.state_dict()
         loaded_keys = []

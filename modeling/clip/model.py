@@ -677,7 +677,7 @@ def build_model(cfg, state_dict: dict, h_resolution: int, w_resolution: int, vis
                  context_length, vocab_size, transformer_width, transformer_heads, transformer_layers,
                  h_resolution, w_resolution
                  )
-    if vit:
+    if vit: # resize the positional embedding in pth
         state_dict["visual.positional_embedding"] = resize_pos_embed(state_dict["visual.positional_embedding"],
                                                                      model.visual.positional_embedding, h_resolution,
                                                                      w_resolution,cfg)

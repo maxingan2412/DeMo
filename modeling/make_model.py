@@ -10,22 +10,24 @@ from modeling.moe.AttnMOE import GeneralFusion, QuickGELU
 import torch
 import os
 
-
 class DeMo(nn.Module):
     def __init__(self, num_classes, cfg, camera_num, view_num, factory):
         super(DeMo, self).__init__()
+        self.rwkvbackbone = False
         if 'vit_base_patch16_224' in cfg.MODEL.TRANSFORMER_TYPE:
             self.feat_dim = 768
         elif 'ViT-B-16' in cfg.MODEL.TRANSFORMER_TYPE:
             self.feat_dim = 512
-
+        elif 'VRWKV6BASE' in cfg.MODEL.TRANSFORMER_TYPE:
+            self.feat_dim = 768
+            self.rwkvbackbone = True
         #self.frozen = cfg.MODEL.FROZEN
-        self.rwkvbackbone = False
-        if self.rwkvbackbone:
-            # for rwkv
-            self.feat_dim = 1024
+        # self.rwkvbackbone = True
+        # if self.rwkvbackbone:
+        #     # for rwkv
+        #     self.feat_dim = 768
 
-        print('using rwkv backbone',self.rwkvbackbone)
+            print('using rwkv backbone')
         self.cfg = cfg
         if cfg.MODEL.FROZEN:
             self.BACKBONE_R = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
@@ -34,9 +36,10 @@ class DeMo(nn.Module):
         else:
 
             if self.rwkvbackbone:
-                self.BACKBONE = VRWKV6(img_size=(cfg.INPUT.SIZE_TRAIN[0],cfg.INPUT.SIZE_TRAIN[1]), cfg =cfg,num_classes = num_classes, camera_num = camera_num,embed_dims = self.feat_dim)  #写这里
+                self.BACKBONE = VRWKV6(img_size=(cfg.INPUT.SIZE_TRAIN[0],cfg.INPUT.SIZE_TRAIN[1]), cfg =cfg,num_classes = num_classes, camera_num = camera_num,embed_dims = self.feat_dim,num_heads = 12)  #写这里
                 current_dir = os.getcwd()
-                model_path = os.path.join(current_dir, 'vrwkv_l_in22k_192.pth')
+
+                model_path = os.path.join(current_dir, 'vrwkv6_b_in1k_224.pth')
                 self.BACKBONE.load_param(model_path)
             else:
                 self.BACKBONE = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim) #bulid_transformer actually is backbone
