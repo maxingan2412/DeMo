@@ -9,7 +9,7 @@ MODEL:
   GLOBAL_LOCAL: True
   HDM: True
   ATM: True
-  HEAD: 4 # orginal 4
+  HEAD: 4  # orginal 4, which is in GeneralFusion is heads of MultiheadAttention of cross attention
   FROZEN: False
 
 INPUT:

@@ -8,12 +8,12 @@ def make_optimizer(cfg, model, center_criterion):
             continue
         lr = cfg.SOLVER.BASE_LR
         weight_decay = cfg.SOLVER.WEIGHT_DECAY
+        #if cfg.MODEL.TRANSFORMER_TYPE != 'VRWKV6BASE':
+        if "bias" in key:
+            lr = cfg.SOLVER.BASE_LR * cfg.SOLVER.BIAS_LR_FACTOR
+            weight_decay = cfg.SOLVER.WEIGHT_DECAY_BIAS
+
         if cfg.MODEL.TRANSFORMER_TYPE != 'VRWKV6BASE':
-            if "bias" in key:
-                lr = cfg.SOLVER.BASE_LR * cfg.SOLVER.BIAS_LR_FACTOR
-                weight_decay = cfg.SOLVER.WEIGHT_DECAY_BIAS
-
-
             if cfg.MODEL.TRANSFORMER_TYPE == 'ViT-B-16':  # this setting is for the CLIP pre-trained models
                 if not cfg.MODEL.FROZEN:
                     if "base" in key:

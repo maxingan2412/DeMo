@@ -616,7 +616,7 @@ class VRWKV6(BaseBackbone):
         if self.with_cls_token:
             cls_tokens = self.cls_token.expand(B, -1, -1)
             x = torch.cat((x, cls_tokens), dim=1)  # post cls_token
-        x[:, 0] = x[:, 0] + cv_embed.squeeze(1)
+       # x[:, 0] = x[:, 0] + cv_embed.squeeze(1)
         x = self.drop_after_pos(x)
 
 
@@ -642,21 +642,7 @@ class VRWKV6(BaseBackbone):
                     out = patch_token
                 outs.append(out)
         return tuple(outs[0])
-        #return outs[0]
 
-    # def load_param(self, trained_path):
-    #     print(f'Loading pretrained model from {trained_path}')
-    #     param_dict = torch.load(trained_path, map_location='cpu')
-    #     if 'state_dict' in param_dict:
-    #         param_dict = param_dict['state_dict']
-    #     model_dict = self.state_dict()
-    #
-    #     # 匹配形状再载入
-    #     for k in param_dict:
-    #         if k in model_dict and model_dict[k].shape == param_dict[k].shape:
-    #             model_dict[k].copy_(param_dict[k])
-    #         else:
-    #             print(f'Skip loading parameter: {k}')
     def load_param(self, trained_path):
         print(f'🔄 Loading pretrained model from {trained_path}')
         checkpoint = torch.load(trained_path, map_location='cpu')
