@@ -28,10 +28,10 @@ output_dir="./${dataset_name}-${model_name}/${exp_name}_${timestamp}"
 mkdir -p "$output_dir"
 
 # 启动训练
-python train_net.py --config_file "$config_file" OUTPUT_DIR "$output_dir"
+python train_net.py --config_file "$config_file" OUTPUT_DIR "$output_dir" 2>&1 | tee "$output_dir/train.log"
 
 
-
+#./runrgbnt100.sh 3 rwkv6bback_nocvembed_allfalse configs/RGBNT100/rwkv6demo.yml
 
 ## 用默认设置
 #./run.sh

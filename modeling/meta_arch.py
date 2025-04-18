@@ -50,7 +50,7 @@ from mmcls.models.backbones.base_backbone import BaseBackbone
 
 T_MAX = 256
 HEAD_SIZE = 64
-rwkvbackbone = True
+rwkvbackbone = False
 if rwkvbackbone:
     from torch.utils.cpp_extension import load
 

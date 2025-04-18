@@ -1152,6 +1152,42 @@ class EMA(nn.Module):
         weights = (torch.matmul(x11, x12) + torch.matmul(x21, x22)).reshape(b * self.groups, 1, h, w)
         return (group_x * weights.sigmoid()).reshape(b, c, h, w)
 
+import torch
+import torch.nn as nn
+
+class TokenSE(nn.Module):
+    def __init__(self, token_dim, reduction=4, use_residual=True):
+        """
+        Args:
+            token_dim (int): 输入 token 的数量 T
+            reduction (int): 通道缩减比例
+            use_residual (bool): 是否使用残差连接
+        """
+        super().__init__()
+        self.use_residual = use_residual
+
+        self.fc = nn.Sequential(
+            nn.Linear(token_dim, token_dim // reduction, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(token_dim // reduction, token_dim, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        """
+        x: [B, T, N] - B=batch, T=token数, N=每个token的特征维度
+        """
+        B, T, N = x.shape
+        # squeeze: 在特征维度上聚合
+        s = x.mean(dim=2)           # [B, T]
+        weights = self.fc(s)        # [B, T]
+        weights = weights.unsqueeze(2)  # [B, T, 1]
+
+        # scale: token加权
+        if self.use_residual:
+            return x * weights + x
+        else:
+            return x * weights
 
 class GeneralFusion(nn.Module):
     def __init__(self, feat_dim, num_experts, head, reg_weight=0.1, dropout=0.1, cfg=None):
@@ -1185,7 +1221,7 @@ class GeneralFusion(nn.Module):
 
 
 
-        self.combineway = 'normal'
+        self.combineway = 'sedeform'
         print('combineway:', self.combineway)
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')
@@ -1204,6 +1240,21 @@ class GeneralFusion(nn.Module):
                 q_size, 1, 512, 1, 0.0, 0.0, 2,
                 5.0, 4, True
             )
+        elif self.combineway == 'sedeform':
+            if self.datasetsname == 'RGBNT201':
+                q_size = (16, 8)
+            elif self.datasetsname == 'RGBNT100':
+                q_size = (8, 16)
+            else:
+                q_size = (8, 16)
+
+            self.deformselect = DAttentionBaseline(
+                q_size, 1, 512, 1, 0.0, 0.0, 2,
+                5.0, 4, True
+            )
+            self.tokense_r = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
+            self.tokense_n = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
+            self.tokense_t = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
         elif self.combineway == 'rwkvadd' or self.combineway == 'rwkvaddlinear':
             rwkv_cfg = dict(
                 #n_embd=feat_dim,
@@ -1285,6 +1336,70 @@ class GeneralFusion(nn.Module):
         RGB_cash = RGB_cash.permute(1, 2, 0)
         NI_cash = NI_cash.permute(1, 2, 0)
         TI_cash = TI_cash.permute(1, 2, 0)
+
+        if self.datasetsname == 'RGBNT100':
+            q_size = (8, 16)
+        elif self.datasetsname == 'RGBNT201':
+            q_size = (16, 8)
+        else:
+            q_size = (8, 16)
+
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), q_size[0], q_size[1])
+        NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), q_size[0], q_size[1])
+        TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), q_size[0], q_size[1])
+
+        # B, C, H, W = RGB_cash.size()
+        # dtype, device = RGB_cash.dtype, RGB_cash.device
+        # data = torch.cat([RGB_cash, NI_cash, TI_cash], dim=1)
+        RGB_cash,NI_cash,TI_cash = self.deformselect(RGB_cash, NI_cash, TI_cash)
+
+
+
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+        batch = RGB.size(1)
+        # get the learnable token
+        r_embedding = self.r_token.repeat(1, batch, 1)
+        n_embedding = self.n_token.repeat(1, batch, 1)
+        t_embedding = self.t_token.repeat(1, batch, 1)
+        rn_embedding = self.rn_token.repeat(1, batch, 1)
+        rt_embedding = self.rt_token.repeat(1, batch, 1)
+        nt_embedding = self.nt_token.repeat(1, batch, 1)
+        rnt_embedding = self.rnt_token.repeat(1, batch, 1)
+
+        # for single modality
+        RGB_special = (self.r(r_embedding, RGB, RGB)[0]).permute(1, 2, 0).squeeze() #r_embedding, RGB, RGB 是 query, key, value, [0] 是 attn_output, 通用做法， permute(1, 2, 0) 是将 batch_size 放到最前面
+        NI_special = (self.n(n_embedding, NI, NI)[0]).permute(1, 2, 0).squeeze()
+        TI_special = (self.t(t_embedding, TI, TI)[0]).permute(1, 2, 0).squeeze()
+        # for double modality
+        RN_shared = (self.rn(rn_embedding, RGB_NI, RGB_NI)[0]).permute(1, 2, 0).squeeze()
+        RT_shared = (self.rt(rt_embedding, RGB_TI, RGB_TI)[0]).permute(1, 2, 0).squeeze()
+        NT_shared = (self.nt(nt_embedding, NI_TI, NI_TI)[0]).permute(1, 2, 0).squeeze()
+        # for triple modality
+        RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
+    def forward_HDMseDeform(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+
+        RGB_cash = self.tokense_r(RGB_cash)
+        NI_cash = self.tokense_n(NI_cash)
+        TI_cash = self.tokense_t(TI_cash)
+
+        RGB_cash = RGB_cash.permute(0, 2, 1)  # [B, T, N] → [B, N, T]
+        NI_cash = NI_cash.permute(0, 2, 1)
+        TI_cash = TI_cash.permute(0, 2, 1)
 
         if self.datasetsname == 'RGBNT100':
             q_size = (8, 16)
@@ -1779,6 +1894,9 @@ class GeneralFusion(nn.Module):
     def forward(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         if self.combineway == 'deform':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMDeform(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'sedeform':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMseDeform(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
         elif self.combineway == 'rwkvadd':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrw(
