@@ -416,6 +416,42 @@ class Transformer(nn.Module):
 
 
 # 原始InnovativeDFF模块（修改为LND格式）
+
+# 快速上采样替代函数
+def fast_upsample_to_length(x, target_length):
+    """
+    快速上采样到目标长度，替代F.interpolate
+    Args:
+        x: (L_in, N, D) 输入张量
+        target_length: 目标长度L
+    Returns:
+        (L, N, D) 上采样后的张量
+    """
+    L_in, N, D = x.shape
+
+    if L_in == target_length:
+        return x
+    elif L_in == 1:
+        # 如果输入长度为1，直接重复
+        return x.expand(target_length, -1, -1)
+    elif L_in < target_length:
+        # 简单重复最后一个元素来填充
+        if target_length % L_in == 0:
+            # 如果可以整除，直接重复
+            repeat_factor = target_length // L_in
+            return x.repeat_interleave(repeat_factor, dim=0)
+        else:
+            # 先重复，然后截取或填充
+            repeat_factor = target_length // L_in + 1
+            repeated = x.repeat_interleave(repeat_factor, dim=0)
+            return repeated[:target_length]
+    else:
+        # 如果输入长度大于目标长度，进行下采样
+        indices = torch.linspace(0, L_in - 1, target_length, dtype=torch.long, device=x.device)
+        return x[indices]
+
+
+# 原始InnovativeDFF模块（移除插值但保持架构）
 class InnovativeDFF(nn.Module):
     def __init__(self, dim):
         super().__init__()
@@ -489,10 +525,10 @@ class InnovativeDFF(nn.Module):
         att2 = self.fc_atten2(att2_pooled)  # (2, N, 2*D)
         att3 = self.fc_atten3(att3_pooled)  # (4, N, 2*D)
 
-        # 上采样使长度一致 - 使用插值
-        att2 = F.interpolate(att2.permute(1, 2, 0), size=L, mode='linear', align_corners=True).permute(2, 0, 1)
-        att3 = F.interpolate(att3.permute(1, 2, 0), size=L, mode='linear', align_corners=True).permute(2, 0, 1)
-        att1 = F.interpolate(att1.permute(1, 2, 0), size=L, mode='linear', align_corners=True).permute(2, 0, 1)
+        # 🚀 替换插值操作为快速上采样
+        att1 = fast_upsample_to_length(att1, L)  # (L, N, 2*D)
+        att2 = fast_upsample_to_length(att2, L)  # (L, N, 2*D)
+        att3 = fast_upsample_to_length(att3, L)  # (L, N, 2*D)
 
         # 融合多尺度注意力
         att = att1 + att2 + att3  # (L, N, 2*D)
@@ -522,7 +558,7 @@ class InnovativeDFF(nn.Module):
         return output
 
 
-# 三输入直接融合DFF模块（LND格式）
+# 三输入直接融合DFF模块（移除插值但保持架构）
 class TripleInputDirectDFF(nn.Module):
     """
     三输入直接融合DFF模块 - LND格式
@@ -649,10 +685,10 @@ class TripleInputDirectDFF(nn.Module):
         att2 = self.fc_atten2(att2_pooled)
         att4 = self.fc_atten4(att4_pooled)
 
-        # 上采样使长度一致
-        att1 = F.interpolate(att1.permute(1, 2, 0), size=L, mode='linear', align_corners=True).permute(2, 0, 1)
-        att2 = F.interpolate(att2.permute(1, 2, 0), size=L, mode='linear', align_corners=True).permute(2, 0, 1)
-        att4 = F.interpolate(att4.permute(1, 2, 0), size=L, mode='linear', align_corners=True).permute(2, 0, 1)
+        # 🚀 替换插值操作为快速上采样
+        att1 = fast_upsample_to_length(att1, L)  # (L, N, 3*D)
+        att2 = fast_upsample_to_length(att2, L)  # (L, N, 3*D)
+        att4 = fast_upsample_to_length(att4, L)  # (L, N, 3*D)
 
         # 融合多尺度注意力
         multi_scale_att = 0.5 * att1 + 0.3 * att2 + 0.2 * att4
@@ -693,7 +729,7 @@ class TripleInputDirectDFF(nn.Module):
         return output
 
 
-# 四输入层级融合DFF模块（LND格式）
+# 四输入层级融合DFF模块（移除插值但保持架构）
 class QuadInputHierarchicalDFF(nn.Module):
     """
     四输入层级融合DFF模块 - LND格式
@@ -824,6 +860,8 @@ class QuadInputHierarchicalDFF(nn.Module):
         final_output = self.final_refinement(final_output)
 
         return final_output
+
+
 #------------------------- menkong
 class GatedModalityEnhancement(nn.Module):
     """
@@ -1155,6 +1193,9 @@ class SimpleModalityGate(nn.Module):
         return enhanced
 
 
+
+
+
 class VisionTransformer(nn.Module):
     def __init__(self, h_resolution: int, w_resolution: int, patch_size: int, stride_size: int, width: int, layers: int,
                  heads: int, output_dim: int, cfg: dict):
@@ -1184,12 +1225,12 @@ class VisionTransformer(nn.Module):
         self.proj = nn.Parameter(scale * torch.randn(width, output_dim))
 
         # 原来的代码:
-        # self.triple_dff = TripleInputDirectDFF(width)
-        # self.quad_dffs = QuadInputHierarchicalDFF(width)
+        self.triple_dff = TripleInputDirectDFF(width)
+        self.quad_dffs = QuadInputHierarchicalDFF(width)
 
         # 替换为优化版本:
-        self.triple_dff = OptimizedTripleInputDFF(width)
-        self.quad_dffs = OptimizedQuadInputDFF(width)
+        # self.triple_dff = OptimizedTripleInputDFF(width)
+        # self.quad_dffs = OptimizedQuadInputDFF(width)
 
         # 或者替换为超轻量级版本（最快）:
         # self.triple_dff = UltraLightTripleDFF(width)
