@@ -1183,11 +1183,20 @@ class VisionTransformer(nn.Module):
         self.ln_post = LayerNorm(width)
         self.proj = nn.Parameter(scale * torch.randn(width, output_dim))
 
-        self.triple_dff = TripleInputDirectDFF(width)
-        self.quad_dffs = QuadInputHierarchicalDFF(width)
+        # 原来的代码:
+        # self.triple_dff = TripleInputDirectDFF(width)
+        # self.quad_dffs = QuadInputHierarchicalDFF(width)
+
+        # 替换为优化版本:
+        self.triple_dff = OptimizedTripleInputDFF(width)
+        self.quad_dffs = OptimizedQuadInputDFF(width)
+
+        # 或者替换为超轻量级版本（最快）:
+        # self.triple_dff = UltraLightTripleDFF(width)
+        # self.quad_dffs = UltraLightQuadDFF(width)
 
         #self.gated_enhancement = GatedModalityEnhancement(width)
-        self.gated_enhancement = SimpleModalityGate(width)
+        self.gated_enhancement = GatedModalityEnhancement(width)
 
     def forward(self, x: torch.Tensor, cv_emb=None, modality=None):
         #ientify if input is dict
@@ -1234,7 +1243,7 @@ class VisionTransformer(nn.Module):
             x_tir = x_tir.permute(1, 0, 2)
 
             # 初始化融合结果
-            y = None
+            #y = torch.randn(x_rgb.shape[0], x_rgb.shape[1], x_rgb.shape[2], device=x_rgb.device, dtype=x_rgb.dtype)
 
             for i in range(len(self.transformer.resblocks)):
                 x_rgb = self.transformer.resblocks[i](x_rgb, modality, i, None, prompt_sign=False, adapter_sign=False)
@@ -1248,11 +1257,14 @@ class VisionTransformer(nn.Module):
                     # 后续层：四输入融合（包含上一层结果）
                     y = self.quad_dffs(x_rgb, x_nir, x_tir, y)
 
-            #x_rgb, x_nir, x_tir = self.gated_enhancement(x_rgb, x_nir, x_tir, y)
-            x_rgb = self.gated_enhancement(x_rgb, y)
-            x_nir = self.gated_enhancement(x_nir, y)
-            x_tir = self.gated_enhancement(x_tir, y)
+            x_rgb, x_nir, x_tir = self.gated_enhancement(x_rgb, x_nir, x_tir, y)
+            # x_rgb = self.gated_enhancement(x_rgb, y)
+            # x_nir = self.gated_enhancement(x_nir, y)
+            # x_tir = self.gated_enhancement(x_tir, y)
 
+            # x_rgb = x_rgb + y
+            # x_nir = x_nir + y
+            # x_tir = x_tir + y
 
             x_rgb = x_rgb.permute(1, 0, 2)
             x_nir = x_nir.permute(1, 0, 2)
@@ -1305,6 +1317,297 @@ class VisionTransformer(nn.Module):
             if self.proj is not None:
                 xproj = x @ self.proj
             return xproj
+
+
+
+
+# 优化后的高效InnovativeDFF - 移除所有插值操作
+class OptimizedInnovativeDFF(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.dim = dim
+
+        # 简化的全局注意力 - 避免多尺度池化和插值
+        self.global_attention = nn.Sequential(
+            nn.Linear(dim * 2, dim * 2, bias=False),
+            nn.LayerNorm(dim * 2),
+            nn.Sigmoid()
+        )
+
+        # 简化的门控机制
+        self.gate_fc = nn.Sequential(
+            nn.Linear(dim * 2, dim * 2, bias=False),
+            nn.Sigmoid()
+        )
+
+        # 通道减少
+        self.fc_redu = nn.Linear(dim * 2, dim, bias=False)
+
+        # 残差分支
+        self.residual_fc = nn.Linear(dim, dim, bias=False)
+
+        # 最终注意力
+        self.final_attention = nn.Sequential(
+            nn.Linear(dim * 2, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x, skip):
+        """
+        优化的前向传播 - 移除所有插值操作
+        Args:
+            x: (L, N, D) - 第一个输入
+            skip: (L, N, D) - 第二个输入
+        Returns:
+            output: (L, N, D) - 融合后的输出
+        """
+        # 拼接输入特征
+        concat_features = torch.cat([x, skip], dim=-1)  # (L, N, 2*D)
+
+        # 全局注意力 - 使用全局平均代替多尺度池化
+        global_context = concat_features.mean(dim=0, keepdim=True)  # (1, N, 2*D)
+        attention_weights = self.global_attention(global_context)  # (1, N, 2*D)
+
+        # 门控机制
+        gate_weights = self.gate_fc(concat_features)  # (L, N, 2*D)
+
+        # 应用注意力和门控
+        enhanced_features = concat_features * attention_weights * gate_weights
+
+        # 通道减少
+        reduced_features = self.fc_redu(enhanced_features)  # (L, N, D)
+
+        # 残差连接
+        residual = self.residual_fc(x)  # (L, N, D)
+        output = reduced_features + residual
+
+        # 最终注意力
+        final_att = self.final_attention(concat_features)  # (L, N, 1)
+        output = output * final_att
+
+        return output
+
+
+# 优化后的三输入DFF - 大幅简化
+class OptimizedTripleInputDFF(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.dim = dim
+
+        # 权重学习网络
+        self.weight_net = nn.Sequential(
+            nn.Linear(dim * 3, dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(dim, 3),
+            nn.Softmax(dim=-1)
+        )
+
+        # 统一的特征融合 - 避免复杂的多尺度处理
+        self.fusion_net = nn.Sequential(
+            nn.Linear(dim * 3, dim * 2),
+            nn.LayerNorm(dim * 2),
+            nn.ReLU(inplace=True),
+            nn.Linear(dim * 2, dim),
+            nn.LayerNorm(dim)
+        )
+
+        # 简化的注意力
+        self.attention_net = nn.Sequential(
+            nn.Linear(dim * 3, dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(dim, 1),
+            nn.Sigmoid()
+        )
+
+        # 残差网络
+        self.residual_nets = nn.ModuleList([
+            nn.Linear(dim, dim, bias=False) for _ in range(3)
+        ])
+
+    def forward(self, input1, input2, input3):
+        """
+        优化的三输入融合 - 移除所有插值和复杂操作
+        """
+        # 拼接所有输入
+        concat_features = torch.cat([input1, input2, input3], dim=-1)  # (L, N, 3*D)
+
+        # 学习自适应权重
+        weights = self.weight_net(concat_features)  # (L, N, 3)
+        w1, w2, w3 = weights[..., 0:1], weights[..., 1:2], weights[..., 2:3]
+
+        # 加权输入
+        weighted_concat = torch.cat([
+            input1 * w1, input2 * w2, input3 * w3
+        ], dim=-1)  # (L, N, 3*D)
+
+        # 特征融合
+        fused_features = self.fusion_net(weighted_concat)  # (L, N, D)
+
+        # 残差连接 - 简化版本
+        residual_sum = sum([
+            net(inp) for net, inp in zip(self.residual_nets, [input1, input2, input3])
+        ]) / 3  # 平均残差
+
+        output = fused_features + residual_sum
+
+        # 最终注意力
+        attention = self.attention_net(concat_features)  # (L, N, 1)
+        output = output * attention
+
+        return output
+
+
+# 优化后的四输入DFF - 简化层级结构
+class OptimizedQuadInputDFF(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.dim = dim
+
+        # 使用优化的三输入DFF
+        self.stage1_triple_dff = OptimizedTripleInputDFF(dim)
+
+        # 简化的特征增强
+        self.stage1_enhancement = nn.Sequential(
+            nn.Linear(dim, dim // 2),
+            nn.ReLU(inplace=True),
+            nn.Linear(dim // 2, dim),
+            nn.Sigmoid()
+        )
+
+        # 简化的第四输入预处理
+        self.input4_preprocessing = nn.Sequential(
+            nn.Linear(dim, dim),
+            nn.LayerNorm(dim)
+        )
+
+        # 权重学习
+        self.adaptive_fusion_weight = nn.Sequential(
+            nn.Linear(dim * 2, 2),
+            nn.Softmax(dim=-1)
+        )
+
+        # 使用优化的DFF进行第二阶段融合
+        self.stage2_dff = OptimizedInnovativeDFF(dim)
+
+        # 简化的记忆机制
+        self.memory_fusion = nn.Linear(dim * 2, dim, bias=False)
+
+        # 简化的最终处理
+        self.final_processing = nn.Sequential(
+            nn.Linear(dim, dim),
+            nn.LayerNorm(dim)
+        )
+
+    def forward(self, input1, input2, input3, input4):
+        """
+        优化的四输入融合 - 简化所有复杂操作
+        """
+        # 第一阶段：三输入融合
+        stage1_result = self.stage1_triple_dff(input1, input2, input3)  # (L, N, D)
+
+        # 特征增强 - 使用全局平均
+        global_avg = stage1_result.mean(dim=0, keepdim=True)  # (1, N, D)
+        enhancement_weight = self.stage1_enhancement(global_avg)  # (1, N, D)
+        enhanced_stage1 = stage1_result * enhancement_weight  # (L, N, D)
+
+        # 第四输入预处理
+        processed_input4 = self.input4_preprocessing(input4)  # (L, N, D)
+
+        # 自适应权重学习
+        weight_input = torch.cat([enhanced_stage1, processed_input4], dim=-1)  # (L, N, 2*D)
+        fusion_weights = self.adaptive_fusion_weight(weight_input)  # (L, N, 2)
+        w1, w2 = fusion_weights[..., 0:1], fusion_weights[..., 1:2]
+
+        # 加权特征
+        weighted_stage1 = enhanced_stage1 * w1
+        weighted_input4 = processed_input4 * w2
+
+        # 第二阶段：使用优化的DFF
+        stage2_result = self.stage2_dff(weighted_stage1, weighted_input4)  # (L, N, D)
+
+        # 记忆机制 - 简化版本
+        memory = self.memory_fusion(torch.cat([input1, input4], dim=-1))  # (L, N, D)
+
+        # 最终融合
+        final_output = stage2_result + memory
+        final_output = self.final_processing(final_output)
+
+        return final_output
+
+
+
+
+# 超轻量级版本 - 如果还需要更快的速度
+class UltraLightDFF(nn.Module):
+    """超轻量级DFF - 最大化速度"""
+
+    def __init__(self, dim):
+        super().__init__()
+        self.fusion = nn.Sequential(
+            nn.Linear(dim * 2, dim),
+            nn.LayerNorm(dim),
+            nn.ReLU(inplace=True)
+        )
+
+        self.gate = nn.Sequential(
+            nn.Linear(dim * 2, dim),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x, skip):
+        concat_input = torch.cat([x, skip], dim=-1)
+        fused = self.fusion(concat_input)
+        gate_weight = self.gate(concat_input)
+        return x + gate_weight * fused
+
+
+class UltraLightTripleDFF(nn.Module):
+    """超轻量级三输入DFF"""
+
+    def __init__(self, dim):
+        super().__init__()
+        self.fusion = nn.Sequential(
+            nn.Linear(dim * 3, dim),
+            nn.LayerNorm(dim),
+            nn.ReLU(inplace=True)
+        )
+
+        self.weight_net = nn.Sequential(
+            nn.Linear(dim * 3, 3),
+            nn.Softmax(dim=-1)
+        )
+
+    def forward(self, x1, x2, x3):
+        concat_input = torch.cat([x1, x2, x3], dim=-1)
+
+        # 学习权重
+        weights = self.weight_net(concat_input)  # (L, N, 3)
+        w1, w2, w3 = weights[..., 0:1], weights[..., 1:2], weights[..., 2:3]
+
+        # 加权平均
+        weighted_avg = w1 * x1 + w2 * x2 + w3 * x3
+
+        # 简单融合
+        fused = self.fusion(concat_input)
+
+        return weighted_avg + 0.1 * fused
+
+
+class UltraLightQuadDFF(nn.Module):
+    """超轻量级四输入DFF"""
+
+    def __init__(self, dim):
+        super().__init__()
+        self.triple_dff = UltraLightTripleDFF(dim)
+        self.final_dff = UltraLightDFF(dim)
+
+    def forward(self, x1, x2, x3, x4):
+        # 先融合前三个
+        triple_result = self.triple_dff(x1, x2, x3)
+        # 再与第四个融合
+        final_result = self.final_dff(triple_result, x4)
+        return final_result
+
 
 
 class CLIP(nn.Module):
