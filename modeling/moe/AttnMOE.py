@@ -500,6 +500,7 @@ class DAttentionBaseline(nn.Module):
         self.n_group_channels = self.nc // self.n_groups
         self.n_group_heads = self.n_heads // self.n_groups
         self.offset_range_factor = offset_range_factor
+
         self.ksize = ksize
         self.stride = stride
         kk = self.ksize
@@ -1189,6 +1190,149 @@ class TokenSE(nn.Module):
         else:
             return x * weights
 
+
+class SimpleGate(nn.Module):
+    def forward(self, x):
+        x1, x2 = x.chunk(2, dim=1)
+        return x1 * x2
+
+class FreMLP(nn.Module):
+
+    def __init__(self, nc, expand=2):
+        super(FreMLP, self).__init__()
+        self.process1 = nn.Sequential(
+            nn.Conv2d(nc, expand * nc, 1, 1, 0),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(expand * nc, nc, 1, 1, 0))
+
+    def forward(self, x):
+        _, _, H, W = x.shape
+        x_freq = torch.fft.rfft2(x, norm='backward')
+        mag = torch.abs(x_freq) #分离出频域数据的 幅度（magnitude）
+        pha = torch.angle(x_freq) #分离出频域数据的 相位（phase）
+        mag = self.process1(mag)
+        real = mag * torch.cos(pha)
+        imag = mag * torch.sin(pha)
+        x_out = torch.complex(real, imag)
+        x_out = torch.fft.irfft2(x_out, s=(H, W), norm='backward')
+        return x_out
+
+#cv fenghe  EBblock104
+class Branch(nn.Module):
+    '''
+    Branch that lasts lonly the dilated convolutions
+    '''
+
+    def __init__(self, c, DW_Expand, dilation=1):
+        super().__init__()
+        self.dw_channel = DW_Expand * c
+
+        self.branch = nn.Sequential(
+            nn.Conv2d(in_channels=self.dw_channel, out_channels=self.dw_channel, kernel_size=3, padding=dilation,
+                      stride=1, groups=self.dw_channel,
+                      bias=True, dilation=dilation)  # the dconv
+        )
+
+    def forward(self, input):
+        return self.branch(input)
+
+class LayerNormFunction(torch.autograd.Function):
+
+    @staticmethod
+    def forward(ctx, x, weight, bias, eps):
+        ctx.eps = eps
+        N, C, H, W = x.size()
+        mu = x.mean(1, keepdim=True)
+        var = (x - mu).pow(2).mean(1, keepdim=True)
+        y = (x - mu) / (var + eps).sqrt()
+        ctx.save_for_backward(y, var, weight)
+        y = weight.view(1, C, 1, 1) * y + bias.view(1, C, 1, 1)
+        return y
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        eps = ctx.eps
+
+        N, C, H, W = grad_output.size()
+        y, var, weight = ctx.saved_variables
+        g = grad_output * weight.view(1, C, 1, 1)
+        mean_g = g.mean(dim=1, keepdim=True)
+
+        mean_gy = (g * y).mean(dim=1, keepdim=True)
+        gx = 1. / torch.sqrt(var + eps) * (g - y * mean_gy - mean_g)
+        return gx, (grad_output * y).sum(dim=3).sum(dim=2).sum(dim=0), grad_output.sum(dim=3).sum(dim=2).sum(
+            dim=0), None
+class LayerNorm2d(nn.Module):
+
+    def __init__(self, channels, eps=1e-6):
+        super(LayerNorm2d, self).__init__()
+        self.register_parameter('weight', nn.Parameter(torch.ones(channels)))
+        self.register_parameter('bias', nn.Parameter(torch.zeros(channels)))
+        self.eps = eps
+
+    def forward(self, x):
+        return LayerNormFunction.apply(x, self.weight, self.bias, self.eps)
+
+
+class EBlock(nn.Module):
+    '''
+    Change this block using Branch
+    '''
+
+    def __init__(self, c, DW_Expand=2, dilations=[1, 4, 9], extra_depth_wise=True):
+        super().__init__()
+        # we define the 2 branches
+        self.dw_channel = DW_Expand * c
+        self.extra_conv = nn.Conv2d(c, c, kernel_size=3, padding=1, stride=1, groups=c, bias=True,
+                                    dilation=1) if extra_depth_wise else nn.Identity()  # optional extra dw
+        self.conv1 = nn.Conv2d(in_channels=c, out_channels=self.dw_channel, kernel_size=1, padding=0, stride=1,
+                               groups=1, bias=True, dilation=1)
+
+        self.branches = nn.ModuleList()
+        for dilation in dilations:
+            self.branches.append(Branch(c, DW_Expand, dilation=dilation))
+
+        assert len(dilations) == len(self.branches)
+        self.dw_channel = DW_Expand * c
+        self.sca = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Conv2d(in_channels=self.dw_channel // 2, out_channels=self.dw_channel // 2, kernel_size=1, padding=0,
+                      stride=1,
+                      groups=1, bias=True, dilation=1),
+        )
+        self.sg1 = SimpleGate()
+        self.conv3 = nn.Conv2d(in_channels=self.dw_channel // 2, out_channels=c, kernel_size=1, padding=0, stride=1,
+                               groups=1, bias=True, dilation=1)
+        # second step
+
+        self.norm1 = LayerNorm2d(c)
+        self.norm2 = LayerNorm2d(c)
+        self.freq = FreMLP(nc=c, expand=2)
+        self.gamma = nn.Parameter(torch.zeros((1, c, 1, 1)), requires_grad=True)
+        self.beta = nn.Parameter(torch.zeros((1, c, 1, 1)), requires_grad=True)
+
+    def forward(self, inp):
+        y = inp
+        x = self.norm1(inp)
+        x = self.conv1(self.extra_conv(x))
+        z = 0
+        for branch in self.branches:
+            z += branch(x)
+
+        z = self.sg1(z)
+        x = self.sca(z) * z
+        x = self.conv3(x)
+        y = inp + self.beta * x
+        # second step
+        x_step2 = self.norm2(y)  # size [B, 2*C, H, W]
+        x_freq = self.freq(x_step2)  # size [B, C, H, W]
+        x = y * x_freq
+        x = y + x * self.gamma
+
+        return x
+
+
+
 class GeneralFusion(nn.Module):
     def __init__(self, feat_dim, num_experts, head, reg_weight=0.1, dropout=0.1, cfg=None):
         super(GeneralFusion, self).__init__()
@@ -1221,7 +1365,7 @@ class GeneralFusion(nn.Module):
 
 
 
-        self.combineway = 'sedeform'
+        self.combineway = 'ebblockdeform'
         print('combineway:', self.combineway)
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')
@@ -1240,6 +1384,21 @@ class GeneralFusion(nn.Module):
                 q_size, 1, 512, 1, 0.0, 0.0, 2,
                 5.0, 4, True
             )
+        elif self.combineway == 'ebblockdeform':
+            if self.datasetsname == 'RGBNT201':
+                q_size = (16,8)
+            elif self.datasetsname == 'RGBNT100':
+                q_size = (8, 16)
+            else:
+                q_size = (8, 16)
+            self.ebblock_r = EBlock(c=self.feat_dim)
+            self.ebblock_n = EBlock(c=self.feat_dim)
+            self.ebblock_t = EBlock(c=self.feat_dim)
+            self.deformselect = DAttentionBaseline(
+                q_size, 1, 512, 1, 0.0, 0.0, 2,
+                5.0, 4, True
+            )
+            
         elif self.combineway == 'sedeform':
             if self.datasetsname == 'RGBNT201':
                 q_size = (16, 8)
@@ -1449,6 +1608,73 @@ class GeneralFusion(nn.Module):
         RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
 
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
+
+    def forward_HDMebblockDeform(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+
+
+        RGB_cash = RGB_cash.permute(0, 2, 1)  # [B, T, N] → [B, N, T]
+        NI_cash = NI_cash.permute(0, 2, 1)
+        TI_cash = TI_cash.permute(0, 2, 1)
+
+        if self.datasetsname == 'RGBNT100':
+            q_size = (8, 16)
+        elif self.datasetsname == 'RGBNT201':
+            q_size = (16, 8)
+        else:
+            q_size = (8, 16)
+
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), q_size[0], q_size[1])
+        NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), q_size[0], q_size[1])
+        TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), q_size[0], q_size[1])
+
+        RGB_cash = self.ebblock_r(RGB_cash)
+        NI_cash = self.ebblock_n(NI_cash)
+        TI_cash = self.ebblock_t(TI_cash)
+
+        # B, C, H, W = RGB_cash.size()
+        # dtype, device = RGB_cash.dtype, RGB_cash.device
+        # data = torch.cat([RGB_cash, NI_cash, TI_cash], dim=1)
+        RGB_cash,NI_cash,TI_cash = self.deformselect(RGB_cash, NI_cash, TI_cash)
+
+
+
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+        batch = RGB.size(1)
+        # get the learnable token
+        r_embedding = self.r_token.repeat(1, batch, 1)
+        n_embedding = self.n_token.repeat(1, batch, 1)
+        t_embedding = self.t_token.repeat(1, batch, 1)
+        rn_embedding = self.rn_token.repeat(1, batch, 1)
+        rt_embedding = self.rt_token.repeat(1, batch, 1)
+        nt_embedding = self.nt_token.repeat(1, batch, 1)
+        rnt_embedding = self.rnt_token.repeat(1, batch, 1)
+
+        # for single modality
+        RGB_special = (self.r(r_embedding, RGB, RGB)[0]).permute(1, 2, 0).squeeze() #r_embedding, RGB, RGB 是 query, key, value, [0] 是 attn_output, 通用做法， permute(1, 2, 0) 是将 batch_size 放到最前面
+        NI_special = (self.n(n_embedding, NI, NI)[0]).permute(1, 2, 0).squeeze()
+        TI_special = (self.t(t_embedding, TI, TI)[0]).permute(1, 2, 0).squeeze()
+        # for double modality
+        RN_shared = (self.rn(rn_embedding, RGB_NI, RGB_NI)[0]).permute(1, 2, 0).squeeze()
+        RT_shared = (self.rt(rt_embedding, RGB_TI, RGB_TI)[0]).permute(1, 2, 0).squeeze()
+        NT_shared = (self.nt(nt_embedding, NI_TI, NI_TI)[0]).permute(1, 2, 0).squeeze()
+        # for triple modality
+        RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
 
     def forward_HDMDeema(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
@@ -1897,6 +2123,9 @@ class GeneralFusion(nn.Module):
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
         elif self.combineway == 'sedeform':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMseDeform(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'ebblockdeform':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMebblockDeform(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
         elif self.combineway == 'rwkvadd':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrw(

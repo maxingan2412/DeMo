@@ -467,6 +467,103 @@ class build_transformer(nn.Module):
         print('Loading pretrained model for finetuning from {}'.format(model_path))
 
 
+class build_transformer_new(nn.Module):
+    def __init__(self, num_classes, cfg, camera_num, view_num, factory, feat_dim):
+        super(build_transformer_new, self).__init__()
+        model_path = cfg.MODEL.PRETRAIN_PATH_T
+        self.in_planes = feat_dim
+        self.cv_embed_sign = cfg.MODEL.SIE_CAMERA
+        self.neck = cfg.MODEL.NECK
+        self.neck_feat = cfg.TEST.NECK_FEAT
+        self.model_name = cfg.MODEL.TRANSFORMER_TYPE
+        self.direct = cfg.MODEL.DIRECT
+        print('using Transformer_type: {} as a backbone'.format(cfg.MODEL.TRANSFORMER_TYPE))
+
+        if cfg.MODEL.SIE_CAMERA:
+            self.camera_num = camera_num
+        else:
+            self.camera_num = 0
+        # No view
+        self.view_num = 0
+        if cfg.MODEL.TRANSFORMER_TYPE == 'vit_base_patch16_224':
+            self.base = factory[cfg.MODEL.TRANSFORMER_TYPE](img_size=cfg.INPUT.SIZE_TRAIN, sie_xishu=cfg.MODEL.SIE_COE,
+                                                            num_classes=num_classes,
+                                                            camera=self.camera_num, view=self.view_num,
+                                                            stride_size=cfg.MODEL.STRIDE_SIZE,
+                                                            drop_path_rate=cfg.MODEL.DROP_PATH,
+                                                            drop_rate=cfg.MODEL.DROP_OUT,
+                                                            attn_drop_rate=cfg.MODEL.ATT_DROP_RATE)
+            self.clip = 0
+            self.base.load_param(model_path)
+            print('Loading pretrained model from ImageNet')
+            if cfg.MODEL.FROZEN:
+                lora_train(self.base)
+        elif cfg.MODEL.TRANSFORMER_TYPE == 'ViT-B-16':
+            self.clip = 1
+            self.sie_xishu = cfg.MODEL.SIE_COE
+            clip_model = load_clip_to_cpu(cfg, self.model_name, cfg.INPUT.SIZE_TRAIN[0] // cfg.MODEL.STRIDE_SIZE[0],
+                                          cfg.INPUT.SIZE_TRAIN[1] // cfg.MODEL.STRIDE_SIZE[1],
+                                          cfg.MODEL.STRIDE_SIZE)
+            print('Loading pretrained model from CLIP')
+            clip_model.to("cuda")
+            self.base = clip_model.visual
+            if cfg.MODEL.FROZEN:
+                lora_train(self.base)
+
+            if cfg.MODEL.SIE_CAMERA and cfg.MODEL.SIE_VIEW:
+                self.cv_embed = nn.Parameter(torch.zeros(camera_num * view_num, 1, 768))
+                trunc_normal_(self.cv_embed, std=.02)
+                print('camera number is : {}'.format(camera_num))
+            elif cfg.MODEL.SIE_CAMERA:
+                self.cv_embed = nn.Parameter(torch.zeros(camera_num, 1, 768))
+                trunc_normal_(self.cv_embed, std=.02)
+                print('camera number is : {}'.format(camera_num))
+            elif cfg.MODEL.SIE_VIEW:
+                self.cv_embed = nn.Parameter(torch.zeros(view_num, 1, 768))
+                trunc_normal_(self.cv_embed, std=.02)
+                print('camera number is : {}'.format(view_num))
+
+        self.num_classes = num_classes
+        self.ID_LOSS_TYPE = cfg.MODEL.ID_LOSS_TYPE
+
+    def forward(self, x, label=None, cam_label=None, view_label=None, modality=None):
+        if self.clip == 0:
+            x = self.base(x, cam_label=cam_label, view_label=view_label) #这里base叫 visiontransformer，应该就是clip的 vision部分，在上面有 self.base = clip_model.visual
+        else:
+            if self.cv_embed_sign:
+                cv_embed = self.sie_xishu * self.cv_embed[cam_label]
+            else:
+                cv_embed = None
+            x = self.base(x, cv_embed, modality)
+
+        x_rgb = x['RGB']
+        x_nir = x['NI']
+        x_tir = x['TI']
+        global_feat_rgb = x_rgb[:, 0]
+        global_feat_nir = x_nir[:, 0]
+        global_feat_tir = x_tir[:, 0]
+        x_rgb = x_rgb[:, 1:]
+        x_nir = x_nir[:, 1:]
+        x_tir = x_tir[:, 1:]
+        return x_rgb,global_feat_rgb, x_nir, global_feat_nir, x_tir, global_feat_tir
+
+        # global_feat = x[:, 0]
+        # x = x[:, 1:]
+        # return x, global_feat
+
+    def load_param(self, trained_path):
+        param_dict = torch.load(trained_path)
+        for i in param_dict:
+            self.state_dict()[i.replace('module.', '')].copy_(param_dict[i])
+        print('Loading pretrained model from {}'.format(trained_path))
+
+    def load_param_finetune(self, model_path):
+        param_dict = torch.load(model_path)
+        for i in param_dict:
+            self.state_dict()[i].copy_(param_dict[i])
+        print('Loading pretrained model for finetuning from {}'.format(model_path))
+
+
 import math
 import torch.nn.functional as F
 

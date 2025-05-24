@@ -5,7 +5,7 @@ from modeling.backbones.t2t import t2t_vit_t_14, t2t_vit_t_24
 from fvcore.nn import flop_count
 from modeling.backbones.basic_cnn_params.flops import give_supported_ops
 import copy
-from modeling.meta_arch import build_transformer, weights_init_classifier, weights_init_kaiming,VRWKV6
+from modeling.meta_arch import build_transformer, weights_init_classifier, weights_init_kaiming,VRWKV6, build_transformer_new
 from modeling.moe.AttnMOE import GeneralFusion, QuickGELU
 import torch
 import os
@@ -14,6 +14,7 @@ class DeMo(nn.Module):
     def __init__(self, num_classes, cfg, camera_num, view_num, factory):
         super(DeMo, self).__init__()
         self.rwkvbackbone = False
+        self.cengjifusion = True
         if 'vit_base_patch16_224' in cfg.MODEL.TRANSFORMER_TYPE:
             self.feat_dim = 768
         elif 'ViT-B-16' in cfg.MODEL.TRANSFORMER_TYPE:
@@ -41,6 +42,8 @@ class DeMo(nn.Module):
 
                 model_path = os.path.join(current_dir, 'vrwkv6_b_in1k_224.pth')
                 self.BACKBONE.load_param(model_path)
+            elif self.cengjifusion:
+                self.BACKBONE = build_transformer_new(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
             else:
                 self.BACKBONE = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim) #bulid_transformer actually is backbone
 
@@ -134,6 +137,8 @@ class DeMo(nn.Module):
                 RGB_cash, RGB_global = self.BACKBONE_R(RGB, cam_label=cam_label, view_label=view_label) #RGB_cash 是除了cls token之外的所有token的特征
                 NI_cash, NI_global = self.BACKBONE_N(NI, cam_label=cam_label, view_label=view_label)
                 TI_cash, TI_global = self.BACKBONE_T(TI, cam_label=cam_label, view_label=view_label)
+            elif self.cengjifusion:
+                RGB_cash, RGB_global, NI_cash, NI_global, TI_cash, TI_global = self.BACKBONE(x, cam_label=cam_label, view_label=view_label) #RGB_cash 是除了cls token之外的所有token的特征
             else:
                 RGB_cash, RGB_global = self.BACKBONE(RGB, cam_label=cam_label, view_label=view_label) #RGB_cash 是除了cls token之外的所有token的特征
                 NI_cash, NI_global = self.BACKBONE(NI, cam_label=cam_label, view_label=view_label)
@@ -198,6 +203,8 @@ class DeMo(nn.Module):
                 RGB_cash, RGB_global = self.BACKBONE_R(RGB, cam_label=cam_label, view_label=view_label)
                 NI_cash, NI_global = self.BACKBONE_N(NI, cam_label=cam_label, view_label=view_label)
                 TI_cash, TI_global = self.BACKBONE_T(TI, cam_label=cam_label, view_label=view_label)
+            elif self.cengjifusion:
+                RGB_cash, RGB_global, NI_cash, NI_global, TI_cash, TI_global = self.BACKBONE(x, cam_label=cam_label, view_label=view_label)
             else:
                 RGB_cash, RGB_global = self.BACKBONE(RGB, cam_label=cam_label, view_label=view_label)
                 NI_cash, NI_global = self.BACKBONE(NI, cam_label=cam_label, view_label=view_label)
