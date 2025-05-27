@@ -41,9 +41,9 @@ def do_train(cfg,
     acc_meter = AverageMeter()
 
     if cfg.DATASETS.NAMES == "MSVR310":
-        evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM)
+        evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM, reranking=cfg.TEST.RE_RANKING)
     else:
-        evaluator = R1_mAP_eval(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM)
+        evaluator = R1_mAP_eval(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM, reranking=cfg.TEST.RE_RANKING)
     scaler = amp.GradScaler()
     test_sign = cfg.MODEL.HDM or cfg.MODEL.ATM
     # train
@@ -71,7 +71,9 @@ def do_train(cfg,
                     for i in range(0, index, 2):
                         loss_tmp = loss_fn(score=output[i], feat=output[i + 1], target=target, target_cam=target_cam)
                         loss = loss + loss_tmp
-                    loss = loss + output[-1]
+                    weight = 6.0
+                    print('diversity weight:', weight)
+                    loss = loss + output[-1] * weight
                 else:
                     for i in range(0, len(output), 2):
                         loss_tmp = loss_fn(score=output[i], feat=output[i + 1], target=target, target_cam=target_cam)

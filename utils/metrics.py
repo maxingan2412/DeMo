@@ -170,12 +170,61 @@ def eval_func(distmat, q_pids, g_pids, q_camids, g_camids, max_rank=50):
     return all_cmc, mAP
 
 
+# class R1_mAP():
+#     def __init__(self, num_query, max_rank=50, feat_norm='yes'):
+#         super(R1_mAP, self).__init__()
+#         self.num_query = num_query
+#         self.max_rank = max_rank
+#         self.feat_norm = feat_norm
+#
+#     def reset(self):
+#         self.feats = []
+#         self.pids = []
+#         self.camids = []
+#         self.sceneids = []
+#         self.img_path = []
+#
+#     def update(self, output):
+#         feat, pid, camid, sceneid, img_path = output
+#         self.feats.append(feat)
+#         self.pids.extend(np.asarray(pid))
+#         self.camids.extend(np.asarray(camid))
+#         self.sceneids.extend(np.asarray(sceneid))
+#         self.img_path.extend(img_path)
+#
+#     def compute(self):
+#         feats = torch.cat(self.feats, dim=0)
+#         if self.feat_norm == 'yes':
+#             print("The test feature is normalized")
+#             feats = torch.nn.functional.normalize(feats, dim=1, p=2)
+#         # query
+#         qf = feats[:self.num_query]
+#         q_pids = np.asarray(self.pids[:self.num_query])
+#         q_camids = np.asarray(self.camids[:self.num_query])
+#
+#         q_sceneids = np.asarray(self.sceneids[:self.num_query])  # zxp
+#         # gallery
+#         gf = feats[self.num_query:]
+#         g_pids = np.asarray(self.pids[self.num_query:])
+#         g_camids = np.asarray(self.camids[self.num_query:])
+#
+#         g_sceneids = np.asarray(self.sceneids[self.num_query:])  # zxp
+#
+#         m, n = qf.shape[0], gf.shape[0]
+#         distmat = torch.pow(qf, 2).sum(dim=1, keepdim=True).expand(m, n) + \
+#                   torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, m).t()
+#         distmat.addmm_(1, -2, qf, gf.t())
+#         distmat = distmat.cpu().numpy()
+#         cmc, mAP = eval_func_msrv(distmat, q_pids, g_pids, q_camids, g_camids, q_sceneids, g_sceneids)
+#         return cmc, mAP, distmat, self.pids, self.camids, qf, gf
+
 class R1_mAP():
-    def __init__(self, num_query, max_rank=50, feat_norm='yes'):
+    def __init__(self, num_query, max_rank=50, feat_norm='yes', reranking=True):
         super(R1_mAP, self).__init__()
         self.num_query = num_query
         self.max_rank = max_rank
         self.feat_norm = feat_norm
+        self.reranking = reranking  # 新增 reranking 参数
 
     def reset(self):
         self.feats = []
@@ -192,33 +241,77 @@ class R1_mAP():
         self.sceneids.extend(np.asarray(sceneid))
         self.img_path.extend(img_path)
 
+    def euclidean_distance(self, qf, gf):
+        """计算欧几里得距离"""
+        m, n = qf.shape[0], gf.shape[0]
+        distmat = torch.pow(qf, 2).sum(dim=1, keepdim=True).expand(m, n) + \
+                  torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, m).t()
+        distmat.addmm_(1, -2, qf, gf.t())
+        return distmat.cpu().numpy()
+
     def compute(self):
         feats = torch.cat(self.feats, dim=0)
         if self.feat_norm == 'yes':
             print("The test feature is normalized")
             feats = torch.nn.functional.normalize(feats, dim=1, p=2)
+
         # query
         qf = feats[:self.num_query]
         q_pids = np.asarray(self.pids[:self.num_query])
         q_camids = np.asarray(self.camids[:self.num_query])
+        q_sceneids = np.asarray(self.sceneids[:self.num_query])
 
-        q_sceneids = np.asarray(self.sceneids[:self.num_query])  # zxp
         # gallery
         gf = feats[self.num_query:]
         g_pids = np.asarray(self.pids[self.num_query:])
         g_camids = np.asarray(self.camids[self.num_query:])
+        g_sceneids = np.asarray(self.sceneids[self.num_query:])
 
-        g_sceneids = np.asarray(self.sceneids[self.num_query:])  # zxp
+        if self.reranking:
+            print('=> Computing DistMat with euclidean_distance (before reranking)')
+            # 使用原有的距离计算方法（保持与原代码一致）
+            distmat_original = torch.pow(qf, 2).sum(dim=1, keepdim=True).expand(qf.shape[0], gf.shape[0]) + \
+                               torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(gf.shape[0], qf.shape[0]).t()
+            distmat_original.addmm_(1, -2, qf, gf.t())
+            distmat_original = distmat_original.cpu().numpy()
 
-        m, n = qf.shape[0], gf.shape[0]
-        distmat = torch.pow(qf, 2).sum(dim=1, keepdim=True).expand(m, n) + \
-                  torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, m).t()
-        distmat.addmm_(1, -2, qf, gf.t())
-        distmat = distmat.cpu().numpy()
-        cmc, mAP = eval_func_msrv(distmat, q_pids, g_pids, q_camids, g_camids, q_sceneids, g_sceneids)
+            cmc_original, mAP_original = eval_func_msrv(distmat_original, q_pids, g_pids, q_camids, g_camids,
+                                                        q_sceneids, g_sceneids)
+
+            print('=> Results before reranking:')
+            print(f'mAP: {mAP_original:.4f}')
+            print(
+                f'CMC curve: Rank-1: {cmc_original[0]:.4f}, Rank-5: {cmc_original[4]:.4f}, Rank-10: {cmc_original[9]:.4f}')
+
+            print('=> Enter reranking')
+            # 执行 reranking（需要导入 re_ranking 函数）
+            distmat = re_ranking(qf, gf, k1=50, k2=15, lambda_value=0.3)
+            cmc, mAP = eval_func_msrv(distmat, q_pids, g_pids, q_camids, g_camids, q_sceneids, g_sceneids)
+
+            print('=> Results after reranking:')
+            print(f'mAP: {mAP:.4f}')
+            print(f'CMC curve: Rank-1: {cmc[0]:.4f}, Rank-5: {cmc[4]:.4f}, Rank-10: {cmc[9]:.4f}')
+
+            print('=> Improvement:')
+            print(f'mAP improvement: {mAP - mAP_original:.4f} ({((mAP - mAP_original) / mAP_original * 100):+.2f}%)')
+            print(
+                f'Rank-1 improvement: {cmc[0] - cmc_original[0]:.4f} ({((cmc[0] - cmc_original[0]) / cmc_original[0] * 100):+.2f}%)')
+
+        else:
+            print('=> Computing DistMat with original method')
+            # 保持原有的距离计算方法
+            m, n = qf.shape[0], gf.shape[0]
+            distmat = torch.pow(qf, 2).sum(dim=1, keepdim=True).expand(m, n) + \
+                      torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, m).t()
+            distmat.addmm_(1, -2, qf, gf.t())
+            distmat = distmat.cpu().numpy()
+            cmc, mAP = eval_func_msrv(distmat, q_pids, g_pids, q_camids, g_camids, q_sceneids, g_sceneids)
+
+            print('=> Results:')
+            print(f'mAP: {mAP:.4f}')
+            print(f'CMC curve: Rank-1: {cmc[0]:.4f}, Rank-5: {cmc[4]:.4f}, Rank-10: {cmc[9]:.4f}')
+
         return cmc, mAP, distmat, self.pids, self.camids, qf, gf
-
-
 class R1_mAP_eval():
     def __init__(self, num_query, max_rank=50, feat_norm=True, reranking=False):
         super(R1_mAP_eval, self).__init__()
@@ -356,13 +449,36 @@ class R1_mAP_eval():
         g_camids = np.asarray(self.camids[self.num_query:])
 
         if self.reranking:
+            print('=> Computing DistMat with euclidean_distance (before reranking)')
+            distmat_original = euclidean_distance(qf, gf)
+            cmc_original, mAP_original = eval_func(distmat_original, q_pids, g_pids, q_camids, g_camids)
+
+            print('=> Results before reranking:')
+            print(f'mAP: {mAP_original:.4f}')
+            print(
+                f'CMC curve: Rank-1: {cmc_original[0]:.4f}, Rank-5: {cmc_original[4]:.4f}, Rank-10: {cmc_original[9]:.4f}')
+
             print('=> Enter reranking')
             distmat = re_ranking(qf, gf, k1=50, k2=15, lambda_value=0.3)
+            cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
+
+            print('=> Results after reranking:')
+            print(f'mAP: {mAP:.4f}')
+            print(f'CMC curve: Rank-1: {cmc[0]:.4f}, Rank-5: {cmc[4]:.4f}, Rank-10: {cmc[9]:.4f}')
+
+            print('=> Improvement:')
+            print(f'mAP improvement: {mAP - mAP_original:.4f} ({((mAP - mAP_original) / mAP_original * 100):+.2f}%)')
+            print(
+                f'Rank-1 improvement: {cmc[0] - cmc_original[0]:.4f} ({((cmc[0] - cmc_original[0]) / cmc_original[0] * 100):+.2f}%)')
+
         else:
             print('=> Computing DistMat with euclidean_distance')
             distmat = euclidean_distance(qf, gf)
+            cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
 
-        cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
+            print('=> Results:')
+            print(f'mAP: {mAP:.4f}')
+            print(f'CMC curve: Rank-1: {cmc[0]:.4f}, Rank-5: {cmc[4]:.4f}, Rank-10: {cmc[9]:.4f}')
 
         # Visualize top10 results for each query
         # self.visualize_ranked_results(distmat, topk=10, save_dir='rankList/your model name')

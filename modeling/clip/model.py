@@ -1224,6 +1224,8 @@ class VisionTransformer(nn.Module):
         self.ln_post = LayerNorm(width)
         self.proj = nn.Parameter(scale * torch.randn(width, output_dim))
 
+##################################chuangxin#####################
+
         # 原来的代码:
         self.triple_dff = TripleInputDirectDFF(width)
         self.quad_dffs = QuadInputHierarchicalDFF(width)

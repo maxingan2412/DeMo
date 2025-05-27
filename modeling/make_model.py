@@ -14,7 +14,12 @@ class DeMo(nn.Module):
     def __init__(self, num_classes, cfg, camera_num, view_num, factory):
         super(DeMo, self).__init__()
         self.rwkvbackbone = False
-        self.cengjifusion = True
+        self.cengjifusion = cfg.MODEL.CENGJIFUSION
+
+
+        print('cengjifusion:', self.cengjifusion)
+        print('rwkvbackbone:', self.rwkvbackbone)
+
         if 'vit_base_patch16_224' in cfg.MODEL.TRANSFORMER_TYPE:
             self.feat_dim = 768
         elif 'ViT-B-16' in cfg.MODEL.TRANSFORMER_TYPE:
@@ -43,6 +48,7 @@ class DeMo(nn.Module):
                 model_path = os.path.join(current_dir, 'vrwkv6_b_in1k_224.pth')
                 self.BACKBONE.load_param(model_path)
             elif self.cengjifusion:
+
                 self.BACKBONE = build_transformer_new(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
             else:
                 self.BACKBONE = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim) #bulid_transformer actually is backbone

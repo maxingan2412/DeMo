@@ -1333,6 +1333,682 @@ class EBlock(nn.Module):
 
 
 
+class MultiModalTokenSE(nn.Module):
+    """
+    多模态交互式TokenSE模块 - 稳定版
+    修复所有维度问题，确保稳定运行
+    """
+
+    def __init__(self, token_dim, feature_dim, reduction=4, use_residual=True,
+                 interaction_mode='fusion'):
+        """
+        Args:
+            token_dim (int): Token数量 T
+            feature_dim (int): 每个Token的特征维度 N
+            reduction (int): 通道缩减比例
+            use_residual (bool): 是否使用残差连接
+            interaction_mode (str): 交互模式 ['fusion', 'adaptive_weight', 'simple']
+        """
+        super().__init__()
+        self.token_dim = token_dim
+        self.feature_dim = feature_dim
+        self.use_residual = use_residual
+        self.interaction_mode = interaction_mode
+
+        # 🚀 创新1: 单模态特征聚合器
+        self.rgb_aggregator = self._build_aggregator(reduction)
+        self.nir_aggregator = self._build_aggregator(reduction)
+        self.tir_aggregator = self._build_aggregator(reduction)
+
+        # 🚀 创新2: 跨模态交互机制
+        if interaction_mode == 'fusion':
+            self.modal_fusion = ModalFusion(token_dim, reduction)
+        elif interaction_mode == 'adaptive_weight':
+            self.adaptive_weighting = AdaptiveWeighting(token_dim, reduction)
+        elif interaction_mode == 'simple':
+            self.simple_interaction = SimpleInteraction(feature_dim)
+
+        # 🚀 创新3: 全局上下文整合
+        self.global_context_net = nn.Sequential(
+            nn.Linear(token_dim * 3, token_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(token_dim, token_dim),
+            nn.Sigmoid()
+        )
+
+        # 🚀 创新4: 自适应模态平衡 - 简化版
+        self.modal_balance = nn.Sequential(
+            nn.Linear(3, 8),  # 输入3个标量
+            nn.ReLU(inplace=True),
+            nn.Linear(8, 3),  # 输出3个权重
+            nn.Softmax(dim=-1)
+        )
+
+        # 🚀 创新5: 增强权重学习
+        self.enhancement_net = nn.Sequential(
+            nn.Linear(token_dim * 3, token_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(token_dim, token_dim),
+            nn.Sigmoid()
+        )
+
+    def _build_aggregator(self, reduction):
+        """构建单模态特征聚合器"""
+        return nn.Sequential(
+            nn.Linear(self.token_dim, max(1, self.token_dim // reduction)),
+            nn.ReLU(inplace=True),
+            nn.Linear(max(1, self.token_dim // reduction), self.token_dim),
+            nn.Sigmoid()
+        )
+
+    def forward(self, rgb_tokens, nir_tokens, tir_tokens):
+        """
+        Args:
+            rgb_tokens: [B, T, N] RGB模态token特征
+            nir_tokens: [B, T, N] NIR模态token特征
+            tir_tokens: [B, T, N] TIR模态token特征
+        Returns:
+            enhanced_rgb: [B, T, N] 增强的RGB特征
+            enhanced_nir: [B, T, N] 增强的NIR特征
+            enhanced_tir: [B, T, N] 增强的TIR特征
+        """
+        B, T, N = rgb_tokens.shape
+
+        # ========== Step 1: 单模态特征聚合 ==========
+        # 在特征维度上聚合，获得每个Token的全局描述
+        rgb_global = rgb_tokens.mean(dim=2)  # [B, T]
+        nir_global = nir_tokens.mean(dim=2)  # [B, T]
+        tir_global = tir_tokens.mean(dim=2)  # [B, T]
+
+        # 学习单模态Token权重
+        rgb_weights = self.rgb_aggregator(rgb_global)  # [B, T]
+        nir_weights = self.nir_aggregator(nir_global)  # [B, T]
+        tir_weights = self.tir_aggregator(tir_global)  # [B, T]
+
+        # ========== Step 2: 跨模态交互增强 ==========
+        if self.interaction_mode == 'fusion':
+            rgb_enhanced, nir_enhanced, tir_enhanced = self.modal_fusion(
+                rgb_global, nir_global, tir_global, rgb_tokens, nir_tokens, tir_tokens
+            )
+        elif self.interaction_mode == 'adaptive_weight':
+            rgb_enhanced, nir_enhanced, tir_enhanced = self.adaptive_weighting(
+                rgb_global, nir_global, tir_global, rgb_tokens, nir_tokens, tir_tokens
+            )
+        elif self.interaction_mode == 'simple':
+            rgb_enhanced, nir_enhanced, tir_enhanced = self.simple_interaction(
+                rgb_tokens, nir_tokens, tir_tokens
+            )
+        else:
+            rgb_enhanced, nir_enhanced, tir_enhanced = rgb_tokens, nir_tokens, tir_tokens
+
+        # ========== Step 3: 全局上下文整合 ==========
+        # 融合三模态的全局信息
+        global_context = torch.cat([rgb_global, nir_global, tir_global], dim=-1)  # [B, T*3]
+        global_weights = self.global_context_net(global_context)  # [B, T]
+
+        # ========== Step 4: 自适应模态平衡 ==========
+        # 计算每个模态的全局特征强度（单个标量）
+        rgb_strength = rgb_global.mean(dim=1)  # [B]
+        nir_strength = nir_global.mean(dim=1)  # [B]
+        tir_strength = tir_global.mean(dim=1)  # [B]
+
+        # 组合为 [B, 3] 张量
+        modal_strengths = torch.stack([rgb_strength, nir_strength, tir_strength], dim=1)  # [B, 3]
+        modal_weights = self.modal_balance(modal_strengths)  # [B, 3]
+
+        # 提取各模态权重并扩展到token维度
+        w_rgb = modal_weights[:, 0].unsqueeze(1).repeat(1, T)  # [B, T]
+        w_nir = modal_weights[:, 1].unsqueeze(1).repeat(1, T)  # [B, T]
+        w_tir = modal_weights[:, 2].unsqueeze(1).repeat(1, T)  # [B, T]
+
+        # ========== Step 5: 最终权重计算与应用 ==========
+        # 综合各种权重
+        final_rgb_weights = (rgb_weights * global_weights * w_rgb).unsqueeze(-1)  # [B, T, 1]
+        final_nir_weights = (nir_weights * global_weights * w_nir).unsqueeze(-1)  # [B, T, 1]
+        final_tir_weights = (tir_weights * global_weights * w_tir).unsqueeze(-1)  # [B, T, 1]
+
+        # 增强权重学习
+        enhancement_weights = self.enhancement_net(global_context).unsqueeze(-1)  # [B, T, 1]
+
+        # 应用权重增强特征
+        if self.use_residual:
+            final_rgb = rgb_enhanced * final_rgb_weights * enhancement_weights + rgb_tokens
+            final_nir = nir_enhanced * final_nir_weights * enhancement_weights + nir_tokens
+            final_tir = tir_enhanced * final_tir_weights * enhancement_weights + tir_tokens
+        else:
+            final_rgb = rgb_enhanced * final_rgb_weights * enhancement_weights
+            final_nir = nir_enhanced * final_nir_weights * enhancement_weights
+            final_tir = tir_enhanced * final_tir_weights * enhancement_weights
+
+        return final_rgb, final_nir, final_tir
+
+
+class SimpleInteraction(nn.Module):
+    """简单但稳定的跨模态交互"""
+
+    def __init__(self, feature_dim):
+        super().__init__()
+        self.rgb_proj = nn.Linear(feature_dim, feature_dim)
+        self.nir_proj = nn.Linear(feature_dim, feature_dim)
+        self.tir_proj = nn.Linear(feature_dim, feature_dim)
+
+        self.interaction_weight = nn.Parameter(torch.tensor(0.1))
+
+    def forward(self, rgb_tokens, nir_tokens, tir_tokens):
+        # 简单的线性交互
+        rgb_enhanced = rgb_tokens + self.interaction_weight * (
+                self.nir_proj(nir_tokens) + self.tir_proj(tir_tokens)
+        ) / 2
+
+        nir_enhanced = nir_tokens + self.interaction_weight * (
+                self.rgb_proj(rgb_tokens) + self.tir_proj(tir_tokens)
+        ) / 2
+
+        tir_enhanced = tir_tokens + self.interaction_weight * (
+                self.rgb_proj(rgb_tokens) + self.nir_proj(nir_tokens)
+        ) / 2
+
+        return rgb_enhanced, nir_enhanced, tir_enhanced
+
+
+class ModalFusion(nn.Module):
+    """模态融合交互机制"""
+
+    def __init__(self, token_dim, reduction=4):
+        super().__init__()
+        self.fusion_net = nn.Sequential(
+            nn.Linear(token_dim * 3, token_dim * 2),
+            nn.ReLU(inplace=True),
+            nn.Linear(token_dim * 2, token_dim * 3),
+            nn.Sigmoid()
+        )
+
+    def forward(self, rgb_global, nir_global, tir_global,
+                rgb_tokens, nir_tokens, tir_tokens):
+        # 融合全局描述符
+        fused_global = torch.cat([rgb_global, nir_global, tir_global], dim=-1)  # [B, T*3]
+        fusion_weights = self.fusion_net(fused_global)  # [B, T*3]
+
+        # 分离权重
+        w_rgb, w_nir, w_tir = fusion_weights.chunk(3, dim=-1)  # [B, T] each
+
+        # 应用权重进行交互
+        rgb_enhanced = rgb_tokens * w_rgb.unsqueeze(-1) + 0.1 * (
+                nir_tokens * w_nir.unsqueeze(-1) + tir_tokens * w_tir.unsqueeze(-1)
+        ) / 2
+
+        nir_enhanced = nir_tokens * w_nir.unsqueeze(-1) + 0.1 * (
+                rgb_tokens * w_rgb.unsqueeze(-1) + tir_tokens * w_tir.unsqueeze(-1)
+        ) / 2
+
+        tir_enhanced = tir_tokens * w_tir.unsqueeze(-1) + 0.1 * (
+                rgb_tokens * w_rgb.unsqueeze(-1) + nir_tokens * w_nir.unsqueeze(-1)
+        ) / 2
+
+        return rgb_enhanced, nir_enhanced, tir_enhanced
+
+
+class AdaptiveWeighting(nn.Module):
+    """自适应权重交互机制"""
+
+    def __init__(self, token_dim, reduction=4):
+        super().__init__()
+        self.weight_net = nn.Sequential(
+            nn.Linear(token_dim * 3, token_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(token_dim, token_dim * 3),
+            nn.Softmax(dim=-1)
+        )
+
+        self.interaction_strength = nn.Parameter(torch.tensor(0.2))
+
+    def forward(self, rgb_global, nir_global, tir_global,
+                rgb_tokens, nir_tokens, tir_tokens):
+        # 计算自适应权重
+        combined_global = torch.cat([rgb_global, nir_global, tir_global], dim=-1)  # [B, T*3]
+        adaptive_weights = self.weight_net(combined_global)  # [B, T*3]
+
+        w_rgb, w_nir, w_tir = adaptive_weights.chunk(3, dim=-1)  # [B, T] each
+
+        # 交互式增强：每个模态都能看到其他模态的信息
+        rgb_enhanced = rgb_tokens + self.interaction_strength * (
+                w_nir.unsqueeze(-1) * nir_tokens + w_tir.unsqueeze(-1) * tir_tokens
+        ) / 2
+
+        nir_enhanced = nir_tokens + self.interaction_strength * (
+                w_rgb.unsqueeze(-1) * rgb_tokens + w_tir.unsqueeze(-1) * tir_tokens
+        ) / 2
+
+        tir_enhanced = tir_tokens + self.interaction_strength * (
+                w_rgb.unsqueeze(-1) * rgb_tokens + w_nir.unsqueeze(-1) * nir_tokens
+        ) / 2
+
+        return rgb_enhanced, nir_enhanced, tir_enhanced
+
+
+
+# ==================== 修复版特征区分度增强融合系统 ====================
+class FeatureDiversityEnhancedFusion(nn.Module):
+    """
+    特征区分度增强的融合系统 - 修复版
+    专门为MoE输入设计，最大化各模态特征的区分度
+    """
+
+    def __init__(self, feat_dim, dropout=0.1):
+        super().__init__()
+        self.feat_dim = feat_dim
+        self.dropout = dropout
+
+        # 保持原始token设计
+        scale = feat_dim ** -0.5
+        self.base_tokens = nn.ParameterDict({
+            'r': nn.Parameter(scale * torch.randn(1, 1, feat_dim)),
+            'n': nn.Parameter(scale * torch.randn(1, 1, feat_dim)),
+            't': nn.Parameter(scale * torch.randn(1, 1, feat_dim)),
+            'rn': nn.Parameter(scale * torch.randn(1, 1, feat_dim)),
+            'rt': nn.Parameter(scale * torch.randn(1, 1, feat_dim)),
+            'nt': nn.Parameter(scale * torch.randn(1, 1, feat_dim)),
+            'rnt': nn.Parameter(scale * torch.randn(1, 1, feat_dim))
+        })
+
+        # 🚀 创新1: 模态特异性增强器
+        self.modality_specific_enhancers = nn.ModuleDict({
+            'r': ModalitySpecificEnhancer(feat_dim, modality_type='rgb'),
+            'n': ModalitySpecificEnhancer(feat_dim, modality_type='nir'),
+            't': ModalitySpecificEnhancer(feat_dim, modality_type='tir'),
+            'rn': ModalitySpecificEnhancer(feat_dim, modality_type='dual'),
+            'rt': ModalitySpecificEnhancer(feat_dim, modality_type='dual'),
+            'nt': ModalitySpecificEnhancer(feat_dim, modality_type='dual'),
+            'rnt': ModalitySpecificEnhancer(feat_dim, modality_type='triple')
+        })
+
+        # 🚀 创新2: 特征分离器
+        self.feature_separators = nn.ModuleDict({
+            name: FeatureSeparator(feat_dim, separator_id=i)
+            for i, name in enumerate(['r', 'n', 't', 'rn', 'rt', 'nt', 'rnt'])
+        })
+
+        # 🚀 创新3: 对比学习损失计算器
+        self.contrastive_projector = ContrastiveProjector(feat_dim)
+
+        # 🚀 创新4: 区分度量化器
+        self.diversity_quantifier = DiversityQuantifier(feat_dim)
+
+        # 原始注意力模块
+        head_num_attn = feat_dim // 64
+        self.attentions = nn.ModuleDict({
+            'r': nn.MultiheadAttention(embed_dim=feat_dim, num_heads=head_num_attn, dropout=dropout),
+            'n': nn.MultiheadAttention(embed_dim=feat_dim, num_heads=head_num_attn, dropout=dropout),
+            't': nn.MultiheadAttention(embed_dim=feat_dim, num_heads=head_num_attn, dropout=dropout),
+            'rn': nn.MultiheadAttention(embed_dim=feat_dim, num_heads=head_num_attn, dropout=dropout),
+            'rt': nn.MultiheadAttention(embed_dim=feat_dim, num_heads=head_num_attn, dropout=dropout),
+            'nt': nn.MultiheadAttention(embed_dim=feat_dim, num_heads=head_num_attn, dropout=dropout),
+            'rnt': nn.MultiheadAttention(embed_dim=feat_dim, num_heads=head_num_attn, dropout=dropout)
+        })
+
+        # 🚀 创新5: 区分度损失权重
+        self.diversity_loss_weight = nn.Parameter(torch.tensor(1.0))
+
+        # 存储中间结果用于分析
+        self.intermediate_features = {}
+
+    def forward(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global, return_loss=True):
+        """
+        Args:
+            return_loss: 是否返回区分度损失（训练时True，推理时False）
+        Returns:
+            features: 7个具有高区分度的特征 [B, 512]
+            diversity_loss: 用于训练的区分度损失（可选）
+        """
+        batch = RGB_cash.size(1)
+
+        # Step 1: 构建特征图（保持原始逻辑）
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+
+        feature_maps = [RGB, NI, TI, RGB_NI, RGB_TI, NI_TI, RGB_NI_TI]
+        feature_names = ['r', 'n', 't', 'rn', 'rt', 'nt', 'rnt']
+
+        # Step 2: 原始注意力提取
+        raw_features = []
+        for name, feature_map in zip(feature_names, feature_maps):
+            token = self.base_tokens[name].repeat(1, batch, 1)
+            attn_output = self.attentions[name](token, feature_map, feature_map)[0]
+            feature = attn_output.permute(1, 2, 0).squeeze()
+            raw_features.append(feature)
+
+        # Step 3: 模态特异性增强
+        specific_features = []
+        for name, feature in zip(feature_names, raw_features):
+            enhanced_feature = self.modality_specific_enhancers[name](feature)
+            specific_features.append(enhanced_feature)
+
+        # Step 4: 特征分离
+        separated_features = []
+        for i, (name, feature) in enumerate(zip(feature_names, specific_features)):
+            separated_feature = self.feature_separators[name](feature, specific_features, i)
+            separated_features.append(separated_feature)
+
+        # 存储中间特征用于分析
+        self.intermediate_features = {
+            'raw': raw_features,
+            'specific': specific_features,
+            'separated': separated_features
+        }
+
+        if return_loss:
+            # Step 5: 计算区分度损失
+            diversity_loss = self._compute_diversity_loss(separated_features)
+            return separated_features, diversity_loss
+        else:
+            return separated_features
+
+    def _compute_diversity_loss(self, features):
+        """计算特征区分度损失"""
+        # 对比学习损失
+        contrastive_loss = self.contrastive_projector(features)
+
+        # 区分度量化损失
+        diversity_loss = self.diversity_quantifier(features)
+
+        # 总损失
+        total_loss = contrastive_loss + diversity_loss
+
+        return total_loss * self.diversity_loss_weight
+
+    def get_diversity_metrics(self):
+        """获取区分度指标用于监控"""
+        if not self.intermediate_features:
+            return {}
+
+        metrics = {}
+        for stage_name, features in self.intermediate_features.items():
+            # 计算特征间相似度
+            similarities = []
+            for i in range(len(features)):
+                for j in range(i + 1, len(features)):
+                    sim = F.cosine_similarity(features[i], features[j], dim=-1).mean()
+                    similarities.append(sim.item())
+
+            avg_similarity = sum(similarities) / len(similarities) if similarities else 0
+            metrics[f'{stage_name}_avg_similarity'] = avg_similarity
+            metrics[f'{stage_name}_diversity_score'] = 1.0 - avg_similarity
+
+        return metrics
+
+
+class ModalitySpecificEnhancer(nn.Module):
+    """模态特异性增强器"""
+
+    def __init__(self, feat_dim, modality_type):
+        super().__init__()
+        self.modality_type = modality_type
+        self.feat_dim = feat_dim
+
+        # 根据模态类型设计不同的增强策略
+        if modality_type == 'rgb':
+            # RGB模态：强调颜色和纹理特征，使用ReLU
+            self.enhancer = nn.Sequential(
+                nn.Linear(feat_dim, feat_dim * 2),
+                nn.LayerNorm(feat_dim * 2),
+                nn.ReLU(),
+                nn.Dropout(0.1),
+                nn.Linear(feat_dim * 2, feat_dim),
+                nn.LayerNorm(feat_dim)
+            )
+        elif modality_type == 'nir':
+            # NIR模态：强调植被和结构，使用GELU
+            self.enhancer = nn.Sequential(
+                nn.Linear(feat_dim, feat_dim * 2),
+                nn.LayerNorm(feat_dim * 2),
+                nn.GELU(),
+                nn.Dropout(0.1),
+                nn.Linear(feat_dim * 2, feat_dim),
+                nn.LayerNorm(feat_dim)
+            )
+        elif modality_type == 'tir':
+            # TIR模态：强调温度和热特征，使用自定义激活
+            self.enhancer = nn.Sequential(
+                nn.Linear(feat_dim, feat_dim * 2),
+                nn.LayerNorm(feat_dim * 2),
+                nn.SiLU(),  # 使用SiLU替代Mish
+                nn.Dropout(0.1),
+                nn.Linear(feat_dim * 2, feat_dim),
+                nn.LayerNorm(feat_dim)
+            )
+        elif modality_type == 'dual':
+            # 双模态：强调互补性，使用ELU
+            self.enhancer = nn.Sequential(
+                nn.Linear(feat_dim, feat_dim * 2),
+                nn.LayerNorm(feat_dim * 2),
+                nn.ELU(),
+                nn.Dropout(0.1),
+                nn.Linear(feat_dim * 2, feat_dim),
+                nn.LayerNorm(feat_dim)
+            )
+        else:  # triple
+            # 三模态：强调综合性，使用LeakyReLU
+            self.enhancer = nn.Sequential(
+                nn.Linear(feat_dim, feat_dim * 2),
+                nn.LayerNorm(feat_dim * 2),
+                nn.LeakyReLU(0.2),
+                nn.Dropout(0.1),
+                nn.Linear(feat_dim * 2, feat_dim),
+                nn.LayerNorm(feat_dim)
+            )
+
+        # 模态身份编码
+        self.modality_embedding = nn.Parameter(torch.randn(feat_dim) * 0.02)
+
+    def forward(self, feature):
+        """模态特异性增强"""
+        # 特异性增强
+        enhanced = self.enhancer(feature)
+
+        # 添加模态身份信息
+        modality_enhanced = enhanced + self.modality_embedding.unsqueeze(0)
+
+        # 残差连接，但权重较小以突出特异性
+        final_feature = 0.7 * modality_enhanced + 0.3 * feature
+
+        return final_feature
+
+
+class FeatureSeparator(nn.Module):
+    """特征分离器 - 最大化与其他特征的区别"""
+
+    def __init__(self, feat_dim, separator_id):
+        super().__init__()
+        self.feat_dim = feat_dim
+        self.separator_id = separator_id
+
+        # 分离网络
+        self.separator = nn.Sequential(
+            nn.Linear(feat_dim, feat_dim),
+            nn.LayerNorm(feat_dim),
+            nn.ReLU(),
+            nn.Linear(feat_dim, feat_dim)
+        )
+
+        # 正交化投影器
+        self.orthogonal_projector = OrthogonalProjector(feat_dim)
+
+        # 分离强度控制
+        self.separation_strength = nn.Parameter(torch.tensor(0.3))
+
+    def forward(self, target_feature, all_features, target_id):
+        """
+        Args:
+            target_feature: 当前特征 [B, feat_dim]
+            all_features: 所有特征列表
+            target_id: 当前特征的ID
+        """
+        # 基础分离
+        separated = self.separator(target_feature)
+
+        # 正交化处理
+        orthogonalized = self.orthogonal_projector(separated, all_features, target_id)
+
+        # 控制分离强度
+        final_feature = (1 - self.separation_strength) * target_feature + \
+                        self.separation_strength * orthogonalized
+
+        return final_feature
+
+
+class OrthogonalProjector(nn.Module):
+    """正交化投影器"""
+
+    def __init__(self, feat_dim):
+        super().__init__()
+        self.feat_dim = feat_dim
+
+        # 正交化权重
+        self.orthogonal_weight = nn.Parameter(torch.eye(feat_dim) * 0.05)
+
+    def forward(self, target_feature, all_features, target_id):
+        """正交化投影"""
+        # 计算与其他特征的相似度
+        similarities = []
+        for i, other_feature in enumerate(all_features):
+            if i != target_id and other_feature is not None:
+                sim = F.cosine_similarity(target_feature, other_feature, dim=-1, eps=1e-8)
+                similarities.append(sim.unsqueeze(-1))
+
+        if not similarities:
+            return target_feature
+
+        # 平均相似度
+        avg_similarity = torch.cat(similarities, dim=-1).mean(dim=-1, keepdim=True)
+
+        # 正交化投影
+        orthogonal_component = torch.matmul(target_feature, self.orthogonal_weight)
+
+        # 根据相似度调整正交化强度
+        orthogonalized = target_feature - avg_similarity * orthogonal_component
+
+        return orthogonalized
+
+
+class ContrastiveProjector(nn.Module):
+    """对比学习投影器 - 修复版"""
+
+    def __init__(self, feat_dim, projection_dim=128):
+        super().__init__()
+        self.projector = nn.Sequential(
+            nn.Linear(feat_dim, feat_dim),
+            nn.ReLU(),
+            nn.Linear(feat_dim, projection_dim)
+        )
+
+        self.temperature = nn.Parameter(torch.tensor(0.1))
+
+    def forward(self, features):
+        """计算对比学习损失"""
+        # 投影到对比空间并L2标准化
+        projected_features = []
+        for f in features:
+            proj = self.projector(f)
+            # 使用F.normalize替代nn.L2Norm
+            normalized = F.normalize(proj, p=2, dim=-1)
+            projected_features.append(normalized)
+
+        # 计算对比损失
+        contrastive_loss = 0
+        num_pairs = 0
+
+        for i in range(len(projected_features)):
+            for j in range(i + 1, len(projected_features)):
+                # 计算相似度
+                similarity = torch.sum(projected_features[i] * projected_features[j], dim=-1)
+                similarity = similarity / self.temperature
+
+                # 对比损失：希望不同模态特征尽可能不相似
+                loss = torch.mean(torch.exp(similarity))
+                contrastive_loss += loss
+                num_pairs += 1
+
+        return contrastive_loss / num_pairs if num_pairs > 0 else torch.tensor(0.0, device=features[0].device)
+
+
+class DiversityQuantifier(nn.Module):
+    """区分度量化器"""
+
+    def __init__(self, feat_dim):
+        super().__init__()
+        self.feat_dim = feat_dim
+
+        # 多样性度量网络
+        self.diversity_net = nn.Sequential(
+            nn.Linear(feat_dim * 7, feat_dim * 2),
+            nn.ReLU(),
+            nn.Linear(feat_dim * 2, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, features):
+        """量化特征区分度"""
+        # 拼接所有特征
+        all_features = torch.cat(features, dim=-1)  # [B, 7*feat_dim]
+
+        # 计算多样性得分
+        diversity_score = self.diversity_net(all_features)  # [B, 1]
+
+        # 多样性损失：希望多样性得分尽可能高
+        diversity_loss = torch.mean(1.0 - diversity_score)
+
+        return diversity_loss
+
+
+# ==================== 简化版MoE友好融合 ====================
+
+class FeatureDiversifier(nn.Module):
+    """简化的特征区分器"""
+
+    def __init__(self, feat_dim, diversifier_id):
+        super().__init__()
+        self.diversifier_id = diversifier_id
+
+        # 区分网络
+        self.diversify_net = nn.Sequential(
+            nn.Linear(feat_dim, feat_dim),
+            nn.LayerNorm(feat_dim),
+            nn.ReLU(),
+            nn.Linear(feat_dim, feat_dim)
+        )
+
+        # 区分强度
+        self.diversity_strength = nn.Parameter(torch.tensor(0.2))
+
+    def forward(self, target_feature, all_features, target_id):
+        """特征区分化"""
+        # 基础区分
+        diversified = self.diversify_net(target_feature)
+
+        # 计算与其他特征的相似度并减少相似性
+        other_features = [f for i, f in enumerate(all_features) if i != target_id]
+        if other_features:
+            avg_other = torch.stack(other_features).mean(dim=0)
+            # 朝远离平均值的方向调整
+            direction = diversified - avg_other
+            adjusted = diversified + self.diversity_strength * direction
+        else:
+            adjusted = diversified
+
+        # 残差连接
+        final_feature = 0.8 * adjusted + 0.2 * target_feature
+
+        return final_feature
+
 class GeneralFusion(nn.Module):
     def __init__(self, feat_dim, num_experts, head, reg_weight=0.1, dropout=0.1, cfg=None):
         super(GeneralFusion, self).__init__()
@@ -1365,10 +2041,13 @@ class GeneralFusion(nn.Module):
 
 
 
-        self.combineway = 'ebblockdeform'
+        self.combineway = 'multimodelse'
         print('combineway:', self.combineway)
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')
+        self.UsingDiversity = True
+        print('UsingDiversity:', self.UsingDiversity)
+
         # loggernew = logging.getLogger("DeMo")
         # loggernew.info(f'combineway: {self.combineway}')
 
@@ -1398,6 +2077,31 @@ class GeneralFusion(nn.Module):
                 q_size, 1, 512, 1, 0.0, 0.0, 2,
                 5.0, 4, True
             )
+        elif self.combineway == 'multimodelse':
+            if self.datasetsname == 'RGBNT201':
+                q_size = (16, 8)
+            elif self.datasetsname == 'RGBNT100':
+                q_size = (8, 16)
+            else:
+                q_size = (8, 16)
+
+            self.multimodal_token_se = MultiModalTokenSE(
+                token_dim= q_size[0] * q_size[1],
+                feature_dim=self.feat_dim,
+                reduction=4,
+                use_residual=True,
+                interaction_mode='adaptive_weight'
+            )
+
+            # 🚀 简化的特征区分增强器
+            self.feature_diversifiers = nn.ModuleList([
+                FeatureDiversifier(feat_dim, diversifier_id=i)
+                for i in range(7)
+            ])
+
+            # 区分度损失权重
+            self.diversity_weight = 0.1
+
             
         elif self.combineway == 'sedeform':
             if self.datasetsname == 'RGBNT201':
@@ -1609,6 +2313,103 @@ class GeneralFusion(nn.Module):
 
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
 
+    def forward_HDMmultimodelse(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+
+        # RGB_cash = self.tokense_r(RGB_cash)
+        # NI_cash = self.tokense_n(NI_cash)
+        # TI_cash = self.tokense_t(TI_cash)
+
+        RGB_cash, NI_cash, TI_cash = self.multimodal_token_se(RGB_cash, NI_cash, TI_cash)
+
+        RGB_cash = RGB_cash.permute(1, 0, 2) # token batch dim
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+
+
+        # xiamian shi deform
+        # RGB_cash = RGB_cash.permute(0, 2, 1)  # [B, T, N] → [B, N, T]
+        # NI_cash = NI_cash.permute(0, 2, 1)
+        # TI_cash = TI_cash.permute(0, 2, 1)
+        #
+        # if self.datasetsname == 'RGBNT100':
+        #     q_size = (8, 16)
+        # elif self.datasetsname == 'RGBNT201':
+        #     q_size = (16, 8)
+        # else:
+        #     q_size = (8, 16)
+        #
+        # RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), q_size[0], q_size[1])
+        # NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), q_size[0], q_size[1])
+        # TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), q_size[0], q_size[1])
+
+        # B, C, H, W = RGB_cash.size()
+        # dtype, device = RGB_cash.dtype, RGB_cash.device
+        # data = torch.cat([RGB_cash, NI_cash, TI_cash], dim=1)
+        #RGB_cash,NI_cash,TI_cash = self.deformselect(RGB_cash, NI_cash, TI_cash)
+
+
+
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+        batch = RGB.size(1)
+        # get the learnable token
+        r_embedding = self.r_token.repeat(1, batch, 1)
+        n_embedding = self.n_token.repeat(1, batch, 1)
+        t_embedding = self.t_token.repeat(1, batch, 1)
+        rn_embedding = self.rn_token.repeat(1, batch, 1)
+        rt_embedding = self.rt_token.repeat(1, batch, 1)
+        nt_embedding = self.nt_token.repeat(1, batch, 1)
+        rnt_embedding = self.rnt_token.repeat(1, batch, 1)
+
+        # for single modality
+        RGB_special = (self.r(r_embedding, RGB, RGB)[0]).permute(1, 2, 0).squeeze() #r_embedding, RGB, RGB 是 query, key, value, [0] 是 attn_output, 通用做法， permute(1, 2, 0) 是将 batch_size 放到最前面
+        NI_special = (self.n(n_embedding, NI, NI)[0]).permute(1, 2, 0).squeeze()
+        TI_special = (self.t(t_embedding, TI, TI)[0]).permute(1, 2, 0).squeeze()
+        # for double modality
+        RN_shared = (self.rn(rn_embedding, RGB_NI, RGB_NI)[0]).permute(1, 2, 0).squeeze()
+        RT_shared = (self.rt(rt_embedding, RGB_TI, RGB_TI)[0]).permute(1, 2, 0).squeeze()
+        NT_shared = (self.nt(nt_embedding, NI_TI, NI_TI)[0]).permute(1, 2, 0).squeeze()
+        # for triple modality
+        RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
+
+
+        if not self.UsingDiversity:
+            return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+        else:
+            raw_features = [RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared]
+            # 🚀 特征区分增强
+            diverse_features = []
+            for i, (feature, diversifier) in enumerate(zip(raw_features, self.feature_diversifiers)):
+                diverse_feature = diversifier(feature, raw_features, i)
+                diverse_features.append(diverse_feature)
+            # 计算简化的区分度损失
+            diversity_loss = self._compute_simple_diversity_loss(diverse_features)
+            return diverse_features[0], diverse_features[1], diverse_features[2], diverse_features[3], diverse_features[4], diverse_features[5], diverse_features[6], diversity_loss
+
+    def _compute_simple_diversity_loss(self, features):
+        """计算区分度损失"""
+        total_loss = 0
+        num_pairs = 0
+
+        for i in range(len(features)):
+            for j in range(i + 1, len(features)):
+                similarity = F.cosine_similarity(features[i], features[j], dim=-1).mean()
+                loss = torch.exp(similarity * 5)  # 惩罚高相似度
+                total_loss += loss
+                num_pairs += 1
+
+        return (total_loss / num_pairs) * self.diversity_weight if num_pairs > 0 else torch.tensor(0.0)
 
     def forward_HDMebblockDeform(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
@@ -2124,6 +2925,14 @@ class GeneralFusion(nn.Module):
         elif self.combineway == 'sedeform':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMseDeform(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'multimodelse':
+            if not self.UsingDiversity:
+                RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMmultimodelse(
+                    RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+            else:
+                RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared, lossdiversity = self.forward_HDMmultimodelse(
+                    RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+
         elif self.combineway == 'ebblockdeform':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMebblockDeform(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
@@ -2155,7 +2964,10 @@ class GeneralFusion(nn.Module):
             elif self.HDM and self.ATM:
                 moe_feat, loss_reg = self.forward_ATM(RGB_special, NI_special, TI_special, RN_shared, RT_shared,
                                                       NT_shared, RNT_shared)
-                return moe_feat, loss_reg
+                if not self.UsingDiversity:
+                    return moe_feat, loss_reg
+                else:
+                    return moe_feat, loss_reg+lossdiversity
         else:
             if self.HDM and not self.ATM:
                 moe_feat = torch.cat(

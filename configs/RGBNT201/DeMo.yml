@@ -11,6 +11,7 @@ MODEL:
   ATM: True
   HEAD: 4 # orginal 4
   FROZEN: False
+  CENGJIFUSION: True
 
 INPUT:
   SIZE_TRAIN: [ 256, 128 ]
@@ -39,7 +40,7 @@ SOLVER:
 
 TEST:
   IMS_PER_BATCH: 128
-  RE_RANKING: 'no'
+  RE_RANKING: 'yes'
   WEIGHT: ''
   NECK_FEAT: 'before'
   FEAT_NORM: 'yes'

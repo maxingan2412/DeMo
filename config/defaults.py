@@ -46,6 +46,7 @@ _C.MODEL.TRANSFORMER_TYPE = 'vit_base_patch16_224'
 _C.MODEL.STRIDE_SIZE = [16, 16]
 _C.MODEL.GLOBAL_LOCAL = False # Whether to use the local information in PIFE for DeMo
 _C.MODEL.HEAD = 12 # Number of heads in the ATMoE
+_C.MODEL.CENGJIFUSION = True
 
 # SIE Parameter
 _C.MODEL.SIE_COE = 3.0

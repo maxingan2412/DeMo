@@ -10,6 +10,7 @@ MODEL:
   HDM: True
   ATM: True
   HEAD: 8
+  CENGJIFUSION: True
 
 INPUT:
   SIZE_TRAIN: [ 128, 256 ]
@@ -38,7 +39,7 @@ SOLVER:
 
 TEST:
   IMS_PER_BATCH: 64
-  RE_RANKING: 'no'
+  RE_RANKING: 'yes'
   WEIGHT: ''
   NECK_FEAT: 'before'
   FEAT_NORM: 'yes'
