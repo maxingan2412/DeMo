@@ -415,6 +415,338 @@ class Transformer(nn.Module):
         return self.resblocks(x, modality, index, last_prompt)
 
 
+
+#------------------------- menkong
+class GatedModalityEnhancement(nn.Module):
+    """
+    门控模态增强模块
+    将融合特征y分别与各个单模态特征(x_rgb, x_nir, x_tir)进行门控融合，
+    生成增强的单模态特征
+
+    创新点：
+    1. 自适应门控：学习每个模态与融合特征的最优融合权重
+    2. 跨模态注意力：融合特征指导单模态特征的增强
+    3. 残差连接：保持原始单模态信息
+    4. 多层次融合：通道级和空间级双重门控
+    5. 模态特异性：为每个模态设计独立的门控机制
+    """
+
+    def __init__(self, dim, reduction_ratio=4):
+        super().__init__()
+        self.dim = dim
+        self.reduction_ratio = reduction_ratio
+
+        # 为每个模态创建独立的门控网络
+        self.rgb_gating = ModalityGatingUnit(dim, reduction_ratio, modality_name="RGB")
+        self.nir_gating = ModalityGatingUnit(dim, reduction_ratio, modality_name="NIR")
+        self.tir_gating = ModalityGatingUnit(dim, reduction_ratio, modality_name="TIR")
+
+        # 全局协调门控：协调三个模态的增强程度
+        self.global_coordination = GlobalCoordinationGate(dim)
+
+    def forward(self, x_rgb, x_nir, x_tir, y_fused):
+        """
+        Args:
+            x_rgb: RGB模态特征 (L, N, D)
+            x_nir: NIR模态特征 (L, N, D)
+            x_tir: TIR模态特征 (L, N, D)
+            y_fused: 融合特征 (L, N, D)
+        Returns:
+            enhanced_rgb: 增强的RGB特征 (L, N, D)
+            enhanced_nir: 增强的NIR特征 (L, N, D)
+            enhanced_tir: 增强的TIR特征 (L, N, D)
+        """
+
+        # 各模态独立门控增强
+        enhanced_rgb = self.rgb_gating(x_rgb, y_fused)
+        enhanced_nir = self.nir_gating(x_nir, y_fused)
+        enhanced_tir = self.tir_gating(x_tir, y_fused)
+
+        # 全局协调门控：平衡三个模态的增强效果
+        enhanced_rgb, enhanced_nir, enhanced_tir = self.global_coordination(
+            enhanced_rgb, enhanced_nir, enhanced_tir, x_rgb, x_nir, x_tir
+        )
+
+        return enhanced_rgb, enhanced_nir, enhanced_tir
+
+
+class ModalityGatingUnit(nn.Module):
+    """
+    单模态门控单元
+    为特定模态设计的门控融合机制
+    """
+
+    def __init__(self, dim, reduction_ratio=4, modality_name=""):
+        super().__init__()
+        self.dim = dim
+        self.modality_name = modality_name
+
+        # 1. 跨模态注意力门控
+        self.cross_modal_attention = CrossModalAttentionGate(dim)
+
+        # 2. 通道级门控网络 - 修复版本
+        self.channel_gate = nn.Sequential(
+            nn.Linear(dim, dim // reduction_ratio),
+            nn.ReLU(inplace=True),
+            nn.Linear(dim // reduction_ratio, dim),
+            nn.Sigmoid()
+        )
+
+        # 3. 空间级门控网络（token级）
+        self.spatial_gate = nn.Sequential(
+            nn.Linear(dim * 2, dim),  # 融合单模态和多模态特征
+            nn.ReLU(inplace=True),
+            nn.Linear(dim, 1),
+            nn.Sigmoid()
+        )
+
+        # 4. 特征融合网络
+        self.feature_fusion = nn.Sequential(
+            nn.Linear(dim * 2, dim * 2),
+            nn.LayerNorm(dim * 2),
+            nn.ReLU(inplace=True),
+            nn.Linear(dim * 2, dim),
+            nn.LayerNorm(dim)
+        )
+
+        # 5. 自适应权重学习
+        self.adaptive_weight = nn.Sequential(
+            nn.Linear(dim * 2, dim // 2),
+            nn.ReLU(inplace=True),
+            nn.Linear(dim // 2, 2),  # 输出两个权重：原始特征权重 + 融合特征权重
+            nn.Softmax(dim=-1)
+        )
+
+        # 6. 残差连接的权重
+        self.residual_weight = nn.Parameter(torch.ones(1) * 0.1)
+
+    def forward(self, x_modal, y_fused):
+        """
+        Args:
+            x_modal: 单模态特征 (L, N, D)
+            y_fused: 融合特征 (L, N, D)
+        Returns:
+            enhanced_modal: 增强的单模态特征 (L, N, D)
+        """
+        L, N, D = x_modal.shape
+
+        # 1. 跨模态注意力：融合特征指导单模态特征
+        attended_modal = self.cross_modal_attention(x_modal, y_fused)
+
+        # 2. 通道级门控 - 修复版本
+        # 计算全局特征表示
+        global_modal = x_modal.mean(dim=0, keepdim=True)  # (1, N, D)
+        global_fused = y_fused.mean(dim=0, keepdim=True)  # (1, N, D)
+        combined_global = global_modal + global_fused  # (1, N, D)
+
+        # 直接通过线性层计算通道权重
+        channel_weights = self.channel_gate(combined_global)  # (1, N, D)
+
+        # 应用通道门控
+        channel_gated = attended_modal * channel_weights  # (L, N, D)
+
+        # 3. 空间级门控（token级）
+        # 拼接单模态和融合特征用于空间门控
+        spatial_input = torch.cat([x_modal, y_fused], dim=-1)  # (L, N, 2*D)
+        spatial_weights = self.spatial_gate(spatial_input)  # (L, N, 1)
+
+        # 应用空间门控
+        spatial_gated = channel_gated * spatial_weights  # (L, N, D)
+
+        # 4. 特征融合
+        fusion_input = torch.cat([spatial_gated, y_fused], dim=-1)  # (L, N, 2*D)
+        fused_features = self.feature_fusion(fusion_input)  # (L, N, D)
+
+        # 5. 自适应权重融合
+        weight_input = torch.cat([x_modal, fused_features], dim=-1)  # (L, N, 2*D)
+        adaptive_weights = self.adaptive_weight(weight_input)  # (L, N, 2)
+        w_original, w_fused = adaptive_weights[..., 0:1], adaptive_weights[..., 1:2]
+
+        # 加权融合
+        weighted_fusion = w_original * x_modal + w_fused * fused_features
+
+        # 6. 残差连接
+        enhanced_modal = weighted_fusion + self.residual_weight * x_modal
+
+        return enhanced_modal
+
+
+class CrossModalAttentionGate(nn.Module):
+    """
+    跨模态注意力门控
+    使用融合特征作为Query，单模态特征作为Key和Value
+    """
+
+    def __init__(self, dim, num_heads=8):
+        super().__init__()
+        self.dim = dim
+        self.num_heads = num_heads
+        self.head_dim = dim // num_heads
+        assert dim % num_heads == 0, "dim must be divisible by num_heads"
+
+        self.scale = self.head_dim ** -0.5
+
+        # Query从融合特征生成，Key和Value从单模态特征生成
+        self.q_proj = nn.Linear(dim, dim, bias=False)
+        self.k_proj = nn.Linear(dim, dim, bias=False)
+        self.v_proj = nn.Linear(dim, dim, bias=False)
+        self.out_proj = nn.Linear(dim, dim)
+
+        self.dropout = nn.Dropout(0.1)
+
+    def forward(self, x_modal, y_fused):
+        """
+        Args:
+            x_modal: 单模态特征 (L, N, D)
+            y_fused: 融合特征 (L, N, D)
+        Returns:
+            attended_modal: 注意力增强的单模态特征 (L, N, D)
+        """
+        L, N, D = x_modal.shape
+
+        # 生成Query, Key, Value
+        Q = self.q_proj(y_fused)  # 使用融合特征作为Query
+        K = self.k_proj(x_modal)  # 使用单模态特征作为Key
+        V = self.v_proj(x_modal)  # 使用单模态特征作为Value
+
+        # 重塑为多头注意力格式
+        Q = Q.view(L, N, self.num_heads, self.head_dim).transpose(1, 2)  # (L, num_heads, N, head_dim)
+        K = K.view(L, N, self.num_heads, self.head_dim).transpose(1, 2)  # (L, num_heads, N, head_dim)
+        V = V.view(L, N, self.num_heads, self.head_dim).transpose(1, 2)  # (L, num_heads, N, head_dim)
+
+        # 计算注意力分数
+        attention_scores = torch.matmul(Q, K.transpose(-2, -1)) * self.scale  # (L, num_heads, N, N)
+        attention_weights = F.softmax(attention_scores, dim=-1)
+        attention_weights = self.dropout(attention_weights)
+
+        # 应用注意力权重
+        attended = torch.matmul(attention_weights, V)  # (L, num_heads, N, head_dim)
+
+        # 重塑回原始格式
+        attended = attended.transpose(1, 2).contiguous().view(L, N, D)  # (L, N, D)
+
+        # 输出投影
+        attended_modal = self.out_proj(attended)
+
+        return attended_modal
+
+
+class GlobalCoordinationGate(nn.Module):
+    """
+    全局协调门控
+    协调三个模态的增强效果，确保模态间的平衡
+    """
+
+    def __init__(self, dim):
+        super().__init__()
+        self.dim = dim
+
+        # 模态间相互作用网络
+        self.interaction_net = nn.Sequential(
+            nn.Linear(dim * 3, dim * 2),
+            nn.LayerNorm(dim * 2),
+            nn.ReLU(inplace=True),
+            nn.Linear(dim * 2, dim),
+            nn.LayerNorm(dim)
+        )
+
+        # 平衡权重网络
+        self.balance_net = nn.Sequential(
+            nn.Linear(dim * 6, dim),  # 增强特征 + 原始特征
+            nn.ReLU(inplace=True),
+            nn.Linear(dim, 3),  # 三个模态的平衡权重
+            nn.Softmax(dim=-1)
+        )
+
+        # 全局调制门控
+        self.global_gate = nn.Sequential(
+            nn.Linear(dim, dim // 4),
+            nn.ReLU(inplace=True),
+            nn.Linear(dim // 4, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, enhanced_rgb, enhanced_nir, enhanced_tir,
+                original_rgb, original_nir, original_tir):
+        """
+        Args:
+            enhanced_*: 增强的模态特征 (L, N, D)
+            original_*: 原始的模态特征 (L, N, D)
+        Returns:
+            coordinated_*: 协调后的模态特征 (L, N, D)
+        """
+
+        # 1. 计算模态间相互作用
+        enhanced_concat = torch.cat([enhanced_rgb, enhanced_nir, enhanced_tir], dim=-1)
+        interaction_features = self.interaction_net(enhanced_concat)  # (L, N, D)
+
+        # 2. 计算平衡权重
+        all_features = torch.cat([
+            enhanced_rgb, enhanced_nir, enhanced_tir,
+            original_rgb, original_nir, original_tir
+        ], dim=-1)  # (L, N, 6*D)
+
+        # 全局平均池化
+        global_features = all_features.mean(dim=0, keepdim=True)  # (1, N, 6*D)
+        balance_weights = self.balance_net(global_features)  # (1, N, 3)
+        w_rgb, w_nir, w_tir = balance_weights[..., 0:1], balance_weights[..., 1:2], balance_weights[..., 2:3]
+
+        # 3. 全局调制
+        global_modulation = self.global_gate(interaction_features)  # (L, N, 1)
+
+        # 4. 应用协调
+        coordinated_rgb = enhanced_rgb * w_rgb * global_modulation + original_rgb * (1 - global_modulation)
+        coordinated_nir = enhanced_nir * w_nir * global_modulation + original_nir * (1 - global_modulation)
+        coordinated_tir = enhanced_tir * w_tir * global_modulation + original_tir * (1 - global_modulation)
+
+        return coordinated_rgb, coordinated_nir, coordinated_tir
+
+class SimpleModalityGate(nn.Module):
+    """简化的单模态门控"""
+
+    def __init__(self, dim):
+        super().__init__()
+
+        # 融合网络
+        self.fusion_net = nn.Sequential(
+            nn.Linear(dim * 2, dim),
+            nn.LayerNorm(dim),
+            nn.ReLU(inplace=True)
+        )
+
+        # 门控网络
+        self.gate_net = nn.Sequential(
+            nn.Linear(dim * 2, dim),
+            nn.Sigmoid()
+        )
+
+        # 权重学习
+        self.weight_net = nn.Sequential(
+            nn.Linear(dim * 2, 2),
+            nn.Softmax(dim=-1)
+        )
+
+    def forward(self, x_modal, y_fused):
+        # 拼接特征
+        concat_features = torch.cat([x_modal, y_fused], dim=-1)  # (L, N, 2*D)
+
+        # 融合特征
+        fused = self.fusion_net(concat_features)  # (L, N, D)
+
+        # 计算门控权重
+        gate = self.gate_net(concat_features)  # (L, N, D)
+        gated_fused = fused * gate
+
+        # 计算混合权重
+        weights = self.weight_net(concat_features)  # (L, N, 2)
+        w1, w2 = weights[..., 0:1], weights[..., 1:2]
+
+        # 最终融合
+        enhanced = w1 * x_modal + w2 * gated_fused
+
+        return enhanced
+
+
 # 原始InnovativeDFF模块（修改为LND格式）
 
 # 快速上采样替代函数
@@ -862,336 +1194,6 @@ class QuadInputHierarchicalDFF(nn.Module):
         return final_output
 
 
-#------------------------- menkong
-class GatedModalityEnhancement(nn.Module):
-    """
-    门控模态增强模块
-    将融合特征y分别与各个单模态特征(x_rgb, x_nir, x_tir)进行门控融合，
-    生成增强的单模态特征
-
-    创新点：
-    1. 自适应门控：学习每个模态与融合特征的最优融合权重
-    2. 跨模态注意力：融合特征指导单模态特征的增强
-    3. 残差连接：保持原始单模态信息
-    4. 多层次融合：通道级和空间级双重门控
-    5. 模态特异性：为每个模态设计独立的门控机制
-    """
-
-    def __init__(self, dim, reduction_ratio=4):
-        super().__init__()
-        self.dim = dim
-        self.reduction_ratio = reduction_ratio
-
-        # 为每个模态创建独立的门控网络
-        self.rgb_gating = ModalityGatingUnit(dim, reduction_ratio, modality_name="RGB")
-        self.nir_gating = ModalityGatingUnit(dim, reduction_ratio, modality_name="NIR")
-        self.tir_gating = ModalityGatingUnit(dim, reduction_ratio, modality_name="TIR")
-
-        # 全局协调门控：协调三个模态的增强程度
-        self.global_coordination = GlobalCoordinationGate(dim)
-
-    def forward(self, x_rgb, x_nir, x_tir, y_fused):
-        """
-        Args:
-            x_rgb: RGB模态特征 (L, N, D)
-            x_nir: NIR模态特征 (L, N, D)
-            x_tir: TIR模态特征 (L, N, D)
-            y_fused: 融合特征 (L, N, D)
-        Returns:
-            enhanced_rgb: 增强的RGB特征 (L, N, D)
-            enhanced_nir: 增强的NIR特征 (L, N, D)
-            enhanced_tir: 增强的TIR特征 (L, N, D)
-        """
-
-        # 各模态独立门控增强
-        enhanced_rgb = self.rgb_gating(x_rgb, y_fused)
-        enhanced_nir = self.nir_gating(x_nir, y_fused)
-        enhanced_tir = self.tir_gating(x_tir, y_fused)
-
-        # 全局协调门控：平衡三个模态的增强效果
-        enhanced_rgb, enhanced_nir, enhanced_tir = self.global_coordination(
-            enhanced_rgb, enhanced_nir, enhanced_tir, x_rgb, x_nir, x_tir
-        )
-
-        return enhanced_rgb, enhanced_nir, enhanced_tir
-
-
-class ModalityGatingUnit(nn.Module):
-    """
-    单模态门控单元
-    为特定模态设计的门控融合机制
-    """
-
-    def __init__(self, dim, reduction_ratio=4, modality_name=""):
-        super().__init__()
-        self.dim = dim
-        self.modality_name = modality_name
-
-        # 1. 跨模态注意力门控
-        self.cross_modal_attention = CrossModalAttentionGate(dim)
-
-        # 2. 通道级门控网络 - 修复版本
-        self.channel_gate = nn.Sequential(
-            nn.Linear(dim, dim // reduction_ratio),
-            nn.ReLU(inplace=True),
-            nn.Linear(dim // reduction_ratio, dim),
-            nn.Sigmoid()
-        )
-
-        # 3. 空间级门控网络（token级）
-        self.spatial_gate = nn.Sequential(
-            nn.Linear(dim * 2, dim),  # 融合单模态和多模态特征
-            nn.ReLU(inplace=True),
-            nn.Linear(dim, 1),
-            nn.Sigmoid()
-        )
-
-        # 4. 特征融合网络
-        self.feature_fusion = nn.Sequential(
-            nn.Linear(dim * 2, dim * 2),
-            nn.LayerNorm(dim * 2),
-            nn.ReLU(inplace=True),
-            nn.Linear(dim * 2, dim),
-            nn.LayerNorm(dim)
-        )
-
-        # 5. 自适应权重学习
-        self.adaptive_weight = nn.Sequential(
-            nn.Linear(dim * 2, dim // 2),
-            nn.ReLU(inplace=True),
-            nn.Linear(dim // 2, 2),  # 输出两个权重：原始特征权重 + 融合特征权重
-            nn.Softmax(dim=-1)
-        )
-
-        # 6. 残差连接的权重
-        self.residual_weight = nn.Parameter(torch.ones(1) * 0.1)
-
-    def forward(self, x_modal, y_fused):
-        """
-        Args:
-            x_modal: 单模态特征 (L, N, D)
-            y_fused: 融合特征 (L, N, D)
-        Returns:
-            enhanced_modal: 增强的单模态特征 (L, N, D)
-        """
-        L, N, D = x_modal.shape
-
-        # 1. 跨模态注意力：融合特征指导单模态特征
-        attended_modal = self.cross_modal_attention(x_modal, y_fused)
-
-        # 2. 通道级门控 - 修复版本
-        # 计算全局特征表示
-        global_modal = x_modal.mean(dim=0, keepdim=True)  # (1, N, D)
-        global_fused = y_fused.mean(dim=0, keepdim=True)  # (1, N, D)
-        combined_global = global_modal + global_fused  # (1, N, D)
-
-        # 直接通过线性层计算通道权重
-        channel_weights = self.channel_gate(combined_global)  # (1, N, D)
-
-        # 应用通道门控
-        channel_gated = attended_modal * channel_weights  # (L, N, D)
-
-        # 3. 空间级门控（token级）
-        # 拼接单模态和融合特征用于空间门控
-        spatial_input = torch.cat([x_modal, y_fused], dim=-1)  # (L, N, 2*D)
-        spatial_weights = self.spatial_gate(spatial_input)  # (L, N, 1)
-
-        # 应用空间门控
-        spatial_gated = channel_gated * spatial_weights  # (L, N, D)
-
-        # 4. 特征融合
-        fusion_input = torch.cat([spatial_gated, y_fused], dim=-1)  # (L, N, 2*D)
-        fused_features = self.feature_fusion(fusion_input)  # (L, N, D)
-
-        # 5. 自适应权重融合
-        weight_input = torch.cat([x_modal, fused_features], dim=-1)  # (L, N, 2*D)
-        adaptive_weights = self.adaptive_weight(weight_input)  # (L, N, 2)
-        w_original, w_fused = adaptive_weights[..., 0:1], adaptive_weights[..., 1:2]
-
-        # 加权融合
-        weighted_fusion = w_original * x_modal + w_fused * fused_features
-
-        # 6. 残差连接
-        enhanced_modal = weighted_fusion + self.residual_weight * x_modal
-
-        return enhanced_modal
-
-
-class CrossModalAttentionGate(nn.Module):
-    """
-    跨模态注意力门控
-    使用融合特征作为Query，单模态特征作为Key和Value
-    """
-
-    def __init__(self, dim, num_heads=8):
-        super().__init__()
-        self.dim = dim
-        self.num_heads = num_heads
-        self.head_dim = dim // num_heads
-        assert dim % num_heads == 0, "dim must be divisible by num_heads"
-
-        self.scale = self.head_dim ** -0.5
-
-        # Query从融合特征生成，Key和Value从单模态特征生成
-        self.q_proj = nn.Linear(dim, dim, bias=False)
-        self.k_proj = nn.Linear(dim, dim, bias=False)
-        self.v_proj = nn.Linear(dim, dim, bias=False)
-        self.out_proj = nn.Linear(dim, dim)
-
-        self.dropout = nn.Dropout(0.1)
-
-    def forward(self, x_modal, y_fused):
-        """
-        Args:
-            x_modal: 单模态特征 (L, N, D)
-            y_fused: 融合特征 (L, N, D)
-        Returns:
-            attended_modal: 注意力增强的单模态特征 (L, N, D)
-        """
-        L, N, D = x_modal.shape
-
-        # 生成Query, Key, Value
-        Q = self.q_proj(y_fused)  # 使用融合特征作为Query
-        K = self.k_proj(x_modal)  # 使用单模态特征作为Key
-        V = self.v_proj(x_modal)  # 使用单模态特征作为Value
-
-        # 重塑为多头注意力格式
-        Q = Q.view(L, N, self.num_heads, self.head_dim).transpose(1, 2)  # (L, num_heads, N, head_dim)
-        K = K.view(L, N, self.num_heads, self.head_dim).transpose(1, 2)  # (L, num_heads, N, head_dim)
-        V = V.view(L, N, self.num_heads, self.head_dim).transpose(1, 2)  # (L, num_heads, N, head_dim)
-
-        # 计算注意力分数
-        attention_scores = torch.matmul(Q, K.transpose(-2, -1)) * self.scale  # (L, num_heads, N, N)
-        attention_weights = F.softmax(attention_scores, dim=-1)
-        attention_weights = self.dropout(attention_weights)
-
-        # 应用注意力权重
-        attended = torch.matmul(attention_weights, V)  # (L, num_heads, N, head_dim)
-
-        # 重塑回原始格式
-        attended = attended.transpose(1, 2).contiguous().view(L, N, D)  # (L, N, D)
-
-        # 输出投影
-        attended_modal = self.out_proj(attended)
-
-        return attended_modal
-
-
-class GlobalCoordinationGate(nn.Module):
-    """
-    全局协调门控
-    协调三个模态的增强效果，确保模态间的平衡
-    """
-
-    def __init__(self, dim):
-        super().__init__()
-        self.dim = dim
-
-        # 模态间相互作用网络
-        self.interaction_net = nn.Sequential(
-            nn.Linear(dim * 3, dim * 2),
-            nn.LayerNorm(dim * 2),
-            nn.ReLU(inplace=True),
-            nn.Linear(dim * 2, dim),
-            nn.LayerNorm(dim)
-        )
-
-        # 平衡权重网络
-        self.balance_net = nn.Sequential(
-            nn.Linear(dim * 6, dim),  # 增强特征 + 原始特征
-            nn.ReLU(inplace=True),
-            nn.Linear(dim, 3),  # 三个模态的平衡权重
-            nn.Softmax(dim=-1)
-        )
-
-        # 全局调制门控
-        self.global_gate = nn.Sequential(
-            nn.Linear(dim, dim // 4),
-            nn.ReLU(inplace=True),
-            nn.Linear(dim // 4, 1),
-            nn.Sigmoid()
-        )
-
-    def forward(self, enhanced_rgb, enhanced_nir, enhanced_tir,
-                original_rgb, original_nir, original_tir):
-        """
-        Args:
-            enhanced_*: 增强的模态特征 (L, N, D)
-            original_*: 原始的模态特征 (L, N, D)
-        Returns:
-            coordinated_*: 协调后的模态特征 (L, N, D)
-        """
-
-        # 1. 计算模态间相互作用
-        enhanced_concat = torch.cat([enhanced_rgb, enhanced_nir, enhanced_tir], dim=-1)
-        interaction_features = self.interaction_net(enhanced_concat)  # (L, N, D)
-
-        # 2. 计算平衡权重
-        all_features = torch.cat([
-            enhanced_rgb, enhanced_nir, enhanced_tir,
-            original_rgb, original_nir, original_tir
-        ], dim=-1)  # (L, N, 6*D)
-
-        # 全局平均池化
-        global_features = all_features.mean(dim=0, keepdim=True)  # (1, N, 6*D)
-        balance_weights = self.balance_net(global_features)  # (1, N, 3)
-        w_rgb, w_nir, w_tir = balance_weights[..., 0:1], balance_weights[..., 1:2], balance_weights[..., 2:3]
-
-        # 3. 全局调制
-        global_modulation = self.global_gate(interaction_features)  # (L, N, 1)
-
-        # 4. 应用协调
-        coordinated_rgb = enhanced_rgb * w_rgb * global_modulation + original_rgb * (1 - global_modulation)
-        coordinated_nir = enhanced_nir * w_nir * global_modulation + original_nir * (1 - global_modulation)
-        coordinated_tir = enhanced_tir * w_tir * global_modulation + original_tir * (1 - global_modulation)
-
-        return coordinated_rgb, coordinated_nir, coordinated_tir
-
-class SimpleModalityGate(nn.Module):
-    """简化的单模态门控"""
-
-    def __init__(self, dim):
-        super().__init__()
-
-        # 融合网络
-        self.fusion_net = nn.Sequential(
-            nn.Linear(dim * 2, dim),
-            nn.LayerNorm(dim),
-            nn.ReLU(inplace=True)
-        )
-
-        # 门控网络
-        self.gate_net = nn.Sequential(
-            nn.Linear(dim * 2, dim),
-            nn.Sigmoid()
-        )
-
-        # 权重学习
-        self.weight_net = nn.Sequential(
-            nn.Linear(dim * 2, 2),
-            nn.Softmax(dim=-1)
-        )
-
-    def forward(self, x_modal, y_fused):
-        # 拼接特征
-        concat_features = torch.cat([x_modal, y_fused], dim=-1)  # (L, N, 2*D)
-
-        # 融合特征
-        fused = self.fusion_net(concat_features)  # (L, N, D)
-
-        # 计算门控权重
-        gate = self.gate_net(concat_features)  # (L, N, D)
-        gated_fused = fused * gate
-
-        # 计算混合权重
-        weights = self.weight_net(concat_features)  # (L, N, 2)
-        w1, w2 = weights[..., 0:1], weights[..., 1:2]
-
-        # 最终融合
-        enhanced = w1 * x_modal + w2 * gated_fused
-
-        return enhanced
-
 
 
 
@@ -1239,7 +1241,18 @@ class VisionTransformer(nn.Module):
         # self.quad_dffs = UltraLightQuadDFF(width)
 
         #self.gated_enhancement = GatedModalityEnhancement(width)
-        self.gated_enhancement = GatedModalityEnhancement(width)
+
+        self.simplegate = False
+        print('simplegate:', self.simplegate,'mxa')
+        if self.simplegate:
+            # 使用简化的门控机制
+            self.gated_enhancement = SimpleModalityGate(width)
+        else:
+            # 使用复杂的门控机制
+            self.gated_enhancement = GatedModalityEnhancement(width)
+
+        self.tiaoyuelianjie = False
+        print('tiaoyuelianjie:', self.tiaoyuelianjie,'mxa')
 
     def forward(self, x: torch.Tensor, cv_emb=None, modality=None):
         #ientify if input is dict
@@ -1287,23 +1300,32 @@ class VisionTransformer(nn.Module):
 
             # 初始化融合结果
             #y = torch.randn(x_rgb.shape[0], x_rgb.shape[1], x_rgb.shape[2], device=x_rgb.device, dtype=x_rgb.dtype)
-
+            if self.tiaoyuelianjie:
+                fusion_layers = [0, 2, 4, 6, 8, 10]  # 需要进行融合的层索引
+            else:
+                fusion_layers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
             for i in range(len(self.transformer.resblocks)):
                 x_rgb = self.transformer.resblocks[i](x_rgb, modality, i, None, prompt_sign=False, adapter_sign=False)
                 x_nir = self.transformer.resblocks[i](x_nir, modality, i, None, prompt_sign=False, adapter_sign=False)
                 x_tir = self.transformer.resblocks[i](x_tir, modality, i, None, prompt_sign=False, adapter_sign=False)
                 # DFF融合逻辑
-                if i == 0:
-                    # 第一层：三输入融合
-                    y = self.triple_dff(x_rgb, x_nir, x_tir)
-                else:
-                    # 后续层：四输入融合（包含上一层结果）
-                    y = self.quad_dffs(x_rgb, x_nir, x_tir, y)
 
-            x_rgb, x_nir, x_tir = self.gated_enhancement(x_rgb, x_nir, x_tir, y)
-            # x_rgb = self.gated_enhancement(x_rgb, y)
-            # x_nir = self.gated_enhancement(x_nir, y)
-            # x_tir = self.gated_enhancement(x_tir, y)
+                # 只在指定层进行融合
+                if i in fusion_layers:
+                    if i == 0:
+                        # 第一层：三输入融合
+                        y = self.triple_dff(x_rgb, x_nir, x_tir)
+                    else:
+                        # 后续融合层：四输入融合（包含上一层融合结果）
+                        y = self.quad_dffs(x_rgb, x_nir, x_tir, y)
+
+
+            if self.simplegate:
+                x_rgb = self.gated_enhancement(x_rgb, y)
+                x_nir = self.gated_enhancement(x_nir, y)
+                x_tir = self.gated_enhancement(x_tir, y)
+            else:
+                x_rgb, x_nir, x_tir = self.gated_enhancement(x_rgb, x_nir, x_tir, y)
 
             # x_rgb = x_rgb + y
             # x_nir = x_nir + y

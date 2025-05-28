@@ -17,8 +17,8 @@ class DeMo(nn.Module):
         self.cengjifusion = cfg.MODEL.CENGJIFUSION
 
 
-        print('cengjifusion:', self.cengjifusion)
-        print('rwkvbackbone:', self.rwkvbackbone)
+        print('cengjifusion:', self.cengjifusion,'mxa')
+        print('rwkvbackbone:', self.rwkvbackbone,'mxa')
 
         if 'vit_base_patch16_224' in cfg.MODEL.TRANSFORMER_TYPE:
             self.feat_dim = 768
@@ -27,15 +27,11 @@ class DeMo(nn.Module):
         elif 'VRWKV6BASE' in cfg.MODEL.TRANSFORMER_TYPE:
             self.feat_dim = 768
             self.rwkvbackbone = True
-        #self.frozen = cfg.MODEL.FROZEN
-        # self.rwkvbackbone = True
-        # if self.rwkvbackbone:
-        #     # for rwkv
-        #     self.feat_dim = 768
 
-            print('using rwkv backbone')
+
+            print('using rwkv backbone','mxa')
         self.cfg = cfg
-        if cfg.MODEL.FROZEN:
+        if cfg.MODEL.FROZEN and False:
             self.BACKBONE_R = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
             self.BACKBONE_N = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
             self.BACKBONE_T = build_transformer(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
@@ -77,7 +73,7 @@ class DeMo(nn.Module):
                                             nn.Linear(2 * self.feat_dim, self.feat_dim), QuickGELU())
 
         if self.HDM or self.ATM:
-            self.generalFusion = GeneralFusion(feat_dim=self.feat_dim, num_experts=7, head=self.head, reg_weight=0,
+            self.generalFusion = GeneralFusion(feat_dim=self.feat_dim, num_experts=7, head=self.head, reg_weight=1,
                                                cfg=cfg)
             self.classifier_moe = nn.Linear(7 * self.feat_dim, self.num_classes, bias=False)
             self.classifier_moe.apply(weights_init_classifier)
@@ -139,7 +135,7 @@ class DeMo(nn.Module):
             RGB = x['RGB']
             NI = x['NI']
             TI = x['TI']
-            if self.cfg.MODEL.FROZEN:
+            if self.cfg.MODEL.FROZEN and False:
                 RGB_cash, RGB_global = self.BACKBONE_R(RGB, cam_label=cam_label, view_label=view_label) #RGB_cash 是除了cls token之外的所有token的特征
                 NI_cash, NI_global = self.BACKBONE_N(NI, cam_label=cam_label, view_label=view_label)
                 TI_cash, TI_global = self.BACKBONE_T(TI, cam_label=cam_label, view_label=view_label)
@@ -205,7 +201,7 @@ class DeMo(nn.Module):
 
             if 'cam_label' in x:
                 cam_label = x['cam_label']
-            if self.cfg.MODEL.FROZEN:
+            if self.cfg.MODEL.FROZEN and False:
                 RGB_cash, RGB_global = self.BACKBONE_R(RGB, cam_label=cam_label, view_label=view_label)
                 NI_cash, NI_global = self.BACKBONE_N(NI, cam_label=cam_label, view_label=view_label)
                 TI_cash, TI_global = self.BACKBONE_T(TI, cam_label=cam_label, view_label=view_label)

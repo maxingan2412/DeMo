@@ -10,7 +10,7 @@ MODEL:
   HDM: True
   ATM: True
   HEAD: 4 # orginal 4
-  FROZEN: False
+  FROZEN: True
   CENGJIFUSION: True
 
 INPUT:

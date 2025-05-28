@@ -48,6 +48,8 @@ def do_train(cfg,
     test_sign = cfg.MODEL.HDM or cfg.MODEL.ATM
     # train
     best_index = {'mAP': 0, "Rank-1": 0, 'Rank-5': 0, 'Rank-10': 0}
+    diversityweight = 10
+    print('diversityweight:', diversityweight,'mxa')
     for epoch in range(1, epochs + 1):
         start_time = time.time()
         loss_meter.reset()
@@ -71,9 +73,8 @@ def do_train(cfg,
                     for i in range(0, index, 2):
                         loss_tmp = loss_fn(score=output[i], feat=output[i + 1], target=target, target_cam=target_cam)
                         loss = loss + loss_tmp
-                    weight = 6.0
-                    print('diversity weight:', weight)
-                    loss = loss + output[-1] * weight
+
+                    loss = loss + output[-1] * diversityweight
                 else:
                     for i in range(0, len(output), 2):
                         loss_tmp = loss_fn(score=output[i], feat=output[i + 1], target=target, target_cam=target_cam)

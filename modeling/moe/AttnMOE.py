@@ -439,14 +439,103 @@ class GatingNetwork(nn.Module):
         return gates
 
 
+# class MoM(nn.Module):
+#     def __init__(self, input_dim, num_experts, head):
+#         super(MoM, self).__init__()
+#         self.head_dim = input_dim // head
+#         self.head = head
+#         self.experts = nn.ModuleList(
+#             [ExpertHead(self.head_dim, num_experts) for _ in range(head)])
+#         self.gating_network = GatingNetwork(input_dim, head)
+#
+#     def forward(self, x1, x2, x3, x4, x5, x6, x7):
+#         if x1.dim() == 1:
+#             x1 = x1.unsqueeze(0)
+#             x2 = x2.unsqueeze(0)
+#             x3 = x3.unsqueeze(0)
+#             x4 = x4.unsqueeze(0)
+#             x5 = x5.unsqueeze(0)
+#             x6 = x6.unsqueeze(0)
+#             x7 = x7.unsqueeze(0)
+#
+#         x1_chunk = torch.chunk(x1, self.head, dim=-1)
+#         x2_chunk = torch.chunk(x2, self.head, dim=-1)
+#         x3_chunk = torch.chunk(x3, self.head, dim=-1)
+#         x4_chunk = torch.chunk(x4, self.head, dim=-1)
+#         x5_chunk = torch.chunk(x5, self.head, dim=-1)
+#         x6_chunk = torch.chunk(x6, self.head, dim=-1)
+#         x7_chunk = torch.chunk(x7, self.head, dim=-1)
+#         head_input = [[x1_chunk[i], x2_chunk[i], x3_chunk[i], x4_chunk[i], x5_chunk[i], x6_chunk[i], x7_chunk[i]] for i
+#                       in range(self.head)] #按head 分块，每个head 有7个输入
+#         query = torch.cat([x1, x2, x3, x4, x5, x6, x7], dim=-1)
+#         key = torch.stack([x1, x2, x3, x4, x5, x6, x7], dim=1)
+#         gate_heads = self.gating_network(query, key) # Multi-HeadAttentionGating 似乎思这个，就是拿 query 和key 生成的attn作为门控
+#         expert_outputs = [expert(head_input[i], gate_heads[:, i]) for i, expert in enumerate(self.experts)]
+#         outputs = torch.cat(expert_outputs, dim=-1).flatten(start_dim=1, end_dim=-1)
+#         loss = 0
+#         if self.training:
+#             return outputs, loss
+#         return outputs
+
+
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
 class MoM(nn.Module):
-    def __init__(self, input_dim, num_experts, head):
+    def __init__(self, input_dim, num_experts, head,
+                 lb_weight=0.1, div_weight=0.1, margin_weight=0.1, margin=0.3):
         super(MoM, self).__init__()
         self.head_dim = input_dim // head
         self.head = head
+        self.num_experts = num_experts
+        self.lb_weight = lb_weight
+        self.div_weight = div_weight
+        self.margin_weight = margin_weight
+        self.margin = margin
+
         self.experts = nn.ModuleList(
             [ExpertHead(self.head_dim, num_experts) for _ in range(head)])
         self.gating_network = GatingNetwork(input_dim, head)
+
+    def compute_uniform_kl_loss(self, gate_weights):
+        """
+        KL divergence between average gate distribution and uniform prior.
+        gate_weights: [B, H, E]
+        """
+        avg = gate_weights.mean(dim=(0, 1))  # [E]
+        uniform = torch.full_like(avg, 1.0 / avg.numel())
+        return F.kl_div(avg.log(), uniform, reduction='batchmean')
+
+    def compute_js_divergence(self, gate_weights):
+        """
+        Jensen-Shannon divergence across heads to encourage diversity.
+        gate_weights: [B, H, E]
+        """
+        B, H, E = gate_weights.shape
+        # pairwise distributions p1, p2: [B, H, H, E]
+        p1 = gate_weights.unsqueeze(2).expand(-1, -1, H, -1)
+        p2 = gate_weights.unsqueeze(1).expand(-1, H, -1, -1)
+        m = 0.5 * (p1 + p2)
+        # compute KL divergences, sum over experts dim
+        kl1 = F.kl_div(p1.log(), m, reduction='none').sum(-1)  # [B,H,H]
+        kl2 = F.kl_div(p2.log(), m, reduction='none').sum(-1)  # [B,H,H]
+        js = 0.5 * (kl1 + kl2)  # [B,H,H]
+        # mask out self-pairs
+        mask = (1 - torch.eye(H, device=gate_weights.device)).unsqueeze(0)  # [1,H,H]
+        js = js * mask  # [B,H,H]
+        # average over batch and head pairs
+        return js.sum() / (B * H * (H - 1))
+
+    def compute_margin_loss(self, gate_weights):
+        """
+        Margin-based loss between top-2 experts per head.
+        gate_weights: [B, H, E]
+        """
+        top2 = torch.topk(gate_weights, k=2, dim=-1).values  # [B, H, 2]
+        margin_diff = top2[..., 0] - top2[..., 1]
+        return F.relu(self.margin - margin_diff).mean()
 
     def forward(self, x1, x2, x3, x4, x5, x6, x7):
         if x1.dim() == 1:
@@ -458,26 +547,44 @@ class MoM(nn.Module):
             x6 = x6.unsqueeze(0)
             x7 = x7.unsqueeze(0)
 
-        x1_chunk = torch.chunk(x1, self.head, dim=-1)
-        x2_chunk = torch.chunk(x2, self.head, dim=-1)
-        x3_chunk = torch.chunk(x3, self.head, dim=-1)
-        x4_chunk = torch.chunk(x4, self.head, dim=-1)
-        x5_chunk = torch.chunk(x5, self.head, dim=-1)
-        x6_chunk = torch.chunk(x6, self.head, dim=-1)
-        x7_chunk = torch.chunk(x7, self.head, dim=-1)
-        head_input = [[x1_chunk[i], x2_chunk[i], x3_chunk[i], x4_chunk[i], x5_chunk[i], x6_chunk[i], x7_chunk[i]] for i
-                      in range(self.head)] #按head 分块，每个head 有7个输入
+        # split into heads
+        chunks = [torch.chunk(x, self.head, dim=-1)
+                  for x in (x1, x2, x3, x4, x5, x6, x7)]
+        head_inputs = [[chunks[v][i] for v in range(7)]
+                        for i in range(self.head)]
+
+        # build query and key
         query = torch.cat([x1, x2, x3, x4, x5, x6, x7], dim=-1)
-        key = torch.stack([x1, x2, x3, x4, x5, x6, x7], dim=1)
-        gate_heads = self.gating_network(query, key) # Multi-HeadAttentionGating 似乎思这个，就是拿 query 和key 生成的attn作为门控
-        expert_outputs = [expert(head_input[i], gate_heads[:, i]) for i, expert in enumerate(self.experts)]
-        outputs = torch.cat(expert_outputs, dim=-1).flatten(start_dim=1, end_dim=-1)
-        loss = 0
-        if self.training:
-            return outputs, loss
-        return outputs
+        key   = torch.stack([x1, x2, x3, x4, x5, x6, x7], dim=1)
 
+        # gating
+        gate_heads = self.gating_network(query, key)  # [B, H, 1, E]
+        all_gw = []
+        outputs = []
+        for i, expert in enumerate(self.experts):
+            gh = gate_heads[:, i]
+            out = expert(head_inputs[i], gh)
+            outputs.append(out)
+            # collect gate weights [B, E]
+            all_gw.append(gh.squeeze(1))
 
+        # combine expert outputs
+        features = torch.cat(outputs, dim=-1).flatten(start_dim=1)
+
+        if not self.training:
+            return features
+
+        # compute auxiliary losses
+        gate_weights = torch.stack(all_gw, dim=1)  # [B, H, E]
+        lb_loss  = self.compute_uniform_kl_loss(gate_weights)
+        js_loss  = self.compute_js_divergence(gate_weights)
+        m_loss   = self.compute_margin_loss(gate_weights)
+
+        loss = (self.lb_weight   * lb_loss
+              + self.div_weight  * js_loss
+              + self.margin_weight * m_loss)
+
+        return features, loss
 
 
 ##
@@ -1332,7 +1439,7 @@ class EBlock(nn.Module):
         return x
 
 
-
+#################SE PART ############################################
 class MultiModalTokenSE(nn.Module):
     """
     多模态交互式TokenSE模块 - 稳定版
@@ -2042,11 +2149,11 @@ class GeneralFusion(nn.Module):
 
 
         self.combineway = 'multimodelse'
-        print('combineway:', self.combineway)
+        print('combineway:', self.combineway,'mxa')
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')
-        self.UsingDiversity = True
-        print('UsingDiversity:', self.UsingDiversity)
+        self.UsingDiversity = False
+        print('UsingDiversity:', self.UsingDiversity,'mxa')
 
         # loggernew = logging.getLogger("DeMo")
         # loggernew.info(f'combineway: {self.combineway}')
@@ -2084,23 +2191,30 @@ class GeneralFusion(nn.Module):
                 q_size = (8, 16)
             else:
                 q_size = (8, 16)
+            self.usemultimodal_token_se = True
+            print('usemultimodal_token_se:', self.usemultimodal_token_se, 'mxa')
+            if self.usemultimodal_token_se:
+                self.multimodal_token_se = MultiModalTokenSE(
+                    token_dim= q_size[0] * q_size[1],
+                    feature_dim=self.feat_dim,
+                    reduction=4,
+                    use_residual=True,
+                    interaction_mode='adaptive_weight'
+                )
+            if self.UsingDiversity:
+                # 🚀 简化的特征区分增强器
+                self.feature_diversifiers = nn.ModuleList([
+                    FeatureDiversifier(feat_dim, diversifier_id=i)
+                    for i in range(7)
+                ])
 
-            self.multimodal_token_se = MultiModalTokenSE(
-                token_dim= q_size[0] * q_size[1],
-                feature_dim=self.feat_dim,
-                reduction=4,
-                use_residual=True,
-                interaction_mode='adaptive_weight'
-            )
+                # 区分度损失权重
+                self.diversity_weight = 0.1
 
-            # 🚀 简化的特征区分增强器
-            self.feature_diversifiers = nn.ModuleList([
-                FeatureDiversifier(feat_dim, diversifier_id=i)
-                for i in range(7)
-            ])
-
-            # 区分度损失权重
-            self.diversity_weight = 0.1
+            # self.deformselect = DAttentionBaseline(
+            #     q_size, 1, 512, 1, 0.0, 0.0, 2,
+            #     5.0, 4, True
+            # )
 
             
         elif self.combineway == 'sedeform':
@@ -2118,6 +2232,27 @@ class GeneralFusion(nn.Module):
             self.tokense_r = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
             self.tokense_n = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
             self.tokense_t = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
+        elif self.combineway == 'multimodeltokense':
+            if self.datasetsname == 'RGBNT201':
+                q_size = (16, 8)
+            elif self.datasetsname == 'RGBNT100':
+                q_size = (8, 16)
+            else:
+                q_size = (8, 16)
+            self.tokense_r = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
+            self.tokense_n = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
+            self.tokense_t = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
+            if self.UsingDiversity:
+                # 🚀 简化的特征区分增强器
+                self.feature_diversifiers = nn.ModuleList([
+                    FeatureDiversifier(feat_dim, diversifier_id=i)
+                    for i in range(7)
+                ])
+
+                # 区分度损失权重
+                self.diversity_weight = 0.1
+
+            
         elif self.combineway == 'rwkvadd' or self.combineway == 'rwkvaddlinear':
             rwkv_cfg = dict(
                 #n_embd=feat_dim,
@@ -2312,6 +2447,70 @@ class GeneralFusion(nn.Module):
         RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
 
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+    
+    def forward_HDMmultimodeltokense(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+
+        RGB_cash = self.tokense_r(RGB_cash)
+        NI_cash = self.tokense_n(NI_cash)
+        TI_cash = self.tokense_t(TI_cash)
+
+
+
+        RGB_cash = RGB_cash.permute(1, 0, 2) # token batch dim
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+
+
+
+
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+        batch = RGB.size(1)
+        # get the learnable token
+        r_embedding = self.r_token.repeat(1, batch, 1)
+        n_embedding = self.n_token.repeat(1, batch, 1)
+        t_embedding = self.t_token.repeat(1, batch, 1)
+        rn_embedding = self.rn_token.repeat(1, batch, 1)
+        rt_embedding = self.rt_token.repeat(1, batch, 1)
+        nt_embedding = self.nt_token.repeat(1, batch, 1)
+        rnt_embedding = self.rnt_token.repeat(1, batch, 1)
+
+        # for single modality
+        RGB_special = (self.r(r_embedding, RGB, RGB)[0]).permute(1, 2, 0).squeeze() #r_embedding, RGB, RGB 是 query, key, value, [0] 是 attn_output, 通用做法， permute(1, 2, 0) 是将 batch_size 放到最前面
+        NI_special = (self.n(n_embedding, NI, NI)[0]).permute(1, 2, 0).squeeze()
+        TI_special = (self.t(t_embedding, TI, TI)[0]).permute(1, 2, 0).squeeze()
+        # for double modality
+        RN_shared = (self.rn(rn_embedding, RGB_NI, RGB_NI)[0]).permute(1, 2, 0).squeeze()
+        RT_shared = (self.rt(rt_embedding, RGB_TI, RGB_TI)[0]).permute(1, 2, 0).squeeze()
+        NT_shared = (self.nt(nt_embedding, NI_TI, NI_TI)[0]).permute(1, 2, 0).squeeze()
+        # for triple modality
+        RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
+
+
+        if not self.UsingDiversity:
+            return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+        else:
+            raw_features = [RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared]
+            # 🚀 特征区分增强
+            diverse_features = []
+            for i, (feature, diversifier) in enumerate(zip(raw_features, self.feature_diversifiers)):
+                diverse_feature = diversifier(feature, raw_features, i)
+                diverse_features.append(diverse_feature)
+            # 计算简化的区分度损失
+            diversity_loss = self._compute_simple_diversity_loss(diverse_features)
+            return diverse_features[0], diverse_features[1], diverse_features[2], diverse_features[3], diverse_features[4], diverse_features[5], diverse_features[6], diversity_loss
+
 
     def forward_HDMmultimodelse(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
@@ -2323,8 +2522,9 @@ class GeneralFusion(nn.Module):
         # RGB_cash = self.tokense_r(RGB_cash)
         # NI_cash = self.tokense_n(NI_cash)
         # TI_cash = self.tokense_t(TI_cash)
+        if self.usemultimodal_token_se:
+            RGB_cash, NI_cash, TI_cash = self.multimodal_token_se(RGB_cash, NI_cash, TI_cash)
 
-        RGB_cash, NI_cash, TI_cash = self.multimodal_token_se(RGB_cash, NI_cash, TI_cash)
 
         RGB_cash = RGB_cash.permute(1, 0, 2) # token batch dim
         NI_cash = NI_cash.permute(1, 0, 2)
@@ -2346,11 +2546,11 @@ class GeneralFusion(nn.Module):
         # RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), q_size[0], q_size[1])
         # NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), q_size[0], q_size[1])
         # TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), q_size[0], q_size[1])
+        #
+        # RGB_cash,NI_cash,TI_cash = self.deformselect(RGB_cash, NI_cash, TI_cash)
 
-        # B, C, H, W = RGB_cash.size()
-        # dtype, device = RGB_cash.dtype, RGB_cash.device
-        # data = torch.cat([RGB_cash, NI_cash, TI_cash], dim=1)
-        #RGB_cash,NI_cash,TI_cash = self.deformselect(RGB_cash, NI_cash, TI_cash)
+        ############
+
 
 
 
@@ -2931,6 +3131,13 @@ class GeneralFusion(nn.Module):
                     RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
             else:
                 RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared, lossdiversity = self.forward_HDMmultimodelse(
+                    RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'multimodeltokense':
+            if not self.UsingDiversity:
+                RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMmultimodeltokense(
+                    RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+            else:
+                RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared, lossdiversity = self.forward_HDMmultimodeltokense(
                     RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
 
         elif self.combineway == 'ebblockdeform':
