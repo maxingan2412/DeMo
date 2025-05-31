@@ -33,6 +33,7 @@ _C.MODEL.ADAPTER = False # From MambaPro
 _C.MODEL.FROZEN = False # whether to freeze the backbone
 _C.MODEL.HDM = False # whether to use HDM in DeMo
 _C.MODEL.ATM = False # whether to use ATM in DeMo
+_C.MODEL.NEWDEFORM = True # whether to use ATMoE in DeMo
 # If train with label smooth, options: 'on', 'off'
 _C.MODEL.IF_LABELSMOOTH = 'on'
 # If train with the contact feature

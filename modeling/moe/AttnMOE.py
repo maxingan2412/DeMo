@@ -18,7 +18,6 @@ import torch.nn as nn
 from torch.nn import functional as F
 import torch.utils.checkpoint as cp
 import os
-from mmcv.runner.base_module import BaseModule, ModuleList
 
 
 # logger = logging.getLogger(__name__)
@@ -28,6 +27,7 @@ HEAD_SIZE = 64
 userwkvblock = False
 if userwkvblock:
     from torch.utils.cpp_extension import load
+    from mmcv.runner.base_module import BaseModule, ModuleList
 
     cur_dir = os.path.dirname(os.path.abspath(__file__))  # 当前是 backbones/
     cuda_dir = os.path.join(cur_dir, "cuda_v6")
@@ -41,320 +41,320 @@ if userwkvblock:
                      "--extra-device-vectorization", f"-D_N_={HEAD_SIZE}",
                      f"-D_T_={T_MAX}"])
 #
-class WKV_6(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, B, T, C, H, r, k, v, w, u):
-        with torch.no_grad():
-            assert HEAD_SIZE == C // H
-            ctx.B = B
-            ctx.T = T
-            ctx.C = C
-            ctx.H = H
-            assert r.is_contiguous()
-            assert k.is_contiguous()
-            assert v.is_contiguous()
-            assert w.is_contiguous()
-            assert u.is_contiguous()
-            ew = (-torch.exp(w.float())).contiguous()
-            ctx.save_for_backward(r, k, v, ew, u)
-            y = torch.empty((B, T, C), device=r.device, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
-            wkv6_cuda.forward(B, T, C, H, r, k, v, ew, u, y)
-            return y
-
-    @staticmethod
-    def backward(ctx, gy):
-        with torch.no_grad():
-            B = ctx.B
-            T = ctx.T
-            C = ctx.C
-            H = ctx.H
-            assert gy.is_contiguous()
-            r, k, v, ew, u = ctx.saved_tensors
-            gr = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
-            gk = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
-            gv = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
-            gw = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
-            gu = torch.empty((B, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
-            wkv6_cuda.backward(B, T, C, H, r, k, v, ew, u, gy, gr, gk, gv, gw, gu)
-            gu = torch.sum(gu, 0).view(H, C//H)
-            return (None, None, None, None, gr, gk, gv, gw, gu)
-def RUN_CUDA_RWKV6(B, T, C, H, r, k, v, w, u):
-    return WKV_6.apply(B, T, C, H, r, k, v, w, u)
-
-def q_shift_multihead(input, shift_pixel=1, head_dim=HEAD_SIZE,
-                      patch_resolution=None, with_cls_token=False):
-    B, N, C = input.shape
-    assert C % head_dim == 0
-    assert head_dim % 4 == 0
-    if with_cls_token:
-        cls_tokens = input[:, [-1], :]
-        input = input[:, :-1, :]
-    input = input.transpose(1, 2).reshape(
-        B, -1, head_dim, patch_resolution[0], patch_resolution[1])  # [B, n_head, head_dim H, W]
-    B, _, _, H, W = input.shape
-    output = torch.zeros_like(input)
-    output[:, :, 0:int(head_dim*1/4), :, shift_pixel:W] = \
-        input[:, :, 0:int(head_dim*1/4), :, 0:W-shift_pixel]
-    output[:, :, int(head_dim/4):int(head_dim/2), :, 0:W-shift_pixel] = \
-        input[:, :, int(head_dim/4):int(head_dim/2), :, shift_pixel:W]
-    output[:, :, int(head_dim/2):int(head_dim/4*3), shift_pixel:H, :] = \
-        input[:, :, int(head_dim/2):int(head_dim/4*3), 0:H-shift_pixel, :]
-    output[:, :, int(head_dim*3/4):int(head_dim), 0:H-shift_pixel, :] = \
-        input[:, :, int(head_dim*3/4):int(head_dim), shift_pixel:H, :]
-    if with_cls_token:
-        output = output.reshape(B, C, N-1).transpose(1, 2)
-        output = torch.cat((output, cls_tokens), dim=1)
-    else:
-        output = output.reshape(B, C, N).transpose(1, 2)
-    return output
-class VRWKV_SpatialMix_V6(BaseModule):
-    def __init__(self, n_embd, n_head, n_layer, layer_id, shift_mode='q_shift_multihead',
-                 shift_pixel=1, init_mode='fancy', key_norm=False, with_cls_token=False,
-                 with_cp=False):
-        super().__init__()
-        self.layer_id = layer_id
-        self.n_layer = n_layer
-        self.n_embd = n_embd
-        self.attn_sz = n_embd
-
-        self.n_head = n_head
-        self.head_size = self.attn_sz // self.n_head
-        assert self.head_size == HEAD_SIZE
-        self.device = None
-        self._init_weights(init_mode)
-        self.with_cls_token = with_cls_token
-        self.shift_pixel = shift_pixel
-        self.shift_mode = shift_mode
-
-
-        self.shift_func = eval(shift_mode)
-
-        self.key = nn.Linear(self.n_embd, self.attn_sz, bias=False)
-        self.value = nn.Linear(self.n_embd, self.attn_sz, bias=False)
-        self.receptance = nn.Linear(self.n_embd, self.attn_sz, bias=False)
-        self.gate = nn.Linear(self.n_embd, self.attn_sz, bias=False)
-        if key_norm:
-            self.key_norm = nn.LayerNorm(n_embd)
-        else:
-            self.key_norm = None
-        self.output = nn.Linear(self.attn_sz, n_embd, bias=False)
-
-        self.ln_x = nn.GroupNorm(self.n_head, self.attn_sz, eps=1e-5)
-        self.with_cp = with_cp
-
-    def _init_weights(self, init_mode):
-        if init_mode == 'fancy':
+    class WKV_6(torch.autograd.Function):
+        @staticmethod
+        def forward(ctx, B, T, C, H, r, k, v, w, u):
             with torch.no_grad():
-                ratio_0_to_1 = self.layer_id / (self.n_layer - 1)  # 0 to 1
-                ratio_1_to_almost0 = 1.0 - (self.layer_id / self.n_layer)  # 1 to ~0
-                ddd = torch.ones(1, 1, self.n_embd)
-                for i in range(self.n_embd):
-                    ddd[0, 0, i] = i / self.n_embd
+                assert HEAD_SIZE == C // H
+                ctx.B = B
+                ctx.T = T
+                ctx.C = C
+                ctx.H = H
+                assert r.is_contiguous()
+                assert k.is_contiguous()
+                assert v.is_contiguous()
+                assert w.is_contiguous()
+                assert u.is_contiguous()
+                ew = (-torch.exp(w.float())).contiguous()
+                ctx.save_for_backward(r, k, v, ew, u)
+                y = torch.empty((B, T, C), device=r.device, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                wkv6_cuda.forward(B, T, C, H, r, k, v, ew, u, y)
+                return y
 
-                # fancy time_mix
-                self.time_maa_x = nn.Parameter(1.0 - torch.pow(ddd, ratio_1_to_almost0))
-                self.time_maa_w = nn.Parameter(1.0 - torch.pow(ddd, ratio_1_to_almost0))
-                self.time_maa_k = nn.Parameter(1.0 - torch.pow(ddd, ratio_1_to_almost0))
-                self.time_maa_v = nn.Parameter(1.0 - (torch.pow(ddd, ratio_1_to_almost0) + 0.3 * ratio_0_to_1))
-                self.time_maa_r = nn.Parameter(1.0 - torch.pow(ddd, 0.5 * ratio_1_to_almost0))
-                self.time_maa_g = nn.Parameter(1.0 - torch.pow(ddd, 0.5 * ratio_1_to_almost0))
+        @staticmethod
+        def backward(ctx, gy):
+            with torch.no_grad():
+                B = ctx.B
+                T = ctx.T
+                C = ctx.C
+                H = ctx.H
+                assert gy.is_contiguous()
+                r, k, v, ew, u = ctx.saved_tensors
+                gr = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                gk = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                gv = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                gw = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                gu = torch.empty((B, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                wkv6_cuda.backward(B, T, C, H, r, k, v, ew, u, gy, gr, gk, gv, gw, gu)
+                gu = torch.sum(gu, 0).view(H, C//H)
+                return (None, None, None, None, gr, gk, gv, gw, gu)
+    def RUN_CUDA_RWKV6(B, T, C, H, r, k, v, w, u):
+        return WKV_6.apply(B, T, C, H, r, k, v, w, u)
 
-                TIME_MIX_EXTRA_DIM = 32  # generate TIME_MIX for w,k,v,r,g
-                self.time_maa_w1 = nn.Parameter(torch.zeros(self.n_embd, TIME_MIX_EXTRA_DIM * 5).uniform_(-1e-4, 1e-4))
-                self.time_maa_w2 = nn.Parameter(torch.zeros(5, TIME_MIX_EXTRA_DIM, self.n_embd).uniform_(-1e-4, 1e-4))
-
-                # fancy time_decay
-                decay_speed = torch.ones(self.attn_sz)
-                for n in range(self.attn_sz):
-                    decay_speed[n] = -6 + 5 * (n / (self.attn_sz - 1)) ** (0.7 + 1.3 * ratio_0_to_1)
-                self.time_decay = nn.Parameter(decay_speed.reshape(1, 1, self.attn_sz))
-
-                TIME_DECAY_EXTRA_DIM = 64
-                self.time_decay_w1 = nn.Parameter(torch.zeros(self.n_embd, TIME_DECAY_EXTRA_DIM).uniform_(-1e-4, 1e-4))
-                self.time_decay_w2 = nn.Parameter(torch.zeros(TIME_DECAY_EXTRA_DIM, self.attn_sz).uniform_(-1e-4, 1e-4))
-
-                tmp = torch.zeros(self.attn_sz)
-                for n in range(self.attn_sz):
-                    zigzag = ((n + 1) % 3 - 1) * 0.1
-                    tmp[n] = ratio_0_to_1 * (1 - (n / (self.attn_sz - 1))) + zigzag
-
-                self.time_faaaa = nn.Parameter(tmp.reshape(self.n_head, self.head_size))
+    def q_shift_multihead(input, shift_pixel=1, head_dim=HEAD_SIZE,
+                          patch_resolution=None, with_cls_token=False):
+        B, N, C = input.shape
+        assert C % head_dim == 0
+        assert head_dim % 4 == 0
+        if with_cls_token:
+            cls_tokens = input[:, [-1], :]
+            input = input[:, :-1, :]
+        input = input.transpose(1, 2).reshape(
+            B, -1, head_dim, patch_resolution[0], patch_resolution[1])  # [B, n_head, head_dim H, W]
+        B, _, _, H, W = input.shape
+        output = torch.zeros_like(input)
+        output[:, :, 0:int(head_dim*1/4), :, shift_pixel:W] = \
+            input[:, :, 0:int(head_dim*1/4), :, 0:W-shift_pixel]
+        output[:, :, int(head_dim/4):int(head_dim/2), :, 0:W-shift_pixel] = \
+            input[:, :, int(head_dim/4):int(head_dim/2), :, shift_pixel:W]
+        output[:, :, int(head_dim/2):int(head_dim/4*3), shift_pixel:H, :] = \
+            input[:, :, int(head_dim/2):int(head_dim/4*3), 0:H-shift_pixel, :]
+        output[:, :, int(head_dim*3/4):int(head_dim), 0:H-shift_pixel, :] = \
+            input[:, :, int(head_dim*3/4):int(head_dim), shift_pixel:H, :]
+        if with_cls_token:
+            output = output.reshape(B, C, N-1).transpose(1, 2)
+            output = torch.cat((output, cls_tokens), dim=1)
         else:
-            raise NotImplementedError
+            output = output.reshape(B, C, N).transpose(1, 2)
+        return output
+    class VRWKV_SpatialMix_V6(BaseModule):
+        def __init__(self, n_embd, n_head, n_layer, layer_id, shift_mode='q_shift_multihead',
+                     shift_pixel=1, init_mode='fancy', key_norm=False, with_cls_token=False,
+                     with_cp=False):
+            super().__init__()
+            self.layer_id = layer_id
+            self.n_layer = n_layer
+            self.n_embd = n_embd
+            self.attn_sz = n_embd
 
-    def jit_func(self, x, patch_resolution):
-        # Mix x with the previous timestep to produce xk, xv, xr
-        B, T, C = x.size()
-
-        xx = self.shift_func(x, self.shift_pixel, patch_resolution=patch_resolution,
-                             with_cls_token=self.with_cls_token) - x  # shiftq - x
-        xxx = x + xx * self.time_maa_x  # [B, T, C]
-        xxx = torch.tanh(xxx @ self.time_maa_w1).view(B * T, 5, -1).transpose(0, 1)
-        # [5, B*T, TIME_MIX_EXTRA_DIM]
-        xxx = torch.bmm(xxx, self.time_maa_w2).view(5, B, T, -1)
-        # [5, B, T, C]
-        mw, mk, mv, mr, mg = xxx.unbind(dim=0)
-
-        xw = x + xx * (self.time_maa_w + mw)
-        xk = x + xx * (self.time_maa_k + mk)
-        xv = x + xx * (self.time_maa_v + mv)
-        xr = x + xx * (self.time_maa_r + mr)
-        xg = x + xx * (self.time_maa_g + mg)
-
-        r = self.receptance(xr)
-        k = self.key(xk)
-        v = self.value(xv)
-        g = F.silu(self.gate(xg))
-
-        ww = torch.tanh(xw @ self.time_decay_w1) @ self.time_decay_w2
-        # [B, T, C]
-        w = self.time_decay + ww
-
-        return r, k, v, g, w
-
-    def jit_func_2(self, x, g):
-        B, T, C = x.size()
-        x = x.view(B * T, C)
-
-        x = self.ln_x(x).view(B, T, C)
-        x = self.output(x * g)
-        return x
-
-    def forward(self, x, patch_resolution=None):
-        def _inner_forward(x):
-            B, T, C = x.size()
-            self.device = x.device
-
-            r, k, v, g, w = self.jit_func(x, patch_resolution)
-            #x = RUN_CUDA_RWKV6(B, T, C, self.n_head, r, k, v, w, u=self.time_faaaa)
-            x = RUN_CUDA_RWKV6(B, T, C, self.n_head, r.float(), k.float(), v.float(), w.float(), u=self.time_faaaa.float())
-
-            if self.key_norm is not None:
-                x = self.key_norm(x)
-            return self.jit_func_2(x, g)
-
-        if self.with_cp and x.requires_grad:
-            x = cp.checkpoint(_inner_forward, x)
-        else:
-            x = _inner_forward(x)
-        return x
+            self.n_head = n_head
+            self.head_size = self.attn_sz // self.n_head
+            assert self.head_size == HEAD_SIZE
+            self.device = None
+            self._init_weights(init_mode)
+            self.with_cls_token = with_cls_token
+            self.shift_pixel = shift_pixel
+            self.shift_mode = shift_mode
 
 
-class VRWKV_ChannelMix(BaseModule):
-    def __init__(self, n_embd, n_head, n_layer, layer_id, shift_mode='q_shift_multihead',
-                 shift_pixel=1, hidden_rate=4, init_mode='fancy', key_norm=False,
-                 with_cls_token=False, with_cp=False):
-        super().__init__()
-        self.layer_id = layer_id
-        self.n_layer = n_layer
-        self.n_embd = n_embd
-        self.attn_sz = n_embd
-        self.n_head = n_head
-        self.head_size = self.attn_sz // self.n_head
-        assert self.head_size == HEAD_SIZE
-        self.with_cp = with_cp
-        self._init_weights(init_mode)
-        self.with_cls_token = with_cls_token
-        self.shift_pixel = shift_pixel
-        self.shift_mode = shift_mode
-        self.shift_func = eval(shift_mode)
+            self.shift_func = eval(shift_mode)
 
-        hidden_sz = hidden_rate * n_embd
-        self.key = nn.Linear(n_embd, hidden_sz, bias=False)
-        if key_norm:
-            self.key_norm = nn.LayerNorm(hidden_sz)
-        else:
-            self.key_norm = None
-        self.receptance = nn.Linear(n_embd, n_embd, bias=False)
-        self.value = nn.Linear(hidden_sz, n_embd, bias=False)
-
-    def _init_weights(self, init_mode):
-        if init_mode == 'fancy':
-            with torch.no_grad():  # fancy init of time_mix
-                ratio_1_to_almost0 = (1.0 - (self.layer_id / self.n_layer))  # 1 to ~0
-                x = torch.ones(1, 1, self.n_embd)
-                for i in range(self.n_embd):
-                    x[0, 0, i] = i / self.n_embd
-                self.spatial_mix_k = nn.Parameter(torch.pow(x, ratio_1_to_almost0))
-                self.spatial_mix_r = nn.Parameter(torch.pow(x, ratio_1_to_almost0))
-        else:
-            raise NotImplementedError
-
-    def forward(self, x, patch_resolution=None):
-        def _inner_forward(x):
-            xx = self.shift_func(x, self.shift_pixel, patch_resolution=patch_resolution,
-                                 with_cls_token=self.with_cls_token)
-            xk = x * self.spatial_mix_k + xx * (1 - self.spatial_mix_k)
-            xr = x * self.spatial_mix_r + xx * (1 - self.spatial_mix_r)
-
-            k = self.key(xk)
-            k = torch.square(torch.relu(k))
-            if self.key_norm is not None:
-                k = self.key_norm(k)
-            kv = self.value(k)
-            x = torch.sigmoid(self.receptance(xr)) * kv
-            return x
-
-        if self.with_cp and x.requires_grad:
-            x = cp.checkpoint(_inner_forward, x)
-        else:
-            x = _inner_forward(x)
-        return x
-
-
-class Block(BaseModule):
-    def __init__(self, n_embd, n_head, n_layer, layer_id, shift_mode='q_shift_multihead',
-                 shift_pixel=1, drop_path=0., hidden_rate=4, init_mode='fancy',
-                 init_values=None, post_norm=False, key_norm=False, with_cls_token=False,
-                 with_cp=False):
-        super().__init__()
-        self.layer_id = layer_id
-        self.ln1 = nn.LayerNorm(n_embd)
-        self.ln2 = nn.LayerNorm(n_embd)
-        #self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
-        self.drop_path = nn.Identity()
-        if self.layer_id == 0:
-            self.ln0 = nn.LayerNorm(n_embd)
-
-        self.att = VRWKV_SpatialMix_V6(n_embd, n_head, n_layer, layer_id, shift_mode,
-                                       shift_pixel, init_mode, key_norm=key_norm,
-                                       with_cls_token=with_cls_token)
-
-        self.ffn = VRWKV_ChannelMix(n_embd, n_head, n_layer, layer_id, shift_mode,
-                                    shift_pixel, hidden_rate, init_mode, key_norm=key_norm,
-                                    with_cls_token=with_cls_token)
-        self.layer_scale = (init_values is not None)
-        self.post_norm = post_norm
-        if self.layer_scale:
-            self.gamma1 = nn.Parameter(init_values * torch.ones((n_embd)), requires_grad=True)
-            self.gamma2 = nn.Parameter(init_values * torch.ones((n_embd)), requires_grad=True)
-        self.with_cp = with_cp
-
-    def forward(self, x, patch_resolution=None):
-        def _inner_forward(x):
-            if self.layer_id == 0:
-                x = self.ln0(x)
-            if self.post_norm:
-                if self.layer_scale:
-                    x = x + self.drop_path(self.gamma1 * self.ln1(self.att(x, patch_resolution)))
-                    x = x + self.drop_path(self.gamma2 * self.ln2(self.ffn(x, patch_resolution)))
-                else:
-                    x = x + self.drop_path(self.ln1(self.att(x, patch_resolution)))
-                    x = x + self.drop_path(self.ln2(self.ffn(x, patch_resolution)))
+            self.key = nn.Linear(self.n_embd, self.attn_sz, bias=False)
+            self.value = nn.Linear(self.n_embd, self.attn_sz, bias=False)
+            self.receptance = nn.Linear(self.n_embd, self.attn_sz, bias=False)
+            self.gate = nn.Linear(self.n_embd, self.attn_sz, bias=False)
+            if key_norm:
+                self.key_norm = nn.LayerNorm(n_embd)
             else:
-                if self.layer_scale:
-                    x = x + self.drop_path(self.gamma1 * self.att(self.ln1(x), patch_resolution))
-                    x = x + self.drop_path(self.gamma2 * self.ffn(self.ln2(x), patch_resolution))
-                else:
-                    x = x + self.drop_path(self.att(self.ln1(x), patch_resolution))
-                    x = x + self.drop_path(self.ffn(self.ln2(x), patch_resolution))
+                self.key_norm = None
+            self.output = nn.Linear(self.attn_sz, n_embd, bias=False)
+
+            self.ln_x = nn.GroupNorm(self.n_head, self.attn_sz, eps=1e-5)
+            self.with_cp = with_cp
+
+        def _init_weights(self, init_mode):
+            if init_mode == 'fancy':
+                with torch.no_grad():
+                    ratio_0_to_1 = self.layer_id / (self.n_layer - 1)  # 0 to 1
+                    ratio_1_to_almost0 = 1.0 - (self.layer_id / self.n_layer)  # 1 to ~0
+                    ddd = torch.ones(1, 1, self.n_embd)
+                    for i in range(self.n_embd):
+                        ddd[0, 0, i] = i / self.n_embd
+
+                    # fancy time_mix
+                    self.time_maa_x = nn.Parameter(1.0 - torch.pow(ddd, ratio_1_to_almost0))
+                    self.time_maa_w = nn.Parameter(1.0 - torch.pow(ddd, ratio_1_to_almost0))
+                    self.time_maa_k = nn.Parameter(1.0 - torch.pow(ddd, ratio_1_to_almost0))
+                    self.time_maa_v = nn.Parameter(1.0 - (torch.pow(ddd, ratio_1_to_almost0) + 0.3 * ratio_0_to_1))
+                    self.time_maa_r = nn.Parameter(1.0 - torch.pow(ddd, 0.5 * ratio_1_to_almost0))
+                    self.time_maa_g = nn.Parameter(1.0 - torch.pow(ddd, 0.5 * ratio_1_to_almost0))
+
+                    TIME_MIX_EXTRA_DIM = 32  # generate TIME_MIX for w,k,v,r,g
+                    self.time_maa_w1 = nn.Parameter(torch.zeros(self.n_embd, TIME_MIX_EXTRA_DIM * 5).uniform_(-1e-4, 1e-4))
+                    self.time_maa_w2 = nn.Parameter(torch.zeros(5, TIME_MIX_EXTRA_DIM, self.n_embd).uniform_(-1e-4, 1e-4))
+
+                    # fancy time_decay
+                    decay_speed = torch.ones(self.attn_sz)
+                    for n in range(self.attn_sz):
+                        decay_speed[n] = -6 + 5 * (n / (self.attn_sz - 1)) ** (0.7 + 1.3 * ratio_0_to_1)
+                    self.time_decay = nn.Parameter(decay_speed.reshape(1, 1, self.attn_sz))
+
+                    TIME_DECAY_EXTRA_DIM = 64
+                    self.time_decay_w1 = nn.Parameter(torch.zeros(self.n_embd, TIME_DECAY_EXTRA_DIM).uniform_(-1e-4, 1e-4))
+                    self.time_decay_w2 = nn.Parameter(torch.zeros(TIME_DECAY_EXTRA_DIM, self.attn_sz).uniform_(-1e-4, 1e-4))
+
+                    tmp = torch.zeros(self.attn_sz)
+                    for n in range(self.attn_sz):
+                        zigzag = ((n + 1) % 3 - 1) * 0.1
+                        tmp[n] = ratio_0_to_1 * (1 - (n / (self.attn_sz - 1))) + zigzag
+
+                    self.time_faaaa = nn.Parameter(tmp.reshape(self.n_head, self.head_size))
+            else:
+                raise NotImplementedError
+
+        def jit_func(self, x, patch_resolution):
+            # Mix x with the previous timestep to produce xk, xv, xr
+            B, T, C = x.size()
+
+            xx = self.shift_func(x, self.shift_pixel, patch_resolution=patch_resolution,
+                                 with_cls_token=self.with_cls_token) - x  # shiftq - x
+            xxx = x + xx * self.time_maa_x  # [B, T, C]
+            xxx = torch.tanh(xxx @ self.time_maa_w1).view(B * T, 5, -1).transpose(0, 1)
+            # [5, B*T, TIME_MIX_EXTRA_DIM]
+            xxx = torch.bmm(xxx, self.time_maa_w2).view(5, B, T, -1)
+            # [5, B, T, C]
+            mw, mk, mv, mr, mg = xxx.unbind(dim=0)
+
+            xw = x + xx * (self.time_maa_w + mw)
+            xk = x + xx * (self.time_maa_k + mk)
+            xv = x + xx * (self.time_maa_v + mv)
+            xr = x + xx * (self.time_maa_r + mr)
+            xg = x + xx * (self.time_maa_g + mg)
+
+            r = self.receptance(xr)
+            k = self.key(xk)
+            v = self.value(xv)
+            g = F.silu(self.gate(xg))
+
+            ww = torch.tanh(xw @ self.time_decay_w1) @ self.time_decay_w2
+            # [B, T, C]
+            w = self.time_decay + ww
+
+            return r, k, v, g, w
+
+        def jit_func_2(self, x, g):
+            B, T, C = x.size()
+            x = x.view(B * T, C)
+
+            x = self.ln_x(x).view(B, T, C)
+            x = self.output(x * g)
             return x
 
-        if self.with_cp and x.requires_grad:
-            x = cp.checkpoint(_inner_forward, x)
-        else:
-            x = _inner_forward(x)
-        return x
+        def forward(self, x, patch_resolution=None):
+            def _inner_forward(x):
+                B, T, C = x.size()
+                self.device = x.device
+
+                r, k, v, g, w = self.jit_func(x, patch_resolution)
+                #x = RUN_CUDA_RWKV6(B, T, C, self.n_head, r, k, v, w, u=self.time_faaaa)
+                x = RUN_CUDA_RWKV6(B, T, C, self.n_head, r.float(), k.float(), v.float(), w.float(), u=self.time_faaaa.float())
+
+                if self.key_norm is not None:
+                    x = self.key_norm(x)
+                return self.jit_func_2(x, g)
+
+            if self.with_cp and x.requires_grad:
+                x = cp.checkpoint(_inner_forward, x)
+            else:
+                x = _inner_forward(x)
+            return x
+
+
+    class VRWKV_ChannelMix(BaseModule):
+        def __init__(self, n_embd, n_head, n_layer, layer_id, shift_mode='q_shift_multihead',
+                     shift_pixel=1, hidden_rate=4, init_mode='fancy', key_norm=False,
+                     with_cls_token=False, with_cp=False):
+            super().__init__()
+            self.layer_id = layer_id
+            self.n_layer = n_layer
+            self.n_embd = n_embd
+            self.attn_sz = n_embd
+            self.n_head = n_head
+            self.head_size = self.attn_sz // self.n_head
+            assert self.head_size == HEAD_SIZE
+            self.with_cp = with_cp
+            self._init_weights(init_mode)
+            self.with_cls_token = with_cls_token
+            self.shift_pixel = shift_pixel
+            self.shift_mode = shift_mode
+            self.shift_func = eval(shift_mode)
+
+            hidden_sz = hidden_rate * n_embd
+            self.key = nn.Linear(n_embd, hidden_sz, bias=False)
+            if key_norm:
+                self.key_norm = nn.LayerNorm(hidden_sz)
+            else:
+                self.key_norm = None
+            self.receptance = nn.Linear(n_embd, n_embd, bias=False)
+            self.value = nn.Linear(hidden_sz, n_embd, bias=False)
+
+        def _init_weights(self, init_mode):
+            if init_mode == 'fancy':
+                with torch.no_grad():  # fancy init of time_mix
+                    ratio_1_to_almost0 = (1.0 - (self.layer_id / self.n_layer))  # 1 to ~0
+                    x = torch.ones(1, 1, self.n_embd)
+                    for i in range(self.n_embd):
+                        x[0, 0, i] = i / self.n_embd
+                    self.spatial_mix_k = nn.Parameter(torch.pow(x, ratio_1_to_almost0))
+                    self.spatial_mix_r = nn.Parameter(torch.pow(x, ratio_1_to_almost0))
+            else:
+                raise NotImplementedError
+
+        def forward(self, x, patch_resolution=None):
+            def _inner_forward(x):
+                xx = self.shift_func(x, self.shift_pixel, patch_resolution=patch_resolution,
+                                     with_cls_token=self.with_cls_token)
+                xk = x * self.spatial_mix_k + xx * (1 - self.spatial_mix_k)
+                xr = x * self.spatial_mix_r + xx * (1 - self.spatial_mix_r)
+
+                k = self.key(xk)
+                k = torch.square(torch.relu(k))
+                if self.key_norm is not None:
+                    k = self.key_norm(k)
+                kv = self.value(k)
+                x = torch.sigmoid(self.receptance(xr)) * kv
+                return x
+
+            if self.with_cp and x.requires_grad:
+                x = cp.checkpoint(_inner_forward, x)
+            else:
+                x = _inner_forward(x)
+            return x
+
+
+    class Block(BaseModule):
+        def __init__(self, n_embd, n_head, n_layer, layer_id, shift_mode='q_shift_multihead',
+                     shift_pixel=1, drop_path=0., hidden_rate=4, init_mode='fancy',
+                     init_values=None, post_norm=False, key_norm=False, with_cls_token=False,
+                     with_cp=False):
+            super().__init__()
+            self.layer_id = layer_id
+            self.ln1 = nn.LayerNorm(n_embd)
+            self.ln2 = nn.LayerNorm(n_embd)
+            #self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+            self.drop_path = nn.Identity()
+            if self.layer_id == 0:
+                self.ln0 = nn.LayerNorm(n_embd)
+
+            self.att = VRWKV_SpatialMix_V6(n_embd, n_head, n_layer, layer_id, shift_mode,
+                                           shift_pixel, init_mode, key_norm=key_norm,
+                                           with_cls_token=with_cls_token)
+
+            self.ffn = VRWKV_ChannelMix(n_embd, n_head, n_layer, layer_id, shift_mode,
+                                        shift_pixel, hidden_rate, init_mode, key_norm=key_norm,
+                                        with_cls_token=with_cls_token)
+            self.layer_scale = (init_values is not None)
+            self.post_norm = post_norm
+            if self.layer_scale:
+                self.gamma1 = nn.Parameter(init_values * torch.ones((n_embd)), requires_grad=True)
+                self.gamma2 = nn.Parameter(init_values * torch.ones((n_embd)), requires_grad=True)
+            self.with_cp = with_cp
+
+        def forward(self, x, patch_resolution=None):
+            def _inner_forward(x):
+                if self.layer_id == 0:
+                    x = self.ln0(x)
+                if self.post_norm:
+                    if self.layer_scale:
+                        x = x + self.drop_path(self.gamma1 * self.ln1(self.att(x, patch_resolution)))
+                        x = x + self.drop_path(self.gamma2 * self.ln2(self.ffn(x, patch_resolution)))
+                    else:
+                        x = x + self.drop_path(self.ln1(self.att(x, patch_resolution)))
+                        x = x + self.drop_path(self.ln2(self.ffn(x, patch_resolution)))
+                else:
+                    if self.layer_scale:
+                        x = x + self.drop_path(self.gamma1 * self.att(self.ln1(x), patch_resolution))
+                        x = x + self.drop_path(self.gamma2 * self.ffn(self.ln2(x), patch_resolution))
+                    else:
+                        x = x + self.drop_path(self.att(self.ln1(x), patch_resolution))
+                        x = x + self.drop_path(self.ffn(self.ln2(x), patch_resolution))
+                return x
+
+            if self.with_cp and x.requires_grad:
+                x = cp.checkpoint(_inner_forward, x)
+            else:
+                x = _inner_forward(x)
+            return x
 
 
 
@@ -1187,6 +1187,796 @@ class DAttentionBaseline(nn.Module):
         out = self.proj_drop(self.proj_out(out))
         out = query + out
         return out.squeeze(2)
+
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import einops
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from PIL import Image
+import textwrap
+
+
+class DAttentionEnhanced(nn.Module):
+    """
+    Enhanced Deformable Attention with:
+    1. Adaptive Modal Weighting (AMW)
+    2. Multi-Scale Offset Fusion (MSOF)
+    3. Learnable Temperature Scaling (LTS)
+    4. Residual Offset Connection (ROC)
+    """
+
+    def __init__(
+            self, q_size, n_heads, n_head_channels, n_groups,
+            attn_drop, proj_drop, stride,
+            offset_range_factor, ksize, share
+    ):
+
+        super().__init__()
+        self.n_head_channels = n_head_channels
+        self.scale = self.n_head_channels ** -0.5
+        self.n_heads = n_heads
+        self.q_h, self.q_w = q_size
+        self.kv_h, self.kv_w = self.q_h // stride, self.q_w // stride
+        self.nc = n_head_channels * n_heads
+        self.n_groups = n_groups
+        self.n_group_channels = self.nc // self.n_groups
+        self.n_group_heads = self.n_heads // self.n_groups
+        self.offset_range_factor = offset_range_factor
+
+        self.ksize = ksize
+        self.stride = stride
+        kk = self.ksize
+        pad_size = 0
+        self.share_offset = share
+
+        # ===== 创新点1: Adaptive Modal Weighting (AMW) =====
+        self.modal_weights = nn.Parameter(torch.ones(3))  # 为RGB, NIR, TIR三个模态学习权重
+        self.modal_gate = nn.Sequential(
+            nn.Conv2d(3 * self.n_group_channels, self.n_group_channels // 4, 1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(self.n_group_channels // 4, 3, 1),
+            nn.Sigmoid()
+        )
+
+        # ===== 创新点2: Multi-Scale Offset Fusion (MSOF) =====
+        self.multi_scale_levels = 3
+        self.scale_weights = nn.Parameter(torch.ones(self.multi_scale_levels))
+
+        # ===== 创新点3: Learnable Temperature Scaling (LTS) =====
+        self.temperature = nn.Parameter(torch.ones(1))
+
+        # ===== 创新点4: Residual Offset Connection (ROC) =====
+        self.offset_residual_weight = nn.Parameter(torch.tensor(0.1))
+
+        if self.share_offset:
+            # 主要偏移网络（原有的）
+            self.conv_offset = nn.Sequential(
+                nn.Conv2d(3 * self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, kk, stride, pad_size,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 2, 1, 1, 0, bias=False),
+            )
+
+            # 多尺度偏移网络
+            self.conv_offset_coarse = nn.Sequential(
+                nn.Conv2d(3 * self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, kk + 2, stride, pad_size + 1,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 2, 1, 1, 0, bias=False),
+            )
+
+            self.conv_offset_fine = nn.Sequential(
+                nn.Conv2d(3 * self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, max(kk - 2, 1), stride, 0,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 2, 1, 1, 0, bias=False),
+            )
+        else:
+            # 原有的非共享偏移网络
+            self.conv_offset_r = nn.Sequential(
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, kk, stride, pad_size,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 1, 1, 1, 0, bias=False)
+            )
+            self.conv_offset_n = nn.Sequential(
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, kk, stride, pad_size,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 1, 1, 1, 0, bias=False)
+            )
+            self.conv_offset_t = nn.Sequential(
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, kk, stride, pad_size,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 1, 1, 1, 0, bias=False)
+            )
+
+            # 多尺度版本 (简化实现)
+            self.conv_offset_r_coarse = nn.Sequential(
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, kk + 2, stride, pad_size + 1,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 1, 1, 1, 0, bias=False)
+            )
+            # 为简化起见，只为R通道添加多尺度，实际使用中可以为所有通道添加
+
+        self.proj_q = nn.Conv2d(
+            self.nc, self.nc,
+            kernel_size=1, stride=1, padding=0
+        )
+
+        self.proj_k = nn.Conv2d(
+            self.nc, self.nc,
+            kernel_size=1, stride=1, padding=0
+        )
+
+        self.proj_v = nn.Conv2d(
+            self.nc, self.nc,
+            kernel_size=1, stride=1, padding=0
+        )
+
+        self.proj_out = nn.Conv2d(
+            self.nc, self.nc,
+            kernel_size=1, stride=1, padding=0
+        )
+
+        self.proj_drop = nn.Dropout(proj_drop)
+        self.attn_drop = nn.Dropout(attn_drop)
+
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            # trunc_normal_(m.weight, std=.02)  # 需要导入trunc_normal_
+            nn.init.normal_(m.weight, std=0.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.LayerNorm):
+            nn.init.constant_(m.bias, 0)
+            nn.init.constant_(m.weight, 1.0)
+
+    @torch.no_grad()
+    def _get_ref_points(self, H_in, W_in, B, kernel_size, stride, dtype, device):
+        """
+        生成参考点在每个卷积块的中心位置。
+
+        :param H_in: 输入特征图的高度 (如 16)
+        :param W_in: 输入特征图的宽度 (如 8)
+        :param B: 批次大小
+        :param kernel_size: 卷积核大小
+        :param stride: 卷积步幅
+        :param dtype: 数据类型
+        :param device: 设备类型
+        :return: 参考点张量，形状为 (B * n_groups, H_out, W_out, 2)
+        """
+
+        # 计算输出特征图的高度和宽度
+        H_out = (H_in - kernel_size) // stride + 1
+        W_out = (W_in - kernel_size) // stride + 1
+
+        # 计算每个卷积位置的中心点在原图坐标上的位置
+        center_y = torch.arange(H_out, dtype=dtype, device=device) * stride + (kernel_size // 2)
+        center_x = torch.arange(W_out, dtype=dtype, device=device) * stride + (kernel_size // 2)
+
+        # 生成网格
+        ref_y, ref_x = torch.meshgrid(center_y, center_x, indexing='ij')
+        ref = torch.stack((ref_y, ref_x), dim=-1)  # Shape: (H_out, W_out, 2)
+
+        # 归一化到 [-1, 1]
+        ref[..., 1].div_(W_in - 1.0).mul_(2.0).sub_(1.0)  # x 坐标归一化
+        ref[..., 0].div_(H_in - 1.0).mul_(2.0).sub_(1.0)  # y 坐标归一化
+
+        # 扩展批次和组维度
+        ref = ref[None, ...].expand(B * self.n_groups, -1, -1, -1)  # Shape: (B * n_groups, H_out, W_out, 2)
+
+        return ref
+
+    def adaptive_modal_weighting(self, x, y, z):
+        """
+        创新点1: 自适应模态权重
+        """
+        # 计算全局模态权重
+        modal_weights = F.softmax(self.modal_weights, dim=0)
+
+        # 计算局部门控权重
+        concat_features = torch.cat([x, y, z], dim=1)
+        B, _, H, W = concat_features.shape
+        avg_pool = F.adaptive_avg_pool2d(concat_features, 1)
+        gate_weights = self.modal_gate(avg_pool)  # [B, 3, 1, 1]
+
+        # 结合全局和局部权重
+        combined_weights = modal_weights.view(1, 3, 1, 1) * gate_weights
+        combined_weights = F.softmax(combined_weights, dim=1)
+
+        # 应用权重
+        weighted_x = x * combined_weights[:, 0:1]
+        weighted_y = y * combined_weights[:, 1:2]
+        weighted_z = z * combined_weights[:, 2:3]
+
+        return weighted_x, weighted_y, weighted_z
+
+    def multi_scale_offset_fusion(self, data, reference):
+        """
+        创新点2: 多尺度偏移融合
+        """
+        if not self.share_offset:
+            # 对于非共享情况，使用增强版
+            return self.off_set_unshared_enhanced(data, reference)
+
+        data = einops.rearrange(data, 'b (g c) h w -> (b g) c h w',
+                                g=self.n_groups, c=3 * self.n_group_channels)
+
+        # 计算不同尺度的偏移
+        offset_main = self.conv_offset(data)
+        offset_coarse = self.conv_offset_coarse(data)
+        offset_fine = self.conv_offset_fine(data)
+
+        # 将fine偏移调整到与main相同的尺寸（如果需要）
+        if offset_fine.shape != offset_main.shape:
+            offset_fine = F.interpolate(offset_fine, size=offset_main.shape[2:],
+                                        mode='bilinear', align_corners=True)
+        if offset_coarse.shape != offset_main.shape:
+            offset_coarse = F.interpolate(offset_coarse, size=offset_main.shape[2:],
+                                          mode='bilinear', align_corners=True)
+
+        # 融合多尺度偏移
+        scale_weights = F.softmax(self.scale_weights, dim=0)
+        offset = (scale_weights[0] * offset_main +
+                  scale_weights[1] * offset_coarse +
+                  scale_weights[2] * offset_fine)
+
+        Hk, Wk = offset.size(2), offset.size(3)
+
+        if self.offset_range_factor > 0:
+            offset_range = torch.tensor([1.0 / (Hk - 1.0), 1.0 / (Wk - 1.0)],
+                                        device=data.device).reshape(1, 2, 1, 1)
+            offset = offset.tanh().mul(offset_range).mul(self.offset_range_factor)
+
+        # 创新点4: 残差偏移连接
+        offset = einops.rearrange(offset, 'b p h w -> b h w p')
+        residual_offset = offset * self.offset_residual_weight
+        final_offset = offset + residual_offset
+
+        pos_x = (final_offset + reference).clamp(-1., +1.)
+        pos_y = (final_offset + reference).clamp(-1., +1.)
+        pos_z = (final_offset + reference).clamp(-1., +1.)
+
+        return pos_x, pos_y, pos_z, Hk, Wk
+
+    def off_set_unshared_enhanced(self, data, reference):
+        """增强版非共享偏移计算"""
+        x, y, z = data.chunk(3, dim=1)
+        x = einops.rearrange(x, 'b (g c) h w -> (b g) c h w', g=self.n_groups, c=self.n_group_channels)
+        y = einops.rearrange(y, 'b (g c) h w -> (b g) c h w', g=self.n_groups, c=self.n_group_channels)
+        z = einops.rearrange(z, 'b (g c) h w -> (b g) c h w', g=self.n_groups, c=self.n_group_channels)
+
+        offset_r = self.conv_offset_r(x)
+        offset_n = self.conv_offset_n(y)
+        offset_t = self.conv_offset_t(z)
+
+        # 添加多尺度 (简化版本，只为R通道)
+        if hasattr(self, 'conv_offset_r_coarse'):
+            offset_r_coarse = self.conv_offset_r_coarse(x)
+            if offset_r_coarse.shape != offset_r.shape:
+                offset_r_coarse = F.interpolate(offset_r_coarse, size=offset_r.shape[2:],
+                                                mode='bilinear', align_corners=True)
+            offset_r = 0.7 * offset_r + 0.3 * offset_r_coarse
+
+        Hk, Wk = offset_r.size(2), offset_r.size(3)
+        if self.offset_range_factor > 0:
+            offset_range = torch.tensor([1.0 / (Hk - 1.0), 1.0 / (Wk - 1.0)], device=data.device).reshape(1, 2, 1, 1)
+            offset_r = offset_r.tanh().mul(offset_range).mul(self.offset_range_factor)
+            offset_n = offset_n.tanh().mul(offset_range).mul(self.offset_range_factor)
+            offset_t = offset_t.tanh().mul(offset_range).mul(self.offset_range_factor)
+
+        offset_r = einops.rearrange(offset_r, 'b p h w -> b h w p')
+        offset_n = einops.rearrange(offset_n, 'b p h w -> b h w p')
+        offset_t = einops.rearrange(offset_t, 'b p h w -> b h w p')
+
+        # 应用残差连接
+        offset_r = offset_r + offset_r * self.offset_residual_weight
+        offset_n = offset_n + offset_n * self.offset_residual_weight
+        offset_t = offset_t + offset_t * self.offset_residual_weight
+
+        pos_x = (offset_r + reference).clamp(-1., +1.)
+        pos_y = (offset_n + reference).clamp(-1., +1.)
+        pos_z = (offset_t + reference).clamp(-1., +1.)
+        return pos_x, pos_y, pos_z, Hk, Wk
+
+    def off_set_shared(self, data, reference):
+        """原有的共享偏移计算 (保持兼容性)"""
+        data = einops.rearrange(data, 'b (g c) h w -> (b g) c h w', g=self.n_groups, c=3 * self.n_group_channels)
+        offset = self.conv_offset(data)
+        Hk, Wk = offset.size(2), offset.size(3)
+        if self.offset_range_factor > 0:
+            offset_range = torch.tensor([1.0 / (Hk - 1.0), 1.0 / (Wk - 1.0)], device=data.device).reshape(1, 2, 1, 1)
+            offset = offset.tanh().mul(offset_range).mul(self.offset_range_factor)
+        offset = einops.rearrange(offset, 'b p h w -> b h w p')
+        pos_x = (offset + reference).clamp(-1., +1.)
+        pos_y = (offset + reference).clamp(-1., +1.)
+        pos_z = (offset + reference).clamp(-1., +1.)
+        return pos_x, pos_y, pos_z, Hk, Wk
+
+    def off_set_unshared(self, data, reference):
+        """原有的非共享偏移计算 (保持兼容性)"""
+        x, y, z = data.chunk(3, dim=1)
+        x = einops.rearrange(x, 'b (g c) h w -> (b g) c h w', g=self.n_groups, c=self.n_group_channels)
+        y = einops.rearrange(y, 'b (g c) h w -> (b g) c h w', g=self.n_groups, c=self.n_group_channels)
+        z = einops.rearrange(z, 'b (g c) h w -> (b g) c h w', g=self.n_groups, c=self.n_group_channels)
+        offset_r = self.conv_offset_r(x)
+        offset_n = self.conv_offset_n(y)
+        offset_t = self.conv_offset_t(z)
+        Hk, Wk = offset_r.size(2), offset_r.size(3)
+        if self.offset_range_factor > 0:
+            offset_range = torch.tensor([1.0 / (Hk - 1.0), 1.0 / (Wk - 1.0)], device=data.device).reshape(1, 2, 1, 1)
+            offset_r = offset_r.tanh().mul(offset_range).mul(self.offset_range_factor)
+            offset_n = offset_n.tanh().mul(offset_range).mul(self.offset_range_factor)
+            offset_t = offset_t.tanh().mul(offset_range).mul(self.offset_range_factor)
+        offset_r = einops.rearrange(offset_r, 'b p h w -> b h w p')
+        offset_n = einops.rearrange(offset_n, 'b p h w -> b h w p')
+        offset_t = einops.rearrange(offset_t, 'b p h w -> b h w p')
+        pos_x = (offset_r + reference).clamp(-1., +1.)
+        pos_y = (offset_n + reference).clamp(-1., +1.)
+        pos_z = (offset_t + reference).clamp(-1., +1.)
+        return pos_x, pos_y, pos_z, Hk, Wk
+
+    @torch.no_grad()
+    def visualize_sampling_with_offset(self, feature_maps, sampled_pointss, img_paths, reference_pointss, writer=None,
+                                       epoch=0, title='Sampling Points with Offset', pattern=0, patch_size=(16, 16)):
+        """
+        在原始图像上标记采样点的偏移效果并保存
+        """
+        # 根据模式设置图像路径前缀
+        modality = ['RGB', 'NI', 'TI']
+        if pattern == 0:
+            prefix = '../RGBNT201/test/RGB/'
+        elif pattern == 1:
+            prefix = '../RGBNT201/test/NI/'
+        elif pattern == 2:
+            prefix = '../RGBNT201/test/TI/'
+        for i in range(len(img_paths)):
+            img_path = prefix + img_paths[i]
+
+            # 加载并调整图像大小
+            original_image = Image.open(img_path).resize((128, 256))
+            original_image = np.array(original_image)
+
+            # 处理特征图
+            feature_map = torch.mean(feature_maps[i], dim=0, keepdim=True)
+            feature_map = feature_map.detach().cpu().numpy()
+            feature_map = (feature_map - np.min(feature_map)) / np.ptp(feature_map)
+
+            # 转换采样点和参考点为 numpy 格式
+            sampled_points = sampled_pointss[i].detach().cpu().numpy()
+            reference_points = reference_pointss[i].detach().cpu().numpy()
+
+            # 获取特征图和原始图像的尺寸
+            H_feat, W_feat = feature_map.shape[1:]
+            H_orig, W_orig = original_image.shape[:2]
+
+            # 计算下采样比例
+            scale_x = W_orig / W_feat
+            scale_y = H_orig / H_feat
+
+            # 转换坐标到原图系
+            sampled_points[:, 1] = (sampled_points[:, 1] + 1) / 2 * (W_feat - 1) * scale_x
+            sampled_points[:, 0] = (sampled_points[:, 0] + 1) / 2 * (H_feat - 1) * scale_y
+            reference_points[:, 1] = (reference_points[:, 1] + 1) / 2 * (W_feat - 1) * scale_x
+            reference_points[:, 0] = (reference_points[:, 0] + 1) / 2 * (H_feat - 1) * scale_y
+
+            # 绘制原图像
+            fig, ax = plt.subplots(figsize=(10, 10))
+            ax.imshow(original_image, aspect='auto')
+            ax.set_title(title)
+
+            # 更改采样点样式和箭头样式
+            for ref, samp in zip(reference_points, sampled_points):
+                ref_y, ref_x = ref
+                samp_y, samp_x = samp
+
+                # 参考点用淡蓝色
+                ax.scatter(ref_x, ref_y, c='skyblue', s=70, marker='o', edgecolor='black', linewidth=2)
+                # 目标点用橙色
+                ax.scatter(samp_x, samp_y, c='orange', s=70, marker='x', linewidth=12)
+
+                # 箭头颜色为半透明绿色
+                ax.arrow(ref_x, ref_y, samp_x - ref_x, samp_y - ref_y, color='limegreen', alpha=0.7,
+                         head_width=4, head_length=6, linewidth=6, length_includes_head=True)
+
+            # 绘制 patch 分隔线
+            patch_height, patch_width = patch_size
+            for y in range(0, H_orig, patch_height):
+                ax.plot([0, W_orig], [y, y], color='white', linewidth=1.5, linestyle='--')
+            for x in range(0, W_orig, patch_width):
+                ax.plot([x, x], [0, H_orig], color='white', linewidth=1.5, linestyle='--')
+
+            ax.set_xlim(-1, W_orig)
+            ax.set_ylim(H_orig, -1)
+
+            # 保存到 writer
+            if writer is not None:
+                writer.add_figure(f"{title}", fig, global_step=epoch)
+            plt.savefig(
+                f'../off_vis/{modality[pattern]}/{img_path.split("/")[-1].split(".")[0]}.png')
+            plt.close(fig)
+
+    def show_cam_on_image(self, img: np.ndarray,
+                          mask: np.ndarray,
+                          use_rgb: bool = False,
+                          colormap: int = cv2.COLORMAP_HOT,
+                          image_weight: float = 0.3) -> np.ndarray:
+        """ This function overlays the cam mask on the image as an heatmap.
+        By default the heatmap is in BGR format.
+
+        :param img: The base image in RGB or BGR format.
+        :param mask: The cam mask.
+        :param use_rgb: Whether to use an RGB or BGR heatmap, this should be set to True if 'img' is in RGB format.
+        :param colormap: The OpenCV colormap to be used.
+        :param image_weight: The final result is image_weight * img + (1-image_weight) * mask.
+        :returns: The default image with the cam overlay.
+        """
+        heatmap = cv2.applyColorMap(np.uint8(255 * mask), colormap)
+        if use_rgb:
+            heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+        heatmap = np.float32(heatmap) / 255
+
+        if np.max(img) > 1:
+            raise Exception(
+                "The input image should np.float32 in the range [0, 1]")
+
+        if image_weight < 0 or image_weight > 1:
+            raise Exception(
+                f"image_weight should be in the range [0, 1].\
+                    Got: {image_weight}")
+
+        cam = (1 - image_weight) * heatmap + image_weight * img
+        cam = cam / np.max(cam)
+        return np.uint8(255 * cam)
+
+    @torch.no_grad()
+    def visualize_attention_with_distribution(self, attn_map, img_paths, index, reference_pointss, sampled_pointss,
+                                              writer=None, epoch=0, title='Attention Heatmap with Distribution',
+                                              patch_size=(16, 16), text=''):
+        """
+        在原始图像上根据 attn_map 选择一个注意力分布，生成热图并覆盖，并显示描述文本
+        """
+        modality = ['v_RGB', 'v_NIR', 'v_TIR', 't_RGB', 't_NIR', 't_TIR']
+        if index == 0 or index == 3:
+            prefix = '../RGBNT201/test/RGB/'
+            text = text['rgb_text']
+        elif index == 1 or index == 4:
+            prefix = '../RGBNT201/test/NI/'
+            text = text['ni_text']
+        elif index == 2 or index == 5:
+            prefix = '../RGBNT201/test/TI/'
+            text = text['ti_text']
+
+        grid_height = 7
+        grid_width = 3
+
+        for i in range(len(img_paths)):
+            img_path = prefix + img_paths[i]
+            original_image = Image.open(img_path).convert('RGB').resize((128, 256))
+            original_image = np.float32(original_image) / 255
+
+            H_orig, W_orig = original_image.shape[:2]
+            grid_height_size = H_orig // grid_height
+            grid_width_size = W_orig // grid_width
+
+            # 根据 index 选择对应的注意力区域
+            if index == 0 or index == 3:
+                selected_attn = attn_map[i, index, :21]
+            elif index == 1 or index == 4:
+                selected_attn = attn_map[i, index, 21:42]
+            else:
+                selected_attn = attn_map[i, index, 42:]
+
+            selected_attn = selected_attn * 1000 * 2
+            selected_attn = torch.softmax(selected_attn, dim=0)
+            selected_attn = selected_attn.detach().cpu().numpy()
+
+            # 初始化一个全为零的热图
+            heatmap = np.zeros((H_orig, W_orig))
+
+            # 根据网格和注意力权重构建热图
+            for row in range(grid_height):
+                for col in range(grid_width):
+                    y_start = row * grid_height_size
+                    x_start = col * grid_width_size
+                    y_end = (row + 1) * grid_height_size if row < grid_height - 1 else H_orig
+                    x_end = (col + 1) * grid_width_size if col < grid_width - 1 else W_orig
+
+                    weight = selected_attn[row * grid_width + col]
+                    heatmap[y_start:y_end, x_start:x_end] += weight
+
+            # 将热图与原图叠加
+            overlay = self.show_cam_on_image(original_image, heatmap, use_rgb=True, image_weight=0.5)
+
+            # 创建可视化图像
+            fig, ax = plt.subplots(figsize=(10, 10))
+            ax.imshow(overlay, aspect='auto')
+            ax.set_title(f"{title} - Image {i + 1}")
+
+            # 在图像中添加描述文本
+            ax.text(
+                0.5, -0.12,
+                textwrap.fill(text[i], width=80),
+                transform=ax.transAxes,
+                color='black',
+                fontsize=10,
+                ha='center',
+                va='bottom',
+                weight='bold'
+            )
+
+            ax.set_xlim(-1, W_orig)
+            ax.set_ylim(H_orig, -1)
+
+            if writer is not None:
+                writer.add_figure(f"{title}", fig, global_step=epoch)
+
+            output_path = f'../attn_vis/{modality[index]}/{img_path.split("/")[-1].split(".")[0]}.png'
+            plt.savefig(output_path)
+            plt.close(fig)
+
+    def forward(self, x, y, z, writer=None, epoch=None, img_path=None, text=''):
+        B, C, H, W = x.size()
+        dtype, device = x.dtype, x.device
+
+        # 创新点1: 应用自适应模态权重
+        x, y, z = self.adaptive_modal_weighting(x, y, z)
+
+        data = torch.cat([x, y, z], dim=1)
+        reference = self._get_ref_points(H, W, B, self.ksize, self.stride, dtype, device)
+
+        # 创新点2&4: 多尺度偏移融合 + 残差连接
+        pos_x, pos_y, pos_z, Hk, Wk = self.multi_scale_offset_fusion(data, reference)
+
+        n_sample = Hk * Wk
+        sampled_x = F.grid_sample(
+            input=x.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_x[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+        sampled_y = F.grid_sample(
+            input=y.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_y[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+        sampled_z = F.grid_sample(
+            input=z.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_z[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+
+        sampled_x, sampled_y, sampled_z = [
+            t.reshape(B, C, 1, n_sample).squeeze(2).permute(2, 0, 1)
+            for t in [sampled_x, sampled_y, sampled_z]
+        ]
+
+        return sampled_x, sampled_y, sampled_z
+
+    def forwardOld(self, query, x, y, z, writer=None, epoch=None, img_path=None, text=''):
+        B, C, H, W = x.size()
+        b_, c_, h_, w_ = query.size()
+        dtype, device = x.dtype, x.device
+
+        # 创新点1: 应用自适应模态权重
+        x, y, z = self.adaptive_modal_weighting(x, y, z)
+
+        data = torch.cat([x, y, z], dim=1)
+        reference = self._get_ref_points(H, W, B, self.ksize, self.stride, dtype, device)
+
+        # 使用增强的偏移计算或原有的
+        if self.share_offset:
+            pos_x, pos_y, pos_z, Hk, Wk = self.multi_scale_offset_fusion(data, reference)
+        else:
+            pos_x, pos_y, pos_z, Hk, Wk = self.off_set_unshared(data, reference)
+
+        n_sample = Hk * Wk
+        sampled_x = F.grid_sample(
+            input=x.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_x[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+        sampled_y = F.grid_sample(
+            input=y.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_y[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+        sampled_z = F.grid_sample(
+            input=z.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_z[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+
+        sampled_x = sampled_x.reshape(B, C, 1, n_sample)
+        sampled_y = sampled_y.reshape(B, C, 1, n_sample)
+        sampled_z = sampled_z.reshape(B, C, 1, n_sample)
+        sampled = torch.cat([sampled_x, sampled_y, sampled_z], dim=-1)
+
+        q = self.proj_q(query)
+        q = q.reshape(B * self.n_heads, self.n_head_channels, h_ * w_)
+        k = self.proj_k(sampled).reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        v = self.proj_v(sampled).reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        attn = torch.einsum('b c m, b c n -> b m n', q, k)
+
+        # 创新点3: 可学习温度缩放
+        attn = attn.mul(self.scale * self.temperature)
+        attn = F.softmax(attn, dim=2)
+
+        attn = self.attn_drop(attn)
+        out = torch.einsum('b m n, b c n -> b c m', attn, v)
+        out = out.reshape(B, C, 1, h_ * w_)
+        out = self.proj_drop(self.proj_out(out))
+        out = query + out
+        return out.squeeze(2)
+
+    def forward_woCrossAttn(self, query, x, y, z, writer=None, epoch=None, img_path=None):
+        B, C, H, W = x.size()
+        dtype, device = x.dtype, x.device
+
+        # 应用自适应模态权重
+        x, y, z = self.adaptive_modal_weighting(x, y, z)
+
+        data = torch.cat([x, y, z], dim=1)
+        reference = self._get_ref_points(H, W, B, self.ksize, self.stride, dtype, device)
+
+        if self.share_offset:
+            pos_x, pos_y, pos_z, Hk, Wk = self.multi_scale_offset_fusion(data, reference)
+        else:
+            pos_x, pos_y, pos_z, Hk, Wk = self.off_set_unshared(data, reference)
+
+        n_sample = Hk * Wk
+        sampled_x = F.grid_sample(
+            input=x.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_x[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+        sampled_y = F.grid_sample(
+            input=y.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_y[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+        sampled_z = F.grid_sample(
+            input=z.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_z[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+
+        sampled_x = sampled_x.reshape(B, C, 1, n_sample)
+        sampled_y = sampled_y.reshape(B, C, 1, n_sample)
+        sampled_z = sampled_z.reshape(B, C, 1, n_sample)
+        input = torch.cat([sampled_x, sampled_y, sampled_z], dim=-1)
+
+        q = self.proj_q(input)
+        q = q.reshape(B * self.n_heads, self.n_head_channels, 3 * Hk * Wk)
+        k = self.proj_k(input).reshape(B * self.n_heads, self.n_head_channels, 3 * Hk * Wk)
+        v = self.proj_v(input).reshape(B * self.n_heads, self.n_head_channels, 3 * Hk * Wk)
+        attn = torch.einsum('b c m, b c n -> b m n', q, k)
+
+        # 应用温度缩放
+        attn = attn.mul(self.scale * self.temperature)
+        attn = F.softmax(attn, dim=2)
+        attn = self.attn_drop(attn)
+        out = torch.einsum('b m n, b c n -> b c m', attn, v)
+        out = out.reshape(B, C, 1, 3 * Hk * Wk)
+        out = self.proj_drop(self.proj_out(out))
+        out = input + out
+        sampled_x, sampled_y, sampled_z = out.chunk(3, dim=-1)
+
+        sampled_x = torch.mean(sampled_x, dim=-1, keepdim=True)
+        sampled_y = torch.mean(sampled_y, dim=-1, keepdim=True)
+        sampled_z = torch.mean(sampled_z, dim=-1, keepdim=True)
+
+        sampled = torch.cat([sampled_x, sampled_y, sampled_z], dim=-1)
+        sampled_2 = torch.cat([sampled, sampled], dim=-1)
+        return sampled_2.squeeze(2)
+
+    def forward_woSample_wCrossAttn(self, query, x, y, z, writer=None, epoch=None, img_path=None):
+        B, C, H, W = x.size()
+        b_, c_, h_, w_ = query.size()
+
+        # 应用自适应模态权重
+        x, y, z = self.adaptive_modal_weighting(x, y, z)
+
+        n_sample = H * W
+        sampled_x = x.reshape(B, C, 1, n_sample)
+        sampled_y = y.reshape(B, C, 1, n_sample)
+        sampled_z = z.reshape(B, C, 1, n_sample)
+        sampled = torch.cat([sampled_x, sampled_y, sampled_z], dim=-1)
+        q = self.proj_q(query)
+        q = q.reshape(B * self.n_heads, self.n_head_channels, h_ * w_)
+        k = self.proj_k(sampled).reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        v = self.proj_v(sampled).reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        attn = torch.einsum('b c m, b c n -> b m n', q, k)
+
+        # 应用温度缩放
+        attn = attn.mul(self.scale * self.temperature)
+        attn = F.softmax(attn, dim=2)
+        attn = self.attn_drop(attn)
+        out = torch.einsum('b m n, b c n -> b c m', attn, v)
+        out = out.reshape(B, C, 1, h_ * w_)
+        out = self.proj_drop(self.proj_out(out))
+        out = query + out
+        return out.squeeze(2)
+
+    def forward_woSample_woCrossAttn(self, query, x, y, z, writer=None, epoch=None, img_path=None):
+        B, C, H, W = x.size()
+
+        # 应用自适应模态权重
+        x, y, z = self.adaptive_modal_weighting(x, y, z)
+
+        n_sample = H * W
+        sampled_x = x.reshape(B, C, 1, n_sample)
+        sampled_y = y.reshape(B, C, 1, n_sample)
+        sampled_z = z.reshape(B, C, 1, n_sample)
+        input = torch.cat([sampled_x, sampled_y, sampled_z], dim=-1)
+        q = self.proj_q(input)
+        q = q.reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        k = self.proj_k(input).reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        v = self.proj_v(input).reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        attn = torch.einsum('b c m, b c n -> b m n', q, k)
+
+        # 应用温度缩放
+        attn = attn.mul(self.scale * self.temperature)
+        attn = F.softmax(attn, dim=2)
+        attn = self.attn_drop(attn)
+        out = torch.einsum('b m n, b c n -> b c m', attn, v)
+        out = out.reshape(B, C, 1, 3 * n_sample)
+        out = self.proj_drop(self.proj_out(out))
+        out = input + out
+        sampled_x, sampled_y, sampled_z = out.chunk(3, dim=-1)
+
+        sampled_x = torch.mean(sampled_x, dim=-1, keepdim=True)
+        sampled_y = torch.mean(sampled_y, dim=-1, keepdim=True)
+        sampled_z = torch.mean(sampled_z, dim=-1, keepdim=True)
+
+        sampled = torch.cat([sampled_x, sampled_y, sampled_z], dim=-1)
+        sampled_2 = torch.cat([sampled, sampled], dim=-1)
+        return sampled_2.squeeze(2)
+
+    def forward_woOffset(self, query, x, y, z, writer=None, epoch=None, img_path=None):
+        B, C, H, W = x.size()
+        b_, c_, h_, w_ = query.size()
+
+        # 应用自适应模态权重
+        x, y, z = self.adaptive_modal_weighting(x, y, z)
+
+        data = torch.cat([x, y, z], dim=1)
+        # 注意：这里原代码使用了conv_v, conv_n, conv_t，但在原始代码中没有定义
+        # 为了保持兼容性，我们直接使用输入
+        h_new, w_new = x.size(2), x.size(3)
+        n_sample = h_new * w_new
+        sampled_x = x.reshape(B, C, 1, n_sample)
+        sampled_y = y.reshape(B, C, 1, n_sample)
+        sampled_z = z.reshape(B, C, 1, n_sample)
+        sampled = torch.cat([sampled_x, sampled_y, sampled_z], dim=-1)
+        q = self.proj_q(query)
+        q = q.reshape(B * self.n_heads, self.n_head_channels, h_ * w_)
+        k = self.proj_k(sampled).reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        v = self.proj_v(sampled).reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        attn = torch.einsum('b c m, b c n -> b m n', q, k)
+
+        # 应用温度缩放
+        attn = attn.mul(self.scale * self.temperature)
+        attn = F.softmax(attn, dim=2)
+        attn = self.attn_drop(attn)
+        out = torch.einsum('b m n, b c n -> b c m', attn, v)
+        out = out.reshape(B, C, 1, h_ * w_)
+        out = self.proj_drop(self.proj_out(out))
+        out = query + out
+        return out.squeeze(2)
+
+
 
 class RWKV_CrossAttention(nn.Module):
     def __init__(self, dim, n_query=1):
@@ -2116,6 +2906,363 @@ class FeatureDiversifier(nn.Module):
 
         return final_feature
 
+
+class BoQBlock(torch.nn.Module):
+    def __init__(self, in_dim, num_queries, nheads=8):
+        super(BoQBlock, self).__init__()
+
+        self.encoder = torch.nn.TransformerEncoderLayer(d_model=in_dim, nhead=nheads, dim_feedforward=4 * in_dim,
+                                                        batch_first=True, dropout=0.)
+        self.queries = torch.nn.Parameter(torch.randn(1, num_queries, in_dim))
+
+        # the following two lines are used during training only, you can cache their output in eval.
+        self.self_attn = torch.nn.MultiheadAttention(in_dim, num_heads=nheads, batch_first=True)
+        self.norm_q = torch.nn.LayerNorm(in_dim)
+        #####
+
+        self.cross_attn = torch.nn.MultiheadAttention(in_dim, num_heads=nheads, batch_first=True)
+        self.norm_out = torch.nn.LayerNorm(in_dim)
+
+    def forward(self, x):
+        B = x.size(0)
+        x = self.encoder(x)
+
+        q = self.queries.repeat(B, 1, 1)
+        q = q + self.self_attn(q, q, q)[0]
+        q = self.norm_q(q)
+
+        out, attn = self.cross_attn(q, x, x)
+        out = self.norm_out(out)
+        return x, out, attn.detach()
+
+
+class BoQ(torch.nn.Module):
+    def __init__(self, in_dim=512, num_queries=32, num_layers=4, row_dim=32):
+        super().__init__()
+        self.norm_input = torch.nn.LayerNorm(in_dim)
+
+        self.boqs = torch.nn.ModuleList([
+            BoQBlock(in_dim, num_queries, nheads=in_dim // 64) for _ in range(num_layers)])
+
+        self.fc = torch.nn.Linear(num_layers * num_queries, row_dim)
+
+    def forward(self, x):
+        # x shape: [B, seq_len, dim]
+        x = self.norm_input(x)
+
+        outs = []
+        attns = []
+        for i in range(len(self.boqs)):
+            x, out, attn = self.boqs[i](x)
+            outs.append(out)
+            attns.append(attn)
+
+        out = torch.cat(outs, dim=1)  # [B, num_layers*num_queries, dim]
+        out = self.fc(out.permute(0, 2, 1))  # [B, dim, row_dim]
+        out = out.flatten(1)  # [B, dim*row_dim]
+        out = torch.nn.functional.normalize(out, p=2, dim=-1)
+        return out, attns
+
+
+class MultiModalBoQ(nn.Module):
+    def __init__(self, in_dim=512, num_queries=32, num_layers=4, row_dim=32):
+        super().__init__()
+
+        # 为不同的特征组合创建BoQ网络
+        # 由于输入序列长度不同，可以共享参数或分别创建
+        self.boq_single = BoQ(in_dim, num_queries, num_layers, row_dim)  # 单模态 (129)
+        self.boq_dual = BoQ(in_dim, num_queries, num_layers, row_dim)  # 双模态 (258)
+        self.boq_triple = BoQ(in_dim, num_queries, num_layers, row_dim)  # 三模态 (387)
+
+    def forward(self, features_dict):
+        """
+        features_dict: 包含所有特征的字典
+        """
+        results = {}
+        attentions = {}
+
+        # 处理单模态特征 (129, 64, 512)
+        for modality in ['RGB', 'NI', 'TI']:
+            if modality in features_dict:
+                feat = features_dict[modality]  # [129, 64, 512]
+                feat = feat.permute(1, 0, 2)  # [64, 129, 512] -> [B, seq_len, dim]
+
+                out, attn = self.boq_single(feat)
+                results[modality] = out
+                attentions[modality] = attn
+
+        # 处理双模态特征 (258, 64, 512)
+        for modality in ['RGB_NI', 'RGB_TI', 'NI_TI']:
+            if modality in features_dict:
+                feat = features_dict[modality]  # [258, 64, 512]
+                feat = feat.permute(1, 0, 2)  # [64, 258, 512] -> [B, seq_len, dim]
+
+                out, attn = self.boq_dual(feat)
+                results[modality] = out
+                attentions[modality] = attn
+
+        # 处理三模态特征 (387, 64, 512)
+        if 'RGB_NI_TI' in features_dict:
+            feat = features_dict['RGB_NI_TI']  # [387, 64, 512]
+            feat = feat.permute(1, 0, 2)  # [64, 387, 512] -> [B, seq_len, dim]
+
+            out, attn = self.boq_triple(feat)
+            results['RGB_NI_TI'] = out
+            attentions['RGB_NI_TI'] = attn
+
+        return results, attentions
+
+
+
+############gaijin boq~~~~~~~~~~~~~~
+import math
+
+class ImprovedBoQBlock(torch.nn.Module):
+    def __init__(self, in_dim, num_queries, nheads=8, layer_idx=0, total_layers=2, prev_num_queries=None):
+        super(ImprovedBoQBlock, self).__init__()
+
+        self.layer_idx = layer_idx
+        self.total_layers = total_layers
+        self.num_queries = num_queries
+
+        self.encoder = torch.nn.TransformerEncoderLayer(
+            d_model=in_dim, nhead=nheads, dim_feedforward=4 * in_dim,
+            batch_first=True, dropout=0.)
+
+        # 改进1: 分层查询初始化策略
+        # 浅层学习局部特征，深层学习全局特征
+        init_scale = 0.02 * (1 + layer_idx * 0.5)  # 深层查询初始化scale更大
+        self.queries = torch.nn.Parameter(torch.randn(1, num_queries, in_dim) * init_scale)
+
+        # 改进2: 查询专门化 - 不同层有不同的注意力模式
+        self.query_projection = nn.Linear(in_dim, in_dim)
+
+        # 查询尺寸适配器 - 解决不同层查询数量不匹配问题
+        if prev_num_queries is not None and prev_num_queries != num_queries:
+            self.query_adapter = nn.Linear(prev_num_queries, num_queries)
+        else:
+            self.query_adapter = None
+
+        self.self_attn = torch.nn.MultiheadAttention(in_dim, num_heads=nheads, batch_first=True)
+        self.norm_q = torch.nn.LayerNorm(in_dim)
+
+        self.cross_attn = torch.nn.MultiheadAttention(in_dim, num_heads=nheads, batch_first=True)
+        self.norm_out = torch.nn.LayerNorm(in_dim)
+
+        # 改进3: 残差门控机制
+        self.gate = nn.Parameter(torch.ones(1))
+
+    def forward(self, x, prev_queries=None):
+        B = x.size(0)
+        x = self.encoder(x)
+
+        q = self.queries.repeat(B, 1, 1)
+
+        # 改进4: 层间查询传递 - 处理尺寸不匹配
+        if prev_queries is not None and self.layer_idx > 0:
+            # 如果查询数量不匹配，使用适配器
+            if self.query_adapter is not None:
+                # 转置 -> 适配 -> 转置回来
+                adapted_queries = self.query_adapter(prev_queries.permute(0, 2, 1)).permute(0, 2, 1)
+            else:
+                adapted_queries = prev_queries
+
+            # 融合前一层的查询信息
+            alpha = torch.sigmoid(self.gate)
+            q = alpha * q + (1 - alpha) * adapted_queries
+
+        # 查询专门化投影
+        q = self.query_projection(q)
+
+        q = q + self.self_attn(q, q, q)[0]
+        q = self.norm_q(q)
+
+        out, attn = self.cross_attn(q, x, x)
+        out = self.norm_out(out)
+
+        return x, out, attn.detach(), q  # 返回处理后的查询供下一层使用
+
+
+class AdaptiveBoQ(torch.nn.Module):
+    """改进的BoQ网络"""
+
+    def __init__(self, input_dim=512, num_queries=32, num_layers=2, row_dim=32,
+                 use_positional_encoding=True):
+        super().__init__()
+
+        self.use_positional_encoding = use_positional_encoding
+        self.norm_input = torch.nn.LayerNorm(input_dim)
+
+        # 改进5: 可选的位置编码
+        if use_positional_encoding:
+            self.pos_encoding = PositionalEncoding(input_dim)
+
+        in_dim = input_dim
+
+        # 改进6: 层特异性的查询数量
+        layer_queries = self._get_layer_queries(num_queries, num_layers)
+
+        self.boqs = torch.nn.ModuleList()
+        for i in range(num_layers):
+            prev_queries = layer_queries[i - 1] if i > 0 else None
+            self.boqs.append(
+                ImprovedBoQBlock(in_dim, layer_queries[i],
+                                 nheads=max(1, in_dim // 64),
+                                 layer_idx=i, total_layers=num_layers,
+                                 prev_num_queries=prev_queries)
+            )
+
+        # 改进7: 自适应特征融合
+        total_query_outputs = sum(layer_queries)
+        self.adaptive_fusion = AdaptiveFusion(input_dim, total_query_outputs, row_dim)
+
+    def _get_layer_queries(self, base_queries, num_layers):
+        """为不同层分配不同数量的查询"""
+        if num_layers == 1:
+            return [base_queries]
+
+        # 浅层更多查询（细节），深层较少查询（抽象）
+        queries_per_layer = []
+        for i in range(num_layers):
+            ratio = 1.0 - (i / (num_layers - 1)) * 0.3  # 30%递减
+            layer_q = max(8, int(base_queries * ratio))
+            queries_per_layer.append(layer_q)
+
+        return queries_per_layer
+
+    def forward(self, x):
+        if self.use_positional_encoding:
+            x = self.pos_encoding(x)
+        x = self.norm_input(x)
+
+        outs = []
+        attns = []
+        prev_queries = None
+
+        for i, boq_layer in enumerate(self.boqs):
+            x, out, attn, queries = boq_layer(x, prev_queries)
+            outs.append(out)
+            attns.append(attn)
+            prev_queries = queries  # 传递查询到下一层
+
+        # 自适应融合
+        final_out = self.adaptive_fusion(outs)
+
+        return final_out, attns
+
+
+class PositionalEncoding(nn.Module):
+    """改进8: 可学习的位置编码"""
+
+    def __init__(self, d_model, max_len=5000):
+        super().__init__()
+
+        # 传统sin/cos位置编码
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() *
+                             (-math.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+
+        self.register_buffer('pe', pe)
+
+        # 可学习的位置权重
+        self.pos_weight = nn.Parameter(torch.ones(1))
+
+    def forward(self, x):
+        seq_len = x.size(1)
+        pos_enc = self.pe[:seq_len].unsqueeze(0)
+        return x + self.pos_weight * pos_enc
+
+
+class AdaptiveFusion(nn.Module):
+    """改进9: 自适应特征融合模块"""
+
+    def __init__(self, feat_dim, total_queries, output_dim):
+        super().__init__()
+
+        self.feat_dim = feat_dim
+        self.total_queries = total_queries
+
+        # 注意力权重网络
+        self.attention_net = nn.Sequential(
+            nn.Linear(feat_dim, feat_dim // 4),
+            nn.ReLU(),
+            nn.Linear(feat_dim // 4, 1)
+        )
+
+        # 最终投影
+        self.final_proj = nn.Linear(total_queries, output_dim)
+
+    def forward(self, layer_outputs):
+        # layer_outputs: list of [B, num_queries_i, feat_dim]
+
+        # 计算每层的重要性权重
+        layer_weights = []
+        for out in layer_outputs:
+            # 全局平均池化 + 注意力权重
+            global_feat = torch.mean(out, dim=1)  # [B, feat_dim]
+            weight = torch.sigmoid(self.attention_net(global_feat))  # [B, 1]
+            layer_weights.append(weight)
+
+        # 加权融合
+        weighted_outputs = []
+        for out, weight in zip(layer_outputs, layer_weights):
+            weighted_out = out * weight.unsqueeze(1)  # [B, num_queries, feat_dim]
+            weighted_outputs.append(weighted_out)
+
+        # 拼接所有层的输出
+        concat_out = torch.cat(weighted_outputs, dim=1)  # [B, total_queries, feat_dim]
+
+        # 最终投影和归一化
+        final_out = self.final_proj(concat_out.permute(0, 2, 1))  # [B, feat_dim, output_dim]
+        final_out = final_out.flatten(1)  # [B, feat_dim * output_dim]
+        final_out = torch.nn.functional.normalize(final_out, p=2, dim=-1)
+
+        return final_out
+
+
+# 多模态专用改进
+class ModalitySpecificBoQ(nn.Module):
+    """改进10: 模态特异性BoQ"""
+
+    def __init__(self, input_dim=512, num_queries=32, num_layers=2, row_dim=32):
+        super().__init__()
+
+        # 为不同模态组合设计特异性参数
+        self.single_modal_boq = AdaptiveBoQ(input_dim, num_queries, num_layers, row_dim)
+        self.dual_modal_boq = AdaptiveBoQ(input_dim, int(num_queries * 1.2), num_layers, row_dim)
+        self.triple_modal_boq = AdaptiveBoQ(input_dim, int(num_queries * 1.5), num_layers, row_dim)
+
+        # 模态特异性的查询初始化
+        self._init_modality_specific_queries()
+
+    def _init_modality_specific_queries(self):
+        """为不同模态初始化特异性查询"""
+        # 这里可以加入先验知识，比如RGB关注纹理，TIR关注温度等
+        pass
+
+    def forward(self, features_dict):
+        results = {}
+        attentions = {}
+
+        for modality, feat in features_dict.items():
+            feat = feat.permute(1, 0, 2)  # [N, B, D] -> [B, N, D]
+
+            if modality in ['RGB', 'NI', 'TI']:
+                out, attn = self.single_modal_boq(feat)
+            elif modality in ['RGB_NI', 'RGB_TI', 'NI_TI']:
+                out, attn = self.dual_modal_boq(feat)
+            else:  # RGB_NI_TI
+                out, attn = self.triple_modal_boq(feat)
+
+            results[modality] = out
+            attentions[modality] = attn
+
+        return results, attentions
+
+
 class GeneralFusion(nn.Module):
     def __init__(self, feat_dim, num_experts, head, reg_weight=0.1, dropout=0.1, cfg=None):
         super(GeneralFusion, self).__init__()
@@ -2125,7 +3272,17 @@ class GeneralFusion(nn.Module):
 
         self.HDM = cfg.MODEL.HDM
         self.ATM = cfg.MODEL.ATM
-        if self.HDM:
+
+        self.combineway = 'adaptiveboqdeform'
+        print('combineway:', self.combineway,'mxa')
+        logger = logging.getLogger("DeMo")
+        logger.info(f'combineway: {self.combineway}')
+
+        self.newdeform = cfg.MODEL.NEWDEFORM
+        print('newdeform:', self.newdeform,'mxa')
+
+
+        if self.HDM and self.combineway == 'normal':
             self.dropout = dropout
             scale = self.feat_dim ** -0.5
             self.r_token = nn.Parameter(scale * torch.randn(1, 1, self.feat_dim))
@@ -2148,10 +3305,7 @@ class GeneralFusion(nn.Module):
 
 
 
-        self.combineway = 'multimodelse'
-        print('combineway:', self.combineway,'mxa')
-        logger = logging.getLogger("DeMo")
-        logger.info(f'combineway: {self.combineway}')
+
         self.UsingDiversity = False
         print('UsingDiversity:', self.UsingDiversity,'mxa')
 
@@ -2166,10 +3320,44 @@ class GeneralFusion(nn.Module):
             else:
                 q_size = (8, 16)
 
-            self.deformselect = DAttentionBaseline(
-                q_size, 1, 512, 1, 0.0, 0.0, 2,
-                5.0, 4, True
-            )
+            if self.newdeform:
+                # 直接替换
+                self.deformselect = DAttentionEnhanced(
+                    q_size, 1, 512, 1, 0.0, 0.0, 2,
+                    5.0, 4, True
+                )
+            else:
+                self.deformselect = DAttentionBaseline(
+                    q_size, 1, 512, 1, 0.0, 0.0, 2,
+                    5.0, 4, True
+                )
+        elif self.combineway == 'boq':
+            # 初始化模型
+            self.multimodalboq = MultiModalBoQ(in_dim= self.feat_dim, num_queries=64, num_layers=4, row_dim=1)
+        elif self.combineway == 'adaptiveboq':
+            self.modalityboq = ModalitySpecificBoQ(input_dim=self.feat_dim, num_queries=64, num_layers=4, row_dim=1)
+        elif self.combineway == 'adaptiveboqdeform':
+            self.modalityboq = ModalitySpecificBoQ(input_dim=self.feat_dim, num_queries=64, num_layers=4, row_dim=1)
+            if self.datasetsname == 'RGBNT201':
+                q_size = (16,8)
+            elif self.datasetsname == 'RGBNT100':
+                q_size = (8, 16)
+            else:
+                q_size = (8, 16)
+
+
+            if self.newdeform:
+                # 直接替换
+                self.deformselect = DAttentionEnhanced(
+                    q_size, 1, 512, 1, 0.0, 0.0, 2,
+                    5.0, 4, True
+                )
+            else:
+                self.deformselect = DAttentionBaseline(
+                    q_size, 1, 512, 1, 0.0, 0.0, 2,
+                    5.0, 4, True
+                )
+
         elif self.combineway == 'ebblockdeform':
             if self.datasetsname == 'RGBNT201':
                 q_size = (16,8)
@@ -2180,10 +3368,17 @@ class GeneralFusion(nn.Module):
             self.ebblock_r = EBlock(c=self.feat_dim)
             self.ebblock_n = EBlock(c=self.feat_dim)
             self.ebblock_t = EBlock(c=self.feat_dim)
-            self.deformselect = DAttentionBaseline(
-                q_size, 1, 512, 1, 0.0, 0.0, 2,
-                5.0, 4, True
-            )
+            if self.newdeform:
+                # 直接替换
+                self.deformselect = DAttentionEnhanced(
+                    q_size, 1, 512, 1, 0.0, 0.0, 2,
+                    5.0, 4, True
+                )
+            else:
+                self.deformselect = DAttentionBaseline(
+                    q_size, 1, 512, 1, 0.0, 0.0, 2,
+                    5.0, 4, True
+                )
         elif self.combineway == 'multimodelse':
             if self.datasetsname == 'RGBNT201':
                 q_size = (16, 8)
@@ -2225,10 +3420,17 @@ class GeneralFusion(nn.Module):
             else:
                 q_size = (8, 16)
 
-            self.deformselect = DAttentionBaseline(
-                q_size, 1, 512, 1, 0.0, 0.0, 2,
-                5.0, 4, True
-            )
+            if self.newdeform:
+                # 直接替换
+                self.deformselect = DAttentionEnhanced(
+                    q_size, 1, 512, 1, 0.0, 0.0, 2,
+                    5.0, 4, True
+                )
+            else:
+                self.deformselect = DAttentionBaseline(
+                    q_size, 1, 512, 1, 0.0, 0.0, 2,
+                    5.0, 4, True
+                )
             self.tokense_r = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
             self.tokense_n = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
             self.tokense_t = TokenSE(token_dim=q_size[0] * q_size[1], reduction=4, use_residual=True)
@@ -3068,6 +4270,183 @@ class GeneralFusion(nn.Module):
         RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
 
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
+
+    def forward_HDMboq(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+        batch = RGB.size(1)
+
+        # 创建特征字典
+        features_dict = {
+            'RGB': RGB,
+            'NI': NI,
+            'TI': TI,
+            'RGB_NI': RGB_NI,
+            'RGB_TI': RGB_TI,
+            'NI_TI': NI_TI,
+            'RGB_NI_TI': RGB_NI_TI
+        }
+
+        results, attentions = self.multimodalboq(features_dict)
+        RGB_special = results['RGB']
+        NI_special = results['NI']
+        TI_special = results['TI']
+        RN_shared = results['RGB_NI']
+        RT_shared = results['RGB_TI']
+        NT_shared = results['NI_TI']
+        RNT_shared = results['RGB_NI_TI']
+
+
+
+        #
+        # # get the learnable token
+        # r_embedding = self.r_token.repeat(1, batch, 1)
+        # n_embedding = self.n_token.repeat(1, batch, 1)
+        # t_embedding = self.t_token.repeat(1, batch, 1)
+        # rn_embedding = self.rn_token.repeat(1, batch, 1)
+        # rt_embedding = self.rt_token.repeat(1, batch, 1)
+        # nt_embedding = self.nt_token.repeat(1, batch, 1)
+        # rnt_embedding = self.rnt_token.repeat(1, batch, 1)
+        #
+        # #从这里开始拿到的都是 BS 512 的特征也就是  B dIM
+        # # for single modality
+        # RGB_special = (self.r(r_embedding, RGB, RGB)[0]).permute(1, 2, 0).squeeze() #r_embedding, RGB, RGB 是 query, key, value, [0] 是 attn_output, 通用做法， permute(1, 2, 0) 是将 batch_size 放到最前面
+        # NI_special = (self.n(n_embedding, NI, NI)[0]).permute(1, 2, 0).squeeze()
+        # TI_special = (self.t(t_embedding, TI, TI)[0]).permute(1, 2, 0).squeeze()
+        # # for double modality
+        # RN_shared = (self.rn(rn_embedding, RGB_NI, RGB_NI)[0]).permute(1, 2, 0).squeeze()
+        # RT_shared = (self.rt(rt_embedding, RGB_TI, RGB_TI)[0]).permute(1, 2, 0).squeeze()
+        # NT_shared = (self.nt(nt_embedding, NI_TI, NI_TI)[0]).permute(1, 2, 0).squeeze()
+        # # for triple modality
+        # RNT_shared = (self.rnt(rnt_embedding, RGB_NI_TI, RGB_NI_TI)[0]).permute(1, 2, 0).squeeze()
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
+
+    def forward_HDMadaptiveboq(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+        batch = RGB.size(1)
+
+        # 创建特征字典
+        features_dict = {
+            'RGB': RGB,
+            'NI': NI,
+            'TI': TI,
+            'RGB_NI': RGB_NI,
+            'RGB_TI': RGB_TI,
+            'NI_TI': NI_TI,
+            'RGB_NI_TI': RGB_NI_TI
+        }
+
+        results, attentions = self.modalityboq(features_dict)
+        RGB_special = results['RGB']
+        NI_special = results['NI']
+        TI_special = results['TI']
+        RN_shared = results['RGB_NI']
+        RT_shared = results['RGB_TI']
+        NT_shared = results['NI_TI']
+        RNT_shared = results['RGB_NI_TI']
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
+
+    def forward_HDMadaptiveboqDeform(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+
+
+        # token selectect 用可变哪个东西
+        RGB_cash = RGB_cash.permute(1, 2, 0)
+        NI_cash = NI_cash.permute(1, 2, 0)
+        TI_cash = TI_cash.permute(1, 2, 0)
+
+        if self.datasetsname == 'RGBNT100':
+            q_size = (8, 16)
+        elif self.datasetsname == 'RGBNT201':
+            q_size = (16, 8)
+        else:
+            q_size = (8, 16)
+
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), q_size[0], q_size[1])
+        NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), q_size[0], q_size[1])
+        TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), q_size[0], q_size[1])
+
+        # B, C, H, W = RGB_cash.size()
+        # dtype, device = RGB_cash.dtype, RGB_cash.device
+        # data = torch.cat([RGB_cash, NI_cash, TI_cash], dim=1)
+        RGB_cash,NI_cash,TI_cash = self.deformselect(RGB_cash, NI_cash, TI_cash)
+
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+
+        # 创建特征字典
+        features_dict = {
+            'RGB': RGB,
+            'NI': NI,
+            'TI': TI,
+            'RGB_NI': RGB_NI,
+            'RGB_TI': RGB_TI,
+            'NI_TI': NI_TI,
+            'RGB_NI_TI': RGB_NI_TI
+        }
+
+        results, attentions = self.modalityboq(features_dict)
+        RGB_special = results['RGB']
+        NI_special = results['NI']
+        TI_special = results['TI']
+        RN_shared = results['RGB_NI']
+        RT_shared = results['RGB_TI']
+        NT_shared = results['NI_TI']
+        RNT_shared = results['RGB_NI_TI']
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
+
+    
+    
+
     def forward_HDM(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
         r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
@@ -3122,6 +4501,16 @@ class GeneralFusion(nn.Module):
         if self.combineway == 'deform':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMDeform(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'boq':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMboq(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'adaptiveboq':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMadaptiveboq(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'adaptiveboqdeform':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMadaptiveboqDeform(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+            
         elif self.combineway == 'sedeform':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMseDeform(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)

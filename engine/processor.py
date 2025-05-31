@@ -48,7 +48,9 @@ def do_train(cfg,
     test_sign = cfg.MODEL.HDM or cfg.MODEL.ATM
     # train
     best_index = {'mAP': 0, "Rank-1": 0, 'Rank-5': 0, 'Rank-10': 0}
-    diversityweight = 10
+    diversityweight = getattr(cfg.MODEL, "DIVERSITY_WEIGHT", 0)
+
+    #diversityweight = 0
     print('diversityweight:', diversityweight,'mxa')
     for epoch in range(1, epochs + 1):
         start_time = time.time()

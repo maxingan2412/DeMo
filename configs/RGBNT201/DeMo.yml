@@ -6,12 +6,13 @@ MODEL:
   SIE_COE: 1.0
   ID_LOSS_WEIGHT: 0.25
   TRIPLET_LOSS_WEIGHT: 1.0
-  GLOBAL_LOCAL: True
+  GLOBAL_LOCAL: False
   HDM: True
-  ATM: True
+  ATM: False
   HEAD: 4 # orginal 4
-  FROZEN: True
-  CENGJIFUSION: True
+  FROZEN: False
+  CENGJIFUSION: False
+  NEWDEFORM: True
 
 INPUT:
   SIZE_TRAIN: [ 256, 128 ]

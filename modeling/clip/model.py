@@ -1225,38 +1225,39 @@ class VisionTransformer(nn.Module):
 
         self.ln_post = LayerNorm(width)
         self.proj = nn.Parameter(scale * torch.randn(width, output_dim))
+        self.cengjifusion = cfg.MODEL.CENGJIFUSION
+        if self.cengjifusion:
+            ##################################chuangxin#####################
 
-##################################chuangxin#####################
+            # 原来的代码:
+            self.triple_dff = TripleInputDirectDFF(width)
+            self.quad_dffs = QuadInputHierarchicalDFF(width)
 
-        # 原来的代码:
-        self.triple_dff = TripleInputDirectDFF(width)
-        self.quad_dffs = QuadInputHierarchicalDFF(width)
+            # 替换为优化版本:
+            # self.triple_dff = OptimizedTripleInputDFF(width)
+            # self.quad_dffs = OptimizedQuadInputDFF(width)
 
-        # 替换为优化版本:
-        # self.triple_dff = OptimizedTripleInputDFF(width)
-        # self.quad_dffs = OptimizedQuadInputDFF(width)
+            # 或者替换为超轻量级版本（最快）:
+            # self.triple_dff = UltraLightTripleDFF(width)
+            # self.quad_dffs = UltraLightQuadDFF(width)
 
-        # 或者替换为超轻量级版本（最快）:
-        # self.triple_dff = UltraLightTripleDFF(width)
-        # self.quad_dffs = UltraLightQuadDFF(width)
+            #self.gated_enhancement = GatedModalityEnhancement(width)
 
-        #self.gated_enhancement = GatedModalityEnhancement(width)
+            self.simplegate = False
+            print('simplegate:', self.simplegate,'mxa')
+            if self.simplegate:
+                # 使用简化的门控机制
+                self.gated_enhancement = SimpleModalityGate(width)
+            else:
+                # 使用复杂的门控机制
+                self.gated_enhancement = GatedModalityEnhancement(width)
 
-        self.simplegate = False
-        print('simplegate:', self.simplegate,'mxa')
-        if self.simplegate:
-            # 使用简化的门控机制
-            self.gated_enhancement = SimpleModalityGate(width)
-        else:
-            # 使用复杂的门控机制
-            self.gated_enhancement = GatedModalityEnhancement(width)
-
-        self.tiaoyuelianjie = False
-        print('tiaoyuelianjie:', self.tiaoyuelianjie,'mxa')
+            self.tiaoyuelianjie = False
+            print('tiaoyuelianjie:', self.tiaoyuelianjie,'mxa')
 
     def forward(self, x: torch.Tensor, cv_emb=None, modality=None):
         #ientify if input is dict
-        if isinstance(x, dict):
+        if isinstance(x, dict) and self.cengjifusion:
             x_rgb = x['RGB']
             x_nir = x['NI']
             x_tir = x['TI']
