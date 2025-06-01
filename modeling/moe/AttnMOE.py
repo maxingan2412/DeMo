@@ -4114,6 +4114,565 @@ def create_eda_ablation_configs():
 #
 #     print(model.get_ablation_summary())
 
+#################new ablation ##############
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import einops
+
+
+# ===== 新的配置类 =====
+class SimplifiedEDAConfig:
+    """简化的EDA消融配置"""
+
+    def __init__(self,
+                 enable_msof=True,  # Multi-Scale Offset Fusion (保留)
+                 enable_cma=True,  # Channel-wise Modal Attention (新)
+                 enable_sal=True):  # Spatial-aware Adaptive Learning (新)
+        self.enable_msof = enable_msof
+        self.enable_cma = enable_cma
+        self.enable_sal = enable_sal
+
+    def get_ablation_name(self):
+        components = []
+        if self.enable_msof: components.append("MSOF")
+        if self.enable_cma: components.append("CMA")
+        if self.enable_sal: components.append("SAL")
+        return "_".join(components) if components else "Baseline"
+
+
+class SimplifiedHAQNConfig:
+    """简化的HAQN消融配置"""
+
+    def __init__(self,
+                 enable_hq=True,  # Hierarchical Queries (保留简化版)
+                 enable_af=True,  # Adaptive Fusion (保留)
+                 enable_qrm=True):  # Query Refinement Mechanism (新)
+        self.enable_hq = enable_hq
+        self.enable_af = enable_af
+        self.enable_qrm = enable_qrm
+
+    def get_ablation_name(self):
+        components = []
+        if self.enable_hq: components.append("HQ")
+        if self.enable_af: components.append("AF")
+        if self.enable_qrm: components.append("QRM")
+        return "_".join(components) if components else "Baseline"
+
+
+# ===== 简化的EDA模块 (保持不变) =====
+class SimplifiedEDA(nn.Module):
+    """简化的增强可变形注意力模块"""
+
+    def __init__(self, q_size, n_heads, n_head_channels, n_groups,
+                 attn_drop, proj_drop, stride, offset_range_factor, ksize, share,
+                 ablation_config=None):
+        super().__init__()
+
+        self.n_head_channels = n_head_channels
+        self.scale = self.n_head_channels ** -0.5
+        self.n_heads = n_heads
+        self.q_h, self.q_w = q_size
+        self.nc = n_head_channels * n_heads
+        self.n_groups = n_groups
+        self.n_group_channels = self.nc // self.n_groups
+        self.offset_range_factor = offset_range_factor
+        self.ksize = ksize
+        self.stride = stride
+        self.share_offset = share
+
+        self.config = ablation_config if ablation_config is not None else SimplifiedEDAConfig()
+        print(f"[Simplified EDA] Configuration: {self.config.get_ablation_name()}")
+
+        # 基础偏移网络
+        self.conv_offset_main = nn.Sequential(
+            nn.Conv2d(3 * self.n_group_channels, self.n_group_channels, 1, 1, 0),
+            nn.GELU(),
+            nn.Conv2d(self.n_group_channels, self.n_group_channels, ksize, stride, 0,
+                      groups=self.n_group_channels),
+            nn.GELU(),
+            nn.Conv2d(self.n_group_channels, 2, 1, 1, 0, bias=False),
+        )
+
+        # 创新1: Multi-Scale Offset Fusion (MSOF) - 保留
+        if self.config.enable_msof:
+            self.conv_offset_coarse = nn.Sequential(
+                nn.Conv2d(3 * self.n_group_channels, self.n_group_channels, 1),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, ksize + 2, stride, 1,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 2, 1, bias=False),
+            )
+            self.conv_offset_fine = nn.Sequential(
+                nn.Conv2d(3 * self.n_group_channels, self.n_group_channels, 1),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, max(ksize - 2, 1), stride, 0,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 2, 1, bias=False),
+            )
+            # 简化的尺度权重
+            self.scale_weights = nn.Parameter(torch.tensor([0.5, 1.0, 0.3]))
+            print("[Simplified EDA] ✓ MSOF enabled")
+        else:
+            print("[Simplified EDA] ✗ MSOF disabled")
+
+        # 创新2: Channel-wise Modal Attention (CMA) - 新设计
+        if self.config.enable_cma:
+            self.channel_attention = nn.Sequential(
+                nn.AdaptiveAvgPool2d(1),
+                nn.Conv2d(3 * self.n_group_channels, self.n_group_channels // 4, 1),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(self.n_group_channels // 4, 3 * self.n_group_channels, 1),
+                nn.Sigmoid()
+            )
+            print("[Simplified EDA] ✓ CMA enabled")
+        else:
+            print("[Simplified EDA] ✗ CMA disabled")
+
+        # 创新3: Spatial-aware Adaptive Learning (SAL) - 新设计
+        if self.config.enable_sal:
+            self.spatial_adapter = nn.Conv2d(2, 2, 3, 1, 1)  # 对偏移进行空间自适应
+            self.spatial_gate = nn.Parameter(torch.tensor(0.1))  # 可学习的空间权重
+            print("[Simplified EDA] ✓ SAL enabled")
+        else:
+            print("[Simplified EDA] ✗ SAL disabled")
+
+        # 基础网络层
+        self.proj_q = nn.Conv2d(self.nc, self.nc, 1)
+        self.proj_k = nn.Conv2d(self.nc, self.nc, 1)
+        self.proj_v = nn.Conv2d(self.nc, self.nc, 1)
+        self.proj_out = nn.Conv2d(self.nc, self.nc, 1)
+        self.proj_drop = nn.Dropout(proj_drop)
+        self.attn_drop = nn.Dropout(attn_drop)
+
+    def channel_wise_modal_attention(self, x, y, z):
+        """创新2: 通道级模态注意力 - 简化版AMW"""
+        if not self.config.enable_cma:
+            return torch.cat([x, y, z], dim=1)
+
+        concat_features = torch.cat([x, y, z], dim=1)
+        channel_weights = self.channel_attention(concat_features)
+
+        # 直接应用通道注意力
+        weighted_features = concat_features * channel_weights
+        return weighted_features
+
+    def multi_scale_offset_fusion(self, data):
+        """创新1: 多尺度偏移融合 - 保留并简化"""
+        data = einops.rearrange(data, 'b (g c) h w -> (b g) c h w',
+                                g=self.n_groups, c=3 * self.n_group_channels)
+
+        offset_main = self.conv_offset_main(data)
+
+        if self.config.enable_msof:
+            offset_coarse = self.conv_offset_coarse(data)
+            offset_fine = self.conv_offset_fine(data)
+
+            # 尺寸对齐
+            if offset_coarse.shape != offset_main.shape:
+                offset_coarse = F.interpolate(offset_coarse, size=offset_main.shape[2:],
+                                              mode='bilinear', align_corners=True)
+            if offset_fine.shape != offset_main.shape:
+                offset_fine = F.interpolate(offset_fine, size=offset_main.shape[2:],
+                                            mode='bilinear', align_corners=True)
+
+            # 简化的权重融合
+            weights = F.softmax(self.scale_weights, dim=0)
+            offset = weights[0] * offset_coarse + weights[1] * offset_main + weights[2] * offset_fine
+        else:
+            offset = offset_main
+
+        return offset
+
+    def spatial_aware_learning(self, offset):
+        """创新3: 空间感知自适应学习"""
+        if not self.config.enable_sal:
+            return offset
+
+        # 空间自适应调整
+        adapted_offset = self.spatial_adapter(offset)
+
+        # 门控融合
+        final_offset = offset + self.spatial_gate * adapted_offset
+        return final_offset
+
+    @torch.no_grad()
+    def _get_ref_points(self, H_in, W_in, B, kernel_size, stride, dtype, device):
+        H_out = (H_in - kernel_size) // stride + 1
+        W_out = (W_in - kernel_size) // stride + 1
+
+        center_y = torch.arange(H_out, dtype=dtype, device=device) * stride + (kernel_size // 2)
+        center_x = torch.arange(W_out, dtype=dtype, device=device) * stride + (kernel_size // 2)
+
+        ref_y, ref_x = torch.meshgrid(center_y, center_x, indexing='ij')
+        ref = torch.stack((ref_y, ref_x), dim=-1)
+
+        ref[..., 1].div_(W_in - 1.0).mul_(2.0).sub_(1.0)
+        ref[..., 0].div_(H_in - 1.0).mul_(2.0).sub_(1.0)
+
+        ref = ref[None, ...].expand(B * self.n_groups, -1, -1, -1)
+        return ref
+
+    def forward(self, x, y, z):
+        B, C, H, W = x.size()
+        dtype, device = x.dtype, x.device
+
+        # 创新2: 通道级模态注意力
+        data = self.channel_wise_modal_attention(x, y, z)
+
+        # 创新1: 多尺度偏移融合
+        offset = self.multi_scale_offset_fusion(data)
+
+        # 创新3: 空间感知学习
+        offset = self.spatial_aware_learning(offset)
+
+        # 标准化偏移
+        Hk, Wk = offset.size(2), offset.size(3)
+        if self.offset_range_factor > 0:
+            offset_range = torch.tensor([1.0 / (Hk - 1.0), 1.0 / (Wk - 1.0)],
+                                        device=device).reshape(1, 2, 1, 1)
+            offset = offset.tanh().mul(offset_range).mul(self.offset_range_factor)
+
+        # 生成参考点
+        reference = self._get_ref_points(H, W, B, self.ksize, self.stride, dtype, device)
+        offset = einops.rearrange(offset, 'b p h w -> b h w p')
+
+        # 可变形采样
+        pos = (offset + reference).clamp(-1., +1.)
+        n_sample = Hk * Wk
+
+        sampled_x = F.grid_sample(x.reshape(B * self.n_groups, self.n_group_channels, H, W),
+                                  pos[..., (1, 0)], mode='bilinear', align_corners=True)
+        sampled_y = F.grid_sample(y.reshape(B * self.n_groups, self.n_group_channels, H, W),
+                                  pos[..., (1, 0)], mode='bilinear', align_corners=True)
+        sampled_z = F.grid_sample(z.reshape(B * self.n_groups, self.n_group_channels, H, W),
+                                  pos[..., (1, 0)], mode='bilinear', align_corners=True)
+
+        sampled_x, sampled_y, sampled_z = [
+            t.reshape(B, C, 1, n_sample).squeeze(2).permute(2, 0, 1)
+            for t in [sampled_x, sampled_y, sampled_z]
+        ]
+
+        return sampled_x, sampled_y, sampled_z
+
+    def get_ablation_summary(self):
+        enabled = []
+        disabled = []
+
+        components = [
+            ("MSOF", "Multi-Scale Offset Fusion", self.config.enable_msof),
+            ("CMA", "Channel-wise Modal Attention", self.config.enable_cma),
+            ("SAL", "Spatial-aware Adaptive Learning", self.config.enable_sal)
+        ]
+
+        for abbr, full_name, enabled_flag in components:
+            if enabled_flag:
+                enabled.append(f"{abbr} ({full_name})")
+            else:
+                disabled.append(f"{abbr} ({full_name})")
+
+        return f"""
+=== Simplified EDA Configuration ===
+Configuration: {self.config.get_ablation_name()}
+Enabled: {', '.join(enabled) if enabled else 'None'}
+Disabled: {', '.join(disabled) if disabled else 'None'}
+================================
+        """.strip()
+
+
+# ===== 修改后的HAQN模块 - 适应你的接口 =====
+class SimplifiedHAQN(nn.Module):
+    """简化的层次化自适应查询网络 - 修改以适应特征字典输入"""
+
+    def __init__(self, input_dim=512, num_queries=32, num_layers=3, row_dim=1,
+                 ablation_config=None):
+        super().__init__()
+
+        self.config = ablation_config if ablation_config is not None else SimplifiedHAQNConfig()
+        self.input_dim = input_dim
+        self.num_layers = num_layers
+        self.row_dim = row_dim
+
+        print(f"[Simplified HAQN] Configuration: {self.config.get_ablation_name()}")
+
+        # 创新1: Hierarchical Queries (HQ) - 简化版
+        if self.config.enable_hq:
+            # 简化的层次查询分配
+            base_queries = [num_queries, max(16, num_queries // 2), max(8, num_queries // 4)]
+            self.layer_queries = base_queries[:num_layers]
+            print(f"[Simplified HAQN] ✓ HQ enabled: {self.layer_queries}")
+        else:
+            self.layer_queries = [num_queries] * num_layers
+            print(f"[Simplified HAQN] ✗ HQ disabled: {self.layer_queries}")
+
+        # 为每种模态组合创建独立的处理分支
+        self.modality_keys = ['RGB', 'NI', 'TI', 'RGB_NI', 'RGB_TI', 'NI_TI', 'RGB_NI_TI']
+
+        # 为每种模态组合创建查询和注意力层
+        self.modality_modules = nn.ModuleDict()
+
+        # 创新2: Adaptive Fusion (AF) - 为每个模态创建层权重参数
+        if self.config.enable_af:
+            self.layer_weights = nn.ParameterDict({
+                key: nn.Parameter(torch.ones(num_layers))
+                for key in self.modality_keys
+            })
+            print("[Simplified HAQN] ✓ AF enabled")
+        else:
+            print("[Simplified HAQN] ✗ AF disabled")
+
+        # 创新3: Query Refinement Mechanism (QRM)
+        if self.config.enable_qrm:
+            print("[Simplified HAQN] ✓ QRM enabled")
+        else:
+            print("[Simplified HAQN] ✗ QRM disabled")
+
+        for key in self.modality_keys:
+            modules = nn.ModuleDict()
+
+            # 查询参数
+            modules['queries'] = nn.ParameterList([
+                nn.Parameter(torch.randn(1, nq, input_dim) * 0.02)
+                for nq in self.layer_queries
+            ])
+
+            # 自注意力层
+            modules['self_attns'] = nn.ModuleList([
+                nn.MultiheadAttention(input_dim, 8, batch_first=True)
+                for _ in self.layer_queries
+            ])
+
+            # 交叉注意力层
+            modules['cross_attns'] = nn.ModuleList([
+                nn.MultiheadAttention(input_dim, 8, batch_first=True)
+                for _ in self.layer_queries
+            ])
+
+            # 归一化层
+            modules['norms1'] = nn.ModuleList([
+                nn.LayerNorm(input_dim) for _ in self.layer_queries
+            ])
+
+            modules['norms2'] = nn.ModuleList([
+                nn.LayerNorm(input_dim) for _ in self.layer_queries
+            ])
+
+            # 创新3: Query Refinement Mechanism (QRM)
+            if self.config.enable_qrm:
+                modules['query_refinement'] = nn.ModuleList([
+                    nn.Sequential(
+                        nn.Linear(input_dim, input_dim // 2),
+                        nn.ReLU(),
+                        nn.Linear(input_dim // 2, input_dim),
+                        nn.Dropout(0.1)
+                    ) for _ in range(num_layers)
+                ])
+
+            # 最终投影层
+            total_queries = sum(self.layer_queries)
+            modules['final_proj'] = nn.Linear(total_queries, row_dim)
+
+            self.modality_modules[key] = modules
+
+        print("[Simplified HAQN] ✓ Created modules for all modality combinations")
+
+    def query_refinement_mechanism(self, queries, modules, layer_idx):
+        """创新3: 查询精炼机制"""
+        if not self.config.enable_qrm:
+            return queries
+
+        # 通过MLP精炼查询表示
+        refined = modules['query_refinement'][layer_idx](queries)
+        # 残差连接
+        return queries + 0.1 * refined
+
+    def adaptive_fusion(self, layer_outputs, modules, modality_key):
+        """创新2: 自适应特征融合"""
+        if self.config.enable_af:
+            # 学习每层的重要性权重
+            layer_weights = F.softmax(self.layer_weights[modality_key], dim=0)
+
+            # 加权融合
+            weighted_outputs = []
+            for i, out in enumerate(layer_outputs):
+                weighted = out * layer_weights[i]
+                weighted_outputs.append(weighted)
+        else:
+            # 简单等权重
+            weighted_outputs = layer_outputs
+
+        # 拼接并投影
+        concat_out = torch.cat(weighted_outputs, dim=1)
+        final_out = modules['final_proj'](concat_out.permute(0, 2, 1))
+        final_out = final_out.flatten(1)
+        final_out = F.normalize(final_out, p=2, dim=-1)
+
+        return final_out
+
+    def process_modality(self, features, key):
+        """处理单个模态组合"""
+        # features: [seq_len, batch, dim]
+        features = features.permute(1, 0, 2)  # [batch, seq_len, dim]
+        B = features.size(0)
+
+        modules = self.modality_modules[key]
+        layer_outputs = []
+        attentions = []
+
+        for i in range(len(self.layer_queries)):
+            # 获取查询
+            queries = modules['queries'][i].repeat(B, 1, 1)
+
+            # 创新3: 查询精炼
+            if self.config.enable_qrm:
+                queries = self.query_refinement_mechanism(queries, modules, i)
+
+            # 自注意力
+            queries_refined, self_attn = modules['self_attns'][i](
+                queries, queries, queries, need_weights=True
+            )
+            queries_refined = queries + queries_refined
+            queries_refined = modules['norms1'][i](queries_refined)
+
+            # 交叉注意力
+            output, cross_attn = modules['cross_attns'][i](
+                queries_refined, features, features, need_weights=True
+            )
+            output = queries_refined + output
+            output = modules['norms2'][i](output)
+
+            layer_outputs.append(output)
+            attentions.append({
+                'self_attn': self_attn,
+                'cross_attn': cross_attn
+            })
+
+        # 创新2: 自适应融合
+        final_output = self.adaptive_fusion(layer_outputs, modules, key)
+
+        return final_output, attentions
+
+    def forward(self, features_dict):
+        """
+        输入:
+            features_dict: 包含不同模态组合的字典
+                - 'RGB': RGB特征 [seq_len, batch, dim]
+                - 'NI': NI特征 [seq_len, batch, dim]
+                - 'TI': TI特征 [seq_len, batch, dim]
+                - 'RGB_NI': RGB+NI组合特征
+                - 'RGB_TI': RGB+TI组合特征
+                - 'NI_TI': NI+TI组合特征
+                - 'RGB_NI_TI': RGB+NI+TI组合特征
+
+        输出:
+            results: 处理后的特征字典
+            attentions: 注意力权重字典
+        """
+        results = {}
+        attentions = {}
+
+        # 处理每种模态组合
+        for key in self.modality_keys:
+            if key in features_dict:
+                result, attn = self.process_modality(features_dict[key], key)
+                results[key] = result
+                attentions[key] = attn
+
+        return results, attentions
+
+    def get_ablation_summary(self):
+        enabled = []
+        disabled = []
+
+        components = [
+            ("HQ", "Hierarchical Queries", self.config.enable_hq),
+            ("AF", "Adaptive Fusion", self.config.enable_af),
+            ("QRM", "Query Refinement Mechanism", self.config.enable_qrm)
+        ]
+
+        for abbr, full_name, enabled_flag in components:
+            if enabled_flag:
+                enabled.append(f"{abbr} ({full_name})")
+            else:
+                disabled.append(f"{abbr} ({full_name})")
+
+        return f"""
+=== Simplified HAQN Configuration ===
+Configuration: {self.config.get_ablation_name()}
+Layer Queries: {self.layer_queries}
+Enabled: {', '.join(enabled) if enabled else 'None'}
+Disabled: {', '.join(disabled) if disabled else 'None'}
+==================================
+        """.strip()
+
+
+# ===== 创建消融配置 =====
+def create_simplified_ablation_configs():
+    """创建简化的消融实验配置"""
+    eda_configs = {}
+    haqn_configs = {}
+    # ./runrgbnt201.sh 0 newablation_womsof_full
+
+
+    # EDA配置
+    eda_configs['Full'] = SimplifiedEDAConfig(True, True, True)
+    eda_configs['w/o_MSOF'] = SimplifiedEDAConfig(False, True, True)
+    eda_configs['w/o_CMA'] = SimplifiedEDAConfig(True, False, True)
+    eda_configs['w/o_SAL'] = SimplifiedEDAConfig(True, True, False)
+    eda_configs['MSOF_only'] = SimplifiedEDAConfig(True, False, False)
+    eda_configs['Baseline'] = SimplifiedEDAConfig(False, False, False)
+
+    # HAQN配置
+    haqn_configs['Full'] = SimplifiedHAQNConfig(True, True, True)
+    haqn_configs['w/o_HQ'] = SimplifiedHAQNConfig(False, True, True)
+    haqn_configs['w/o_AF'] = SimplifiedHAQNConfig(True, False, True)
+    haqn_configs['w/o_QRM'] = SimplifiedHAQNConfig(True, True, False)
+    haqn_configs['AF_only'] = SimplifiedHAQNConfig(False, True, False)
+    haqn_configs['Baseline'] = SimplifiedHAQNConfig(False, False, False)
+
+    return eda_configs, haqn_configs
+# ===== 使用示例 =====
+# if __name__ == "__main__":
+#     # 创建消融配置
+#     eda_configs, haqn_configs = create_simplified_ablation_configs()
+#
+#     # 测试EDA模块
+#     print("=" * 60)
+#     print("Testing Simplified EDA Module")
+#     print("=" * 60)
+#
+#     eda_config = eda_configs['Full']
+#     eda_model = SimplifiedEDA(
+#         q_size=(16, 8), n_heads=1, n_head_channels=512, n_groups=1,
+#         attn_drop=0.0, proj_drop=0.0, stride=2,
+#         offset_range_factor=5.0, ksize=4, share=True,
+#         ablation_config=eda_config
+#     )
+#     print(eda_model.get_ablation_summary())
+#
+#     # 测试HAQN模块
+#     print("\n" + "=" * 60)
+#     print("Testing Simplified HAQN Module")
+#     print("=" * 60)
+#
+#     haqn_config = haqn_configs['Full']
+#     haqn_model = SimplifiedHAQN(
+#         input_dim=512, num_queries=32, num_layers=3, row_dim=1,
+#         ablation_config=haqn_config
+#     )
+#     print(haqn_model.get_ablation_summary())
+#
+#     print("\n✅ Simplified ablation modules ready!")
+#     print("📋 Recommended experiment plan:")
+#     print("   1. Test EDA components: MSOF vs CMA vs SAL")
+#     print("   2. Test HAQN components: HQ vs AF vs QRM")
+#     print("   3. Test key combinations for synergy effects")
+#     print("   4. Compare with original baseline (87.3/86.8)")
+
+
 class GeneralFusion(nn.Module):
     def __init__(self, feat_dim, num_experts, head, reg_weight=0.1, dropout=0.1, cfg=None):
         super(GeneralFusion, self).__init__()
@@ -4124,7 +4683,7 @@ class GeneralFusion(nn.Module):
         self.HDM = cfg.MODEL.HDM
         self.ATM = cfg.MODEL.ATM
 
-        self.combineway = 'adaptiveboqdeform'
+        self.combineway = 'newablation'
         print('combineway:', self.combineway,'mxa')
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')
@@ -4216,7 +4775,7 @@ class GeneralFusion(nn.Module):
             ablation_configs_boq = create_haqn_ablation_configs()
 
             # 示例：创建移除查询传播的模型
-            configboq = ablation_configs_boq['Baseline']
+            configboq = ablation_configs_boq['Full']
 
             # 测试模态特异性BoQ
             self.modalityboqablation = ModalitySpecificBoQAblation(
@@ -4235,7 +4794,7 @@ class GeneralFusion(nn.Module):
             ablation_configs_deform = create_eda_ablation_configs()
 
             # 示例：创建移除AMW组件的模型
-            configdeform = ablation_configs_deform['Baseline']
+            configdeform = ablation_configs_deform['Full']
             self.deformselectablation = DAttentionEnhancedAblation(
                 q_size=q_size, n_heads=1, n_head_channels=512, n_groups=1,
                 attn_drop=0.0, proj_drop=0.0, stride=2,
@@ -4248,6 +4807,52 @@ class GeneralFusion(nn.Module):
             #     q_size, 1, 512, 1, 0.0, 0.0, 2,
             #     5.0, 4, True
             # )
+
+        elif self.combineway == 'newablation':
+            # ./runrgbnt201.sh 3 aboqnewdeform_ablation_full_no_msof
+            # ./runrgbnt201.sh 0 aboqnewdeform_ablation_no_HQ_full
+
+            if self.datasetsname == 'RGBNT201':
+                q_size = (16, 8)
+            elif self.datasetsname == 'RGBNT100':
+                q_size = (8, 16)
+            else:
+                q_size = (8, 16)
+
+            eda_configs, haqn_configs = create_simplified_ablation_configs()
+
+            # 测试EDA模块
+            print("=" * 60)
+            print("Testing Simplified EDA Module")
+            print("=" * 60)
+
+            eda_config = eda_configs['Baseline']
+            self.eda_model = SimplifiedEDA(
+                q_size=q_size, n_heads=1, n_head_channels=512, n_groups=1,
+                attn_drop=0.0, proj_drop=0.0, stride=2,
+                offset_range_factor=5.0, ksize=4, share=True,
+                ablation_config=eda_config
+            )
+            print(self.eda_model.get_ablation_summary())
+            # 测试HAQN模块
+            print("\n" + "=" * 60)
+            print("Testing Simplified HAQN Module")
+            print("=" * 60)
+
+            haqn_config = haqn_configs['Baseline']
+            self.haqn_model = SimplifiedHAQN(
+                input_dim=self.feat_dim, num_queries=64, num_layers=4, row_dim=1,
+                ablation_config=haqn_config
+            )
+            print(self.haqn_model.get_ablation_summary())
+
+            print("\n✅ Simplified ablation modules ready!")
+            print("📋 Recommended experiment plan:")
+            print("   1. Test EDA components: MSOF vs CMA vs SAL")
+            print("   2. Test HAQN components: HQ vs AF vs QRM")
+            print("   3. Test key combinations for synergy effects")
+            print("   4. Compare with original baseline (87.3/86.8)")
+
 
 
         elif self.combineway == 'ebblockdeform':
@@ -5400,6 +6005,78 @@ class GeneralFusion(nn.Module):
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
 
 
+    def forward_HDMnewablation(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+
+
+        # token selectect 用可变哪个东西
+        RGB_cash = RGB_cash.permute(1, 2, 0)
+        NI_cash = NI_cash.permute(1, 2, 0)
+        TI_cash = TI_cash.permute(1, 2, 0)
+
+        if self.datasetsname == 'RGBNT100':
+            q_size = (8, 16)
+        elif self.datasetsname == 'RGBNT201':
+            q_size = (16, 8)
+        else:
+            q_size = (8, 16)
+
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), q_size[0], q_size[1])
+        NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), q_size[0], q_size[1])
+        TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), q_size[0], q_size[1])
+
+        # B, C, H, W = RGB_cash.size()
+        # dtype, device = RGB_cash.dtype, RGB_cash.device
+        # data = torch.cat([RGB_cash, NI_cash, TI_cash], dim=1)
+        RGB_cash,NI_cash,TI_cash = self.eda_model(RGB_cash, NI_cash, TI_cash)
+
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+
+        # # 创建特征字典
+        features_dict = {
+            'RGB': RGB,
+            'NI': NI,
+            'TI': TI,
+            'RGB_NI': RGB_NI,
+            'RGB_TI': RGB_TI,
+            'NI_TI': NI_TI,
+            'RGB_NI_TI': RGB_NI_TI
+        }
+
+        results, attentions = self.haqn_model(features_dict)
+        RGB_special = results['RGB']
+        NI_special = results['NI']
+        TI_special = results['TI']
+        RN_shared = results['RGB_NI']
+        RT_shared = results['RGB_TI']
+        NT_shared = results['NI_TI']
+        RNT_shared = results['RGB_NI_TI']
+        # RGB_special = self.haqn_model(RGB)
+        # NI_special = self.haqn_model(NI)
+        # TI_special = self.haqn_model(TI)
+        # RN_shared = self.haqn_model(RGB_NI)
+        # RT_shared = self.haqn_model(RGB_TI)
+        # NT_shared = self.haqn_model(NI_TI)
+        # RNT_shared = self.haqn_model(RGB_NI_TI)
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
+
+
 
     
     
@@ -5469,6 +6146,9 @@ class GeneralFusion(nn.Module):
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
         elif self.combineway == 'adaptiveboqdeformablation':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMadaptiveboqDeformAblation(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'newablation':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMnewablation(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
         elif self.combineway == 'sedeform':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMseDeform(
