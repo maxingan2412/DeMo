@@ -9,15 +9,22 @@ import numpy as np
 from PIL import Image
 import cv2
 from modeling.backbones.vit_pytorch import trunc_normal_
-import textwrap
 
 import logging
-import numpy as np
-import torch
-import torch.nn as nn
-from torch.nn import functional as F
+
 import torch.utils.checkpoint as cp
 import os
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import einops
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from PIL import Image
+import textwrap
+
 
 
 # logger = logging.getLogger(__name__)
@@ -3263,6 +3270,850 @@ class ModalitySpecificBoQ(nn.Module):
         return results, attentions
 
 
+
+
+###################多模态xiaorong###########
+class HAQNConfig:
+    """
+    HAQN消融实验配置类 - 控制各组件的开启/关闭
+    """
+
+    def __init__(self,
+                 enable_hierarchical_queries=True,  # Progressive query learning (层次化查询学习)
+                 enable_query_propagation=True,  # Inter-layer query propagation (跨层查询传播)
+                 enable_modality_specific=True,  # Modality-specific architectures (模态特异性架构)
+                 enable_adaptive_fusion=True):  # Adaptive feature fusion (自适应特征融合)
+        self.enable_hierarchical_queries = enable_hierarchical_queries
+        self.enable_query_propagation = enable_query_propagation
+        self.enable_modality_specific = enable_modality_specific
+        self.enable_adaptive_fusion = enable_adaptive_fusion
+
+    def get_ablation_name(self):
+        """生成消融实验的名称标识"""
+        components = []
+        if self.enable_hierarchical_queries: components.append("HQ")
+        if self.enable_query_propagation: components.append("QP")
+        if self.enable_modality_specific: components.append("MS")
+        if self.enable_adaptive_fusion: components.append("AF")
+        return "_".join(components) if components else "Baseline"
+
+
+class ImprovedBoQBlockAblation(torch.nn.Module):
+    """BoQ Block with Ablation Interface"""
+
+    def __init__(self, in_dim, num_queries, nheads=8, layer_idx=0, total_layers=2,
+                 prev_num_queries=None, ablation_config=None):
+        super(ImprovedBoQBlockAblation, self).__init__()
+
+        self.layer_idx = layer_idx
+        self.total_layers = total_layers
+        self.num_queries = num_queries
+        self.config = ablation_config if ablation_config is not None else HAQNConfig()
+
+        self.encoder = torch.nn.TransformerEncoderLayer(
+            d_model=in_dim, nhead=nheads, dim_feedforward=4 * in_dim,
+            batch_first=True, dropout=0.)
+
+        # 组件1: Progressive Query Learning (层次化查询学习)
+        if self.config.enable_hierarchical_queries:
+            # 分层查询初始化策略 - 浅层学习局部特征，深层学习全局特征
+            init_scale = 0.02 * (1 + layer_idx * 0.5)  # 深层查询初始化scale更大
+            print(f"[HAQN Ablation] ✓ Layer {layer_idx}: Hierarchical queries enabled with scale {init_scale:.3f}")
+        else:
+            # 禁用时使用固定初始化
+            init_scale = 0.02
+            print(
+                f"[HAQN Ablation] ✗ Layer {layer_idx}: Hierarchical queries disabled, using fixed scale {init_scale:.3f}")
+
+        self.queries = torch.nn.Parameter(torch.randn(1, num_queries, in_dim) * init_scale)
+
+        # 查询专门化投影
+        self.query_projection = nn.Linear(in_dim, in_dim)
+
+        # 组件2: Inter-layer Query Propagation (跨层查询传播)
+        if self.config.enable_query_propagation and prev_num_queries is not None and prev_num_queries != num_queries:
+            self.query_adapter = nn.Linear(prev_num_queries, num_queries)
+            print(
+                f"[HAQN Ablation] ✓ Layer {layer_idx}: Query propagation enabled with adapter ({prev_num_queries}->{num_queries})")
+        elif self.config.enable_query_propagation:
+            self.query_adapter = None
+            print(f"[HAQN Ablation] ✓ Layer {layer_idx}: Query propagation enabled (no adapter needed)")
+        else:
+            self.query_adapter = None
+            print(f"[HAQN Ablation] ✗ Layer {layer_idx}: Query propagation disabled")
+
+        self.self_attn = torch.nn.MultiheadAttention(in_dim, num_heads=nheads, batch_first=True)
+        self.norm_q = torch.nn.LayerNorm(in_dim)
+
+        self.cross_attn = torch.nn.MultiheadAttention(in_dim, num_heads=nheads, batch_first=True)
+        self.norm_out = torch.nn.LayerNorm(in_dim)
+
+        # 残差门控机制 (仅在查询传播启用时使用)
+        if self.config.enable_query_propagation:
+            self.gate = nn.Parameter(torch.ones(1))
+
+    def forward(self, x, prev_queries=None):
+        B = x.size(0)
+        x = self.encoder(x)
+
+        q = self.queries.repeat(B, 1, 1)
+
+        # 组件2: 层间查询传递
+        if self.config.enable_query_propagation and prev_queries is not None and self.layer_idx > 0:
+            # 如果查询数量不匹配，使用适配器
+            if self.query_adapter is not None:
+                adapted_queries = self.query_adapter(prev_queries.permute(0, 2, 1)).permute(0, 2, 1)
+            else:
+                adapted_queries = prev_queries
+
+            # 融合前一层的查询信息
+            alpha = torch.sigmoid(self.gate)
+            q = alpha * q + (1 - alpha) * adapted_queries
+
+        # 查询专门化投影
+        q = self.query_projection(q)
+
+        q = q + self.self_attn(q, q, q)[0]
+        q = self.norm_q(q)
+
+        out, attn = self.cross_attn(q, x, x)
+        out = self.norm_out(out)
+
+        return x, out, attn.detach(), q
+
+
+class PositionalEncodingAblation(nn.Module):
+    """可学习的位置编码"""
+
+    def __init__(self, d_model, max_len=5000):
+        super().__init__()
+
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() *
+                             (-math.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+
+        self.register_buffer('pe', pe)
+        self.pos_weight = nn.Parameter(torch.ones(1))
+
+    def forward(self, x):
+        seq_len = x.size(1)
+        pos_enc = self.pe[:seq_len].unsqueeze(0)
+        return x + self.pos_weight * pos_enc
+
+
+class AdaptiveFusionAblation(nn.Module):
+    """自适应特征融合模块 (可消融)"""
+
+    def __init__(self, feat_dim, total_queries, output_dim, ablation_config=None):
+        super().__init__()
+
+        self.feat_dim = feat_dim
+        self.total_queries = total_queries
+        self.config = ablation_config if ablation_config is not None else HAQNConfig()
+
+        if self.config.enable_adaptive_fusion:
+            # 启用自适应融合：注意力权重网络
+            self.attention_net = nn.Sequential(
+                nn.Linear(feat_dim, feat_dim // 4),
+                nn.ReLU(),
+                nn.Linear(feat_dim // 4, 1)
+            )
+            print("[HAQN Ablation] ✓ Adaptive fusion enabled")
+        else:
+            print("[HAQN Ablation] ✗ Adaptive fusion disabled (using simple concatenation)")
+
+        # 最终投影
+        self.final_proj = nn.Linear(total_queries, output_dim)
+
+    def forward(self, layer_outputs):
+        # layer_outputs: list of [B, num_queries_i, feat_dim]
+
+        if self.config.enable_adaptive_fusion:
+            # 启用：计算每层的重要性权重
+            layer_weights = []
+            for out in layer_outputs:
+                global_feat = torch.mean(out, dim=1)  # [B, feat_dim]
+                weight = torch.sigmoid(self.attention_net(global_feat))  # [B, 1]
+                layer_weights.append(weight)
+
+            # 加权融合
+            weighted_outputs = []
+            for out, weight in zip(layer_outputs, layer_weights):
+                weighted_out = out * weight.unsqueeze(1)  # [B, num_queries, feat_dim]
+                weighted_outputs.append(weighted_out)
+        else:
+            # 禁用：简单等权重融合
+            weighted_outputs = layer_outputs
+
+        # 拼接所有层的输出
+        concat_out = torch.cat(weighted_outputs, dim=1)  # [B, total_queries, feat_dim]
+
+        # 最终投影和归一化
+        final_out = self.final_proj(concat_out.permute(0, 2, 1))  # [B, feat_dim, output_dim]
+        final_out = final_out.flatten(1)  # [B, feat_dim * output_dim]
+        final_out = torch.nn.functional.normalize(final_out, p=2, dim=-1)
+
+        return final_out
+
+
+class AdaptiveBoQAblation(torch.nn.Module):
+    """AdaptiveBoQ with Ablation Study Interface"""
+
+    def __init__(self, input_dim=512, num_queries=32, num_layers=2, row_dim=32,
+                 use_positional_encoding=True, ablation_config=None):
+        super().__init__()
+
+        self.use_positional_encoding = use_positional_encoding
+        self.norm_input = torch.nn.LayerNorm(input_dim)
+        self.config = ablation_config if ablation_config is not None else HAQNConfig()
+
+        print(f"[HAQN Ablation] Using configuration: {self.config.get_ablation_name()}")
+
+        if use_positional_encoding:
+            self.pos_encoding = PositionalEncodingAblation(input_dim)
+
+        in_dim = input_dim
+
+        # 组件1: 层特异性的查询数量 (层次化查询学习)
+        if self.config.enable_hierarchical_queries:
+            layer_queries = self._get_layer_queries_hierarchical(num_queries, num_layers)
+            print(f"[HAQN Ablation] ✓ Hierarchical queries: {layer_queries}")
+        else:
+            layer_queries = [num_queries] * num_layers  # 所有层使用相同查询数量
+            print(f"[HAQN Ablation] ✗ Hierarchical queries disabled: {layer_queries}")
+
+        self.layer_queries = layer_queries
+        self.boqs = torch.nn.ModuleList()
+        for i in range(num_layers):
+            prev_queries = layer_queries[i - 1] if i > 0 else None
+            self.boqs.append(
+                ImprovedBoQBlockAblation(in_dim, layer_queries[i],
+                                         nheads=max(1, in_dim // 64),
+                                         layer_idx=i, total_layers=num_layers,
+                                         prev_num_queries=prev_queries,
+                                         ablation_config=self.config)
+            )
+
+        # 组件4: 自适应特征融合
+        total_query_outputs = sum(layer_queries)
+        self.adaptive_fusion = AdaptiveFusionAblation(input_dim, total_query_outputs, row_dim, self.config)
+
+    def _get_layer_queries_hierarchical(self, base_queries, num_layers):
+        """层次化查询分配 (组件1)"""
+        if num_layers == 1:
+            return [base_queries]
+
+        # 浅层更多查询（细节），深层较少查询（抽象）
+        queries_per_layer = []
+        for i in range(num_layers):
+            ratio = 1.0 - (i / (num_layers - 1)) * 0.3  # 30%递减
+            layer_q = max(8, int(base_queries * ratio))
+            queries_per_layer.append(layer_q)
+
+        return queries_per_layer
+
+    def forward(self, x):
+        if self.use_positional_encoding:
+            x = self.pos_encoding(x)
+        x = self.norm_input(x)
+
+        outs = []
+        attns = []
+        prev_queries = None
+
+        for i, boq_layer in enumerate(self.boqs):
+            x, out, attn, queries = boq_layer(x, prev_queries)
+            outs.append(out)
+            attns.append(attn)
+
+            # 组件2: 查询传播控制
+            if self.config.enable_query_propagation:
+                prev_queries = queries  # 传递查询到下一层
+            else:
+                prev_queries = None  # 不传递查询信息
+
+        # 组件4: 自适应融合
+        final_out = self.adaptive_fusion(outs)
+
+        return final_out, attns
+
+    def get_ablation_summary(self):
+        """获取当前消融配置的总结"""
+        enabled = []
+        disabled = []
+
+        components = [
+            ("HQ", "Hierarchical Queries", self.config.enable_hierarchical_queries),
+            ("QP", "Query Propagation", self.config.enable_query_propagation),
+            ("MS", "Modality Specific", self.config.enable_modality_specific),
+            ("AF", "Adaptive Fusion", self.config.enable_adaptive_fusion)
+        ]
+
+        for abbr, full_name, enabled_flag in components:
+            if enabled_flag:
+                enabled.append(f"{abbr} ({full_name})")
+            else:
+                disabled.append(f"{abbr} ({full_name})")
+
+        summary = f"""
+=== HAQN Ablation Configuration ===
+Configuration Name: {self.config.get_ablation_name()}
+Layer Queries: {self.layer_queries}
+Enabled Components: {', '.join(enabled) if enabled else 'None'}
+Disabled Components: {', '.join(disabled) if disabled else 'None'}
+===================================
+        """
+        return summary.strip()
+
+
+class ModalitySpecificBoQAblation(nn.Module):
+    """模态特异性BoQ (可消融)"""
+
+    def __init__(self, input_dim=512, num_queries=32, num_layers=2, row_dim=32, ablation_config=None):
+        super().__init__()
+
+        self.config = ablation_config if ablation_config is not None else HAQNConfig()
+
+        if self.config.enable_modality_specific:
+            # 启用模态特异性：为不同模态组合设计特异性参数
+            self.single_modal_boq = AdaptiveBoQAblation(input_dim, num_queries, num_layers, row_dim, True, self.config)
+            self.dual_modal_boq = AdaptiveBoQAblation(input_dim, int(num_queries * 1.2), num_layers, row_dim, True,
+                                                      self.config)
+            self.triple_modal_boq = AdaptiveBoQAblation(input_dim, int(num_queries * 1.5), num_layers, row_dim, True,
+                                                        self.config)
+            print("[HAQN Ablation] ✓ Modality-specific architectures enabled")
+        else:
+            # 禁用模态特异性：所有模态使用相同架构
+            shared_boq = AdaptiveBoQAblation(input_dim, num_queries, num_layers, row_dim, True, self.config)
+            self.single_modal_boq = shared_boq
+            self.dual_modal_boq = shared_boq
+            self.triple_modal_boq = shared_boq
+            print("[HAQN Ablation] ✗ Modality-specific architectures disabled (using shared architecture)")
+
+    def forward(self, features_dict):
+        results = {}
+        attentions = {}
+
+        for modality, feat in features_dict.items():
+            feat = feat.permute(1, 0, 2)  # [N, B, D] -> [B, N, D]
+
+            if self.config.enable_modality_specific:
+                # 启用模态特异性：使用专门的架构
+                if modality in ['RGB', 'NI', 'TI']:
+                    out, attn = self.single_modal_boq(feat)
+                elif modality in ['RGB_NI', 'RGB_TI', 'NI_TI']:
+                    out, attn = self.dual_modal_boq(feat)
+                else:  # RGB_NI_TI
+                    out, attn = self.triple_modal_boq(feat)
+            else:
+                # 禁用模态特异性：所有模态使用相同架构
+                out, attn = self.single_modal_boq(feat)
+
+            results[modality] = out
+            attentions[modality] = attn
+
+        return results, attentions
+
+
+# 创建所有可能的HAQN消融配置
+def create_haqn_ablation_configs():
+    """创建所有可能的HAQN消融配置"""
+    configs = {}
+
+    # 完整模型
+    configs['Full'] = HAQNConfig(True, True, True, True)
+
+    # 单组件消融
+    configs['w/o_HQ'] = HAQNConfig(False, True, True, True)  # 移除层次化查询
+    configs['w/o_QP'] = HAQNConfig(True, False, True, True)  # 移除查询传播
+    configs['w/o_MS'] = HAQNConfig(True, True, False, True)  # 移除模态特异性
+    configs['w/o_AF'] = HAQNConfig(True, True, True, False)  # 移除自适应融合
+
+    # 双组件消融
+    configs['w/o_HQ_QP'] = HAQNConfig(False, False, True, True)
+    configs['w/o_HQ_MS'] = HAQNConfig(False, True, False, True)
+    configs['w/o_HQ_AF'] = HAQNConfig(False, True, True, False)
+    configs['w/o_QP_MS'] = HAQNConfig(True, False, False, True)
+    configs['w/o_QP_AF'] = HAQNConfig(True, False, True, False)
+    configs['w/o_MS_AF'] = HAQNConfig(True, True, False, False)
+
+    # 基线模型
+    configs['Baseline'] = HAQNConfig(False, False, False, False)
+
+    return configs
+
+
+# 使用示例
+# if __name__ == "__main__":
+#     # 创建消融配置
+#     ablation_configs = create_haqn_ablation_configs()
+#
+#     # 示例：创建移除查询传播的模型
+#     config = ablation_configs['w/o_QP']
+#     model = AdaptiveBoQAblation(
+#         input_dim=512, num_queries=32, num_layers=3, row_dim=1,
+#         ablation_config=config
+#     )
+#
+#     print(model.get_ablation_summary())
+#
+#     # 测试模态特异性BoQ
+#     modality_model = ModalitySpecificBoQAblation(
+#         input_dim=512, num_queries=64, num_layers=4, row_dim=1,
+#         ablation_config=config
+#     )
+#
+#     print("\n" + "=" * 50)
+#     print("Modality-Specific BoQ Configuration:")
+#     print("=" * 50)
+
+
+
+################## deform ablation ########
+
+
+class EDAConfig:
+    """
+    消融实验配置类 - 控制EDA各组件的开启/关闭
+    """
+
+    def __init__(self,
+                 enable_amw=True,  # Adaptive Modal Weighting
+                 enable_msof=True,  # Multi-Scale Offset Fusion
+                 enable_lts=True,  # Learnable Temperature Scaling
+                 enable_roc=True):  # Residual Offset Connection
+        self.enable_amw = enable_amw
+        self.enable_msof = enable_msof
+        self.enable_lts = enable_lts
+        self.enable_roc = enable_roc
+
+    def get_ablation_name(self):
+        """生成消融实验的名称标识"""
+        components = []
+        if self.enable_amw: components.append("AMW")
+        if self.enable_msof: components.append("MSOF")
+        if self.enable_lts: components.append("LTS")
+        if self.enable_roc: components.append("ROC")
+        return "_".join(components) if components else "Baseline"
+
+
+class DAttentionEnhancedAblation(nn.Module):
+    """
+    Enhanced Deformable Attention with Ablation Study Interface
+    """
+
+    def __init__(
+            self, q_size, n_heads, n_head_channels, n_groups,
+            attn_drop, proj_drop, stride,
+            offset_range_factor, ksize, share,
+            ablation_config=None  # 新增消融配置参数
+    ):
+
+        super().__init__()
+        self.n_head_channels = n_head_channels
+        self.scale = self.n_head_channels ** -0.5
+        self.n_heads = n_heads
+        self.q_h, self.q_w = q_size
+        self.kv_h, self.kv_w = self.q_h // stride, self.q_w // stride
+        self.nc = n_head_channels * n_heads
+        self.n_groups = n_groups
+        self.n_group_channels = self.nc // self.n_groups
+        self.n_group_heads = self.n_heads // self.n_groups
+        self.offset_range_factor = offset_range_factor
+
+        self.ksize = ksize
+        self.stride = stride
+        kk = self.ksize
+        pad_size = 0
+        self.share_offset = share
+
+        # 消融配置
+        self.config = ablation_config if ablation_config is not None else EDAConfig()
+        print(f"[EDA Ablation] Using configuration: {self.config.get_ablation_name()}")
+
+        # ===== 组件1: Adaptive Modal Weighting (AMW) =====
+        if self.config.enable_amw:
+            self.modal_weights = nn.Parameter(torch.ones(3))
+            self.modal_gate = nn.Sequential(
+                nn.Conv2d(3 * self.n_group_channels, self.n_group_channels // 4, 1),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(self.n_group_channels // 4, 3, 1),
+                nn.Sigmoid()
+            )
+            print("[EDA Ablation] ✓ AMW (Adaptive Modal Weighting) enabled")
+        else:
+            print("[EDA Ablation] ✗ AMW (Adaptive Modal Weighting) disabled")
+
+        # ===== 组件2: Multi-Scale Offset Fusion (MSOF) =====
+        if self.config.enable_msof:
+            self.multi_scale_levels = 3
+            self.scale_weights = nn.Parameter(torch.ones(self.multi_scale_levels))
+            print("[EDA Ablation] ✓ MSOF (Multi-Scale Offset Fusion) enabled")
+        else:
+            print("[EDA Ablation] ✗ MSOF (Multi-Scale Offset Fusion) disabled")
+
+        # ===== 组件3: Learnable Temperature Scaling (LTS) =====
+        if self.config.enable_lts:
+            self.temperature = nn.Parameter(torch.ones(1))
+            print("[EDA Ablation] ✓ LTS (Learnable Temperature Scaling) enabled")
+        else:
+            print("[EDA Ablation] ✗ LTS (Learnable Temperature Scaling) disabled")
+
+        # ===== 组件4: Residual Offset Connection (ROC) =====
+        if self.config.enable_roc:
+            self.offset_residual_weight = nn.Parameter(torch.tensor(0.1))
+            print("[EDA Ablation] ✓ ROC (Residual Offset Connection) enabled")
+        else:
+            print("[EDA Ablation] ✗ ROC (Residual Offset Connection) disabled")
+
+        # 基础偏移网络
+        if self.share_offset:
+            # 主要偏移网络
+            self.conv_offset = nn.Sequential(
+                nn.Conv2d(3 * self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, kk, stride, pad_size,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 2, 1, 1, 0, bias=False),
+            )
+
+            # 多尺度偏移网络 (仅在MSOF启用时创建)
+            if self.config.enable_msof:
+                self.conv_offset_coarse = nn.Sequential(
+                    nn.Conv2d(3 * self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                    nn.GELU(),
+                    nn.Conv2d(self.n_group_channels, self.n_group_channels, kk + 2, stride, pad_size + 1,
+                              groups=self.n_group_channels),
+                    nn.GELU(),
+                    nn.Conv2d(self.n_group_channels, 2, 1, 1, 0, bias=False),
+                )
+
+                self.conv_offset_fine = nn.Sequential(
+                    nn.Conv2d(3 * self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                    nn.GELU(),
+                    nn.Conv2d(self.n_group_channels, self.n_group_channels, max(kk - 2, 1), stride, 0,
+                              groups=self.n_group_channels),
+                    nn.GELU(),
+                    nn.Conv2d(self.n_group_channels, 2, 1, 1, 0, bias=False),
+                )
+        else:
+            # 非共享偏移网络
+            self.conv_offset_r = nn.Sequential(
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, 1, 1, 0),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, self.n_group_channels, kk, stride, pad_size,
+                          groups=self.n_group_channels),
+                nn.GELU(),
+                nn.Conv2d(self.n_group_channels, 1, 1, 1, 0, bias=False)
+            )
+            # ... 其他模态的网络
+
+        # 基础投影层
+        self.proj_q = nn.Conv2d(self.nc, self.nc, kernel_size=1, stride=1, padding=0)
+        self.proj_k = nn.Conv2d(self.nc, self.nc, kernel_size=1, stride=1, padding=0)
+        self.proj_v = nn.Conv2d(self.nc, self.nc, kernel_size=1, stride=1, padding=0)
+        self.proj_out = nn.Conv2d(self.nc, self.nc, kernel_size=1, stride=1, padding=0)
+        self.proj_drop = nn.Dropout(proj_drop)
+        self.attn_drop = nn.Dropout(attn_drop)
+
+    def adaptive_modal_weighting(self, x, y, z):
+        """
+        组件1: 自适应模态权重 (可消融)
+        """
+        if not self.config.enable_amw:
+            # AMW禁用时，使用均等权重
+            return x, y, z
+
+        # 计算全局模态权重
+        modal_weights = F.softmax(self.modal_weights, dim=0)
+
+        # 计算局部门控权重
+        concat_features = torch.cat([x, y, z], dim=1)
+        B, _, H, W = concat_features.shape
+        avg_pool = F.adaptive_avg_pool2d(concat_features, 1)
+        gate_weights = self.modal_gate(avg_pool)  # [B, 3, 1, 1]
+
+        # 结合全局和局部权重
+        combined_weights = modal_weights.view(1, 3, 1, 1) * gate_weights
+        combined_weights = F.softmax(combined_weights, dim=1)
+
+        # 应用权重
+        weighted_x = x * combined_weights[:, 0:1]
+        weighted_y = y * combined_weights[:, 1:2]
+        weighted_z = z * combined_weights[:, 2:3]
+
+        return weighted_x, weighted_y, weighted_z
+
+    def multi_scale_offset_fusion(self, data, reference):
+        """
+        组件2: 多尺度偏移融合 (可消融)
+        """
+        if not self.share_offset:
+            return self.off_set_unshared_enhanced(data, reference)
+
+        data = einops.rearrange(data, 'b (g c) h w -> (b g) c h w',
+                                g=self.n_groups, c=3 * self.n_group_channels)
+
+        # 计算主要偏移
+        offset_main = self.conv_offset(data)
+
+        if self.config.enable_msof:
+            # MSOF启用：多尺度偏移融合
+            offset_coarse = self.conv_offset_coarse(data)
+            offset_fine = self.conv_offset_fine(data)
+
+            # 调整尺寸
+            if offset_fine.shape != offset_main.shape:
+                offset_fine = F.interpolate(offset_fine, size=offset_main.shape[2:],
+                                            mode='bilinear', align_corners=True)
+            if offset_coarse.shape != offset_main.shape:
+                offset_coarse = F.interpolate(offset_coarse, size=offset_main.shape[2:],
+                                              mode='bilinear', align_corners=True)
+
+            # 融合多尺度偏移
+            scale_weights = F.softmax(self.scale_weights, dim=0)
+            offset = (scale_weights[0] * offset_main +
+                      scale_weights[1] * offset_coarse +
+                      scale_weights[2] * offset_fine)
+        else:
+            # MSOF禁用：仅使用主要偏移
+            offset = offset_main
+
+        Hk, Wk = offset.size(2), offset.size(3)
+
+        if self.offset_range_factor > 0:
+            offset_range = torch.tensor([1.0 / (Hk - 1.0), 1.0 / (Wk - 1.0)],
+                                        device=data.device).reshape(1, 2, 1, 1)
+            offset = offset.tanh().mul(offset_range).mul(self.offset_range_factor)
+
+        offset = einops.rearrange(offset, 'b p h w -> b h w p')
+
+        if self.config.enable_roc:
+            # ROC启用：残差偏移连接
+            residual_offset = offset * self.offset_residual_weight
+            final_offset = offset + residual_offset
+        else:
+            # ROC禁用：直接使用偏移
+            final_offset = offset
+
+        pos_x = (final_offset + reference).clamp(-1., +1.)
+        pos_y = (final_offset + reference).clamp(-1., +1.)
+        pos_z = (final_offset + reference).clamp(-1., +1.)
+
+        return pos_x, pos_y, pos_z, Hk, Wk
+
+    def apply_temperature_scaling(self, attn):
+        """
+        组件3: 可学习温度缩放 (可消融)
+        """
+        if self.config.enable_lts:
+            # LTS启用：使用可学习温度
+            return attn.mul(self.scale * self.temperature)
+        else:
+            # LTS禁用：使用固定缩放
+            return attn.mul(self.scale)
+
+    @torch.no_grad()
+    def _get_ref_points(self, H_in, W_in, B, kernel_size, stride, dtype, device):
+        """生成参考点"""
+        H_out = (H_in - kernel_size) // stride + 1
+        W_out = (W_in - kernel_size) // stride + 1
+
+        center_y = torch.arange(H_out, dtype=dtype, device=device) * stride + (kernel_size // 2)
+        center_x = torch.arange(W_out, dtype=dtype, device=device) * stride + (kernel_size // 2)
+
+        ref_y, ref_x = torch.meshgrid(center_y, center_x, indexing='ij')
+        ref = torch.stack((ref_y, ref_x), dim=-1)
+
+        ref[..., 1].div_(W_in - 1.0).mul_(2.0).sub_(1.0)
+        ref[..., 0].div_(H_in - 1.0).mul_(2.0).sub_(1.0)
+
+        ref = ref[None, ...].expand(B * self.n_groups, -1, -1, -1)
+        return ref
+
+    def off_set_unshared_enhanced(self, data, reference):
+        """增强版非共享偏移计算"""
+        x, y, z = data.chunk(3, dim=1)
+        x = einops.rearrange(x, 'b (g c) h w -> (b g) c h w', g=self.n_groups, c=self.n_group_channels)
+
+        offset_r = self.conv_offset_r(x)
+        # 简化处理其他模态
+        Hk, Wk = offset_r.size(2), offset_r.size(3)
+
+        if self.offset_range_factor > 0:
+            offset_range = torch.tensor([1.0 / (Hk - 1.0), 1.0 / (Wk - 1.0)], device=data.device).reshape(1, 2, 1, 1)
+            offset_r = offset_r.tanh().mul(offset_range).mul(self.offset_range_factor)
+
+        offset_r = einops.rearrange(offset_r, 'b p h w -> b h w p')
+
+        if self.config.enable_roc:
+            offset_r = offset_r + offset_r * self.offset_residual_weight
+
+        pos_x = (offset_r + reference).clamp(-1., +1.)
+        pos_y = (offset_r + reference).clamp(-1., +1.)
+        pos_z = (offset_r + reference).clamp(-1., +1.)
+        return pos_x, pos_y, pos_z, Hk, Wk
+
+    def forward(self, x, y, z, writer=None, epoch=None, img_path=None, text=''):
+        B, C, H, W = x.size()
+        dtype, device = x.dtype, x.device
+
+        # 组件1: 应用自适应模态权重
+        x, y, z = self.adaptive_modal_weighting(x, y, z)
+
+        data = torch.cat([x, y, z], dim=1)
+        reference = self._get_ref_points(H, W, B, self.ksize, self.stride, dtype, device)
+
+        # 组件2&4: 多尺度偏移融合 + 残差连接
+        pos_x, pos_y, pos_z, Hk, Wk = self.multi_scale_offset_fusion(data, reference)
+
+        n_sample = Hk * Wk
+        sampled_x = F.grid_sample(
+            input=x.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_x[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+        sampled_y = F.grid_sample(
+            input=y.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_y[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+        sampled_z = F.grid_sample(
+            input=z.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_z[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+
+        sampled_x, sampled_y, sampled_z = [
+            t.reshape(B, C, 1, n_sample).squeeze(2).permute(2, 0, 1)
+            for t in [sampled_x, sampled_y, sampled_z]
+        ]
+
+        return sampled_x, sampled_y, sampled_z
+
+    def forwardOld(self, query, x, y, z, writer=None, epoch=None, img_path=None, text=''):
+        """带交叉注意力的前向传播（用于消融LTS组件）"""
+        B, C, H, W = x.size()
+        b_, c_, h_, w_ = query.size()
+        dtype, device = x.dtype, x.device
+
+        # 应用自适应模态权重
+        x, y, z = self.adaptive_modal_weighting(x, y, z)
+
+        data = torch.cat([x, y, z], dim=1)
+        reference = self._get_ref_points(H, W, B, self.ksize, self.stride, dtype, device)
+
+        pos_x, pos_y, pos_z, Hk, Wk = self.multi_scale_offset_fusion(data, reference)
+
+        n_sample = Hk * Wk
+        sampled_x = F.grid_sample(
+            input=x.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_x[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+        sampled_y = F.grid_sample(
+            input=y.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_y[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+        sampled_z = F.grid_sample(
+            input=z.reshape(B * self.n_groups, self.n_group_channels, H, W),
+            grid=pos_z[..., (1, 0)],
+            mode='bilinear', align_corners=True)
+
+        sampled_x = sampled_x.reshape(B, C, 1, n_sample)
+        sampled_y = sampled_y.reshape(B, C, 1, n_sample)
+        sampled_z = sampled_z.reshape(B, C, 1, n_sample)
+        sampled = torch.cat([sampled_x, sampled_y, sampled_z], dim=-1)
+
+        q = self.proj_q(query)
+        q = q.reshape(B * self.n_heads, self.n_head_channels, h_ * w_)
+        k = self.proj_k(sampled).reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        v = self.proj_v(sampled).reshape(B * self.n_heads, self.n_head_channels, 3 * n_sample)
+        attn = torch.einsum('b c m, b c n -> b m n', q, k)
+
+        # 组件3: 可学习温度缩放
+        attn = self.apply_temperature_scaling(attn)
+        attn = F.softmax(attn, dim=2)
+
+        attn = self.attn_drop(attn)
+        out = torch.einsum('b m n, b c n -> b c m', attn, v)
+        out = out.reshape(B, C, 1, h_ * w_)
+        out = self.proj_drop(self.proj_out(out))
+        out = query + out
+        return out.squeeze(2)
+
+    def get_ablation_summary(self):
+        """获取当前消融配置的总结"""
+        enabled = []
+        disabled = []
+
+        components = [
+            ("AMW", "Adaptive Modal Weighting", self.config.enable_amw),
+            ("MSOF", "Multi-Scale Offset Fusion", self.config.enable_msof),
+            ("LTS", "Learnable Temperature Scaling", self.config.enable_lts),
+            ("ROC", "Residual Offset Connection", self.config.enable_roc)
+        ]
+
+        for abbr, full_name, enabled_flag in components:
+            if enabled_flag:
+                enabled.append(f"{abbr} ({full_name})")
+            else:
+                disabled.append(f"{abbr} ({full_name})")
+
+        summary = f"""
+=== EDA Ablation Configuration ===
+Configuration Name: {self.config.get_ablation_name()}
+Enabled Components: {', '.join(enabled) if enabled else 'None'}
+Disabled Components: {', '.join(disabled) if disabled else 'None'}
+================================
+        """
+        return summary.strip()
+
+
+# 使用示例
+def create_eda_ablation_configs():
+    """创建所有可能的消融配置"""
+    configs = {}
+
+    # 完整模型
+    configs['Full'] = EDAConfig(True, True, True, True)
+
+    # 单组件消融 (移除一个组件)
+    configs['w/o_AMW'] = EDAConfig(False, True, True, True)
+    configs['w/o_MSOF'] = EDAConfig(True, False, True, True)
+    configs['w/o_LTS'] = EDAConfig(True, True, False, True)
+    configs['w/o_ROC'] = EDAConfig(True, True, True, False)
+
+    # 双组件消融 (移除两个组件)
+    configs['w/o_AMW_MSOF'] = EDAConfig(False, False, True, True)
+    configs['w/o_AMW_LTS'] = EDAConfig(False, True, False, True)
+    configs['w/o_AMW_ROC'] = EDAConfig(False, True, True, False)
+    configs['w/o_MSOF_LTS'] = EDAConfig(True, False, False, True)
+    configs['w/o_MSOF_ROC'] = EDAConfig(True, False, True, False)
+    configs['w/o_LTS_ROC'] = EDAConfig(True, True, False, False)
+
+    # 基线模型 (移除所有组件)
+    configs['Baseline'] = EDAConfig(False, False, False, False)
+
+    return configs
+
+
+# 使用示例
+# if __name__ == "__main__":
+#     # 创建消融配置
+#     ablation_configs = create_eda_ablation_configs()
+#
+#     # 示例：创建移除AMW组件的模型
+#     config = ablation_configs['w/o_AMW']
+#     model = DAttentionEnhancedAblation(
+#         q_size=(16, 8), n_heads=1, n_head_channels=512, n_groups=1,
+#         attn_drop=0.0, proj_drop=0.0, stride=2,
+#         offset_range_factor=5.0, ksize=4, share=True,
+#         ablation_config=config
+#     )
+#
+#     print(model.get_ablation_summary())
+
 class GeneralFusion(nn.Module):
     def __init__(self, feat_dim, num_experts, head, reg_weight=0.1, dropout=0.1, cfg=None):
         super(GeneralFusion, self).__init__()
@@ -3273,7 +4124,7 @@ class GeneralFusion(nn.Module):
         self.HDM = cfg.MODEL.HDM
         self.ATM = cfg.MODEL.ATM
 
-        self.combineway = 'adaptiveboqdeform'
+        self.combineway = 'adaptiveboqdeformablation'
         print('combineway:', self.combineway,'mxa')
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')
@@ -3357,6 +4208,47 @@ class GeneralFusion(nn.Module):
                     q_size, 1, 512, 1, 0.0, 0.0, 2,
                     5.0, 4, True
                 )
+
+        elif self.combineway == 'adaptiveboqdeformablation':
+            # ./runrgbnt201.sh 3 aboqnewdeform_ablation_full_no_msof
+            # ./runrgbnt201.sh 0 aboqnewdeform_ablation_no_HQ_full
+
+            ablation_configs_boq = create_haqn_ablation_configs()
+
+            # 示例：创建移除查询传播的模型
+            configboq = ablation_configs_boq['w/o_AF']
+
+            # 测试模态特异性BoQ
+            self.modalityboqablation = ModalitySpecificBoQAblation(
+                input_dim=self.feat_dim, num_queries=64, num_layers=4, row_dim=1,
+                ablation_config=configboq
+            )
+
+
+            if self.datasetsname == 'RGBNT201':
+                q_size = (16,8)
+            elif self.datasetsname == 'RGBNT100':
+                q_size = (8, 16)
+            else:
+                q_size = (8, 16)
+
+            ablation_configs_deform = create_eda_ablation_configs()
+
+            # 示例：创建移除AMW组件的模型
+            configdeform = ablation_configs_deform['Full']
+            self.deformselectablation = DAttentionEnhancedAblation(
+                q_size=q_size, n_heads=1, n_head_channels=512, n_groups=1,
+                attn_drop=0.0, proj_drop=0.0, stride=2,
+                offset_range_factor=5.0, ksize=4, share=True,
+                ablation_config=configdeform
+            )
+
+            # 直接替换
+            # self.deformselect = DAttentionEnhanced(
+            #     q_size, 1, 512, 1, 0.0, 0.0, 2,
+            #     5.0, 4, True
+            # )
+
 
         elif self.combineway == 'ebblockdeform':
             if self.datasetsname == 'RGBNT201':
@@ -4444,6 +5336,71 @@ class GeneralFusion(nn.Module):
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
 
 
+    def forward_HDMadaptiveboqDeformAblation(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+
+
+        # token selectect 用可变哪个东西
+        RGB_cash = RGB_cash.permute(1, 2, 0)
+        NI_cash = NI_cash.permute(1, 2, 0)
+        TI_cash = TI_cash.permute(1, 2, 0)
+
+        if self.datasetsname == 'RGBNT100':
+            q_size = (8, 16)
+        elif self.datasetsname == 'RGBNT201':
+            q_size = (16, 8)
+        else:
+            q_size = (8, 16)
+
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), q_size[0], q_size[1])
+        NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), q_size[0], q_size[1])
+        TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), q_size[0], q_size[1])
+
+        # B, C, H, W = RGB_cash.size()
+        # dtype, device = RGB_cash.dtype, RGB_cash.device
+        # data = torch.cat([RGB_cash, NI_cash, TI_cash], dim=1)
+        RGB_cash,NI_cash,TI_cash = self.deformselectablation(RGB_cash, NI_cash, TI_cash)
+
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+
+        # 创建特征字典
+        features_dict = {
+            'RGB': RGB,
+            'NI': NI,
+            'TI': TI,
+            'RGB_NI': RGB_NI,
+            'RGB_TI': RGB_TI,
+            'NI_TI': NI_TI,
+            'RGB_NI_TI': RGB_NI_TI
+        }
+
+        results, attentions = self.modalityboqablation(features_dict)
+        RGB_special = results['RGB']
+        NI_special = results['NI']
+        TI_special = results['TI']
+        RN_shared = results['RGB_NI']
+        RT_shared = results['RGB_TI']
+        NT_shared = results['NI_TI']
+        RNT_shared = results['RGB_NI_TI']
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
+
+
     
     
 
@@ -4510,7 +5467,9 @@ class GeneralFusion(nn.Module):
         elif self.combineway == 'adaptiveboqdeform':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMadaptiveboqDeform(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
-            
+        elif self.combineway == 'adaptiveboqdeformablation':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMadaptiveboqDeformAblation(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
         elif self.combineway == 'sedeform':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMseDeform(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
