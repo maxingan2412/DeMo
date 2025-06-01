@@ -3038,7 +3038,7 @@ class ImprovedBoQBlock(torch.nn.Module):
 
         # 改进1: 分层查询初始化策略
         # 浅层学习局部特征，深层学习全局特征
-        init_scale = 0.02 * (1 + layer_idx * 0.5)  # 深层查询初始化scale更大
+        init_scale = 1 * (1 + layer_idx * 0.5)  # 深层查询初始化scale更大
         self.queries = torch.nn.Parameter(torch.randn(1, num_queries, in_dim) * init_scale)
 
         # 改进2: 查询专门化 - 不同层有不同的注意力模式
@@ -3317,11 +3317,11 @@ class ImprovedBoQBlockAblation(torch.nn.Module):
         # 组件1: Progressive Query Learning (层次化查询学习)
         if self.config.enable_hierarchical_queries:
             # 分层查询初始化策略 - 浅层学习局部特征，深层学习全局特征
-            init_scale = 0.02 * (1 + layer_idx * 0.5)  # 深层查询初始化scale更大
+            init_scale = 1 * (1 + layer_idx * 0.5)  # 深层查询初始化scale更大
             print(f"[HAQN Ablation] ✓ Layer {layer_idx}: Hierarchical queries enabled with scale {init_scale:.3f}")
         else:
             # 禁用时使用固定初始化
-            init_scale = 0.02
+            init_scale = 1
             print(
                 f"[HAQN Ablation] ✗ Layer {layer_idx}: Hierarchical queries disabled, using fixed scale {init_scale:.3f}")
 
@@ -4124,7 +4124,7 @@ class GeneralFusion(nn.Module):
         self.HDM = cfg.MODEL.HDM
         self.ATM = cfg.MODEL.ATM
 
-        self.combineway = 'adaptiveboqdeformablation'
+        self.combineway = 'adaptiveboqdeform'
         print('combineway:', self.combineway,'mxa')
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')
@@ -4216,7 +4216,7 @@ class GeneralFusion(nn.Module):
             ablation_configs_boq = create_haqn_ablation_configs()
 
             # 示例：创建移除查询传播的模型
-            configboq = ablation_configs_boq['w/o_AF']
+            configboq = ablation_configs_boq['Baseline']
 
             # 测试模态特异性BoQ
             self.modalityboqablation = ModalitySpecificBoQAblation(
@@ -4235,7 +4235,7 @@ class GeneralFusion(nn.Module):
             ablation_configs_deform = create_eda_ablation_configs()
 
             # 示例：创建移除AMW组件的模型
-            configdeform = ablation_configs_deform['Full']
+            configdeform = ablation_configs_deform['Baseline']
             self.deformselectablation = DAttentionEnhancedAblation(
                 q_size=q_size, n_heads=1, n_head_channels=512, n_groups=1,
                 attn_drop=0.0, proj_drop=0.0, stride=2,
