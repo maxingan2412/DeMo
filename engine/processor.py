@@ -245,6 +245,32 @@ def training_neat_eval(cfg,
             else:
                 evaluator.update((feat, vid, camid, _))
     cmc, mAP, _, _, _, _, _ = evaluator.compute()
+
+    # 生成 t-SNE 图 - 选择当前目录
+    feats_np = torch.cat(evaluator.feats, dim=0).cpu().numpy()
+
+    # 检查哪些ID的样本数量足够
+    unique_pids = list(set(evaluator.pids))
+    print(f"Available PIDs: {unique_pids[:10]}...")
+
+    # 选择有足够样本的ID进行可视化
+    valid_ids = []
+    for pid in unique_pids[:5]:
+        count = evaluator.pids.count(pid)
+        if count >= 2:
+            valid_ids.append(pid)
+            print(f"PID {pid}: {count} samples")
+
+    # 对有效的ID进行可视化 - 保存到当前目录
+    for pid in valid_ids[:3]:
+        try:
+            print(f"\n🎯 Generating t-SNE for PID {pid}")
+            evaluator.showPointMultiModal(feats_np, evaluator.pids, draw_label=pid, save_path='./tsne_output')
+        except Exception as e:
+            print(f"❌ Failed to generate t-SNE for PID {pid}: {e}")
+            import traceback
+            traceback.print_exc()
+
     logger.info("Validation Results - Epoch: {}".format(epoch))
     logger.info("mAP: {:.1%}".format(mAP))
     for r in [1, 5, 10]:
