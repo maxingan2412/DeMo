@@ -4826,7 +4826,7 @@ class GeneralFusion(nn.Module):
             print("Testing Simplified EDA Module")
             print("=" * 60)
 
-            eda_config = eda_configs['Baseline']
+            eda_config = eda_configs['Full']
             self.eda_model = SimplifiedEDA(
                 q_size=q_size, n_heads=1, n_head_channels=512, n_groups=1,
                 attn_drop=0.0, proj_drop=0.0, stride=2,
@@ -4839,7 +4839,7 @@ class GeneralFusion(nn.Module):
             print("Testing Simplified HAQN Module")
             print("=" * 60)
 
-            haqn_config = haqn_configs['Baseline']
+            haqn_config = haqn_configs['Full']
             self.haqn_model = SimplifiedHAQN(
                 input_dim=self.feat_dim, num_queries=64, num_layers=4, row_dim=1,
                 ablation_config=haqn_config
