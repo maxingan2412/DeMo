@@ -27,6 +27,342 @@ import textwrap
 
 
 
+# logger = logging.getLogger(__name__)
+
+T_MAX = 256
+HEAD_SIZE = 64
+userwkvblock = False
+if userwkvblock:
+    from torch.utils.cpp_extension import load
+    from mmcv.runner.base_module import BaseModule, ModuleList
+
+    cur_dir = os.path.dirname(os.path.abspath(__file__))  # 当前是 backbones/
+    cuda_dir = os.path.join(cur_dir, "cuda_v6")
+    wkv6_cuda = load(name="wkv6",
+                     sources=[
+                         os.path.join(cuda_dir, "wkv6_op.cpp"),
+                         os.path.join(cuda_dir, "wkv6_cuda.cu"),
+                     ],
+                     verbose=True, extra_cuda_cflags=["-res-usage", "--use_fast_math",
+                     "-O3", "-Xptxas -O3",
+                     "--extra-device-vectorization", f"-D_N_={HEAD_SIZE}",
+                     f"-D_T_={T_MAX}"])
+#
+    class WKV_6(torch.autograd.Function):
+        @staticmethod
+        def forward(ctx, B, T, C, H, r, k, v, w, u):
+            with torch.no_grad():
+                assert HEAD_SIZE == C // H
+                ctx.B = B
+                ctx.T = T
+                ctx.C = C
+                ctx.H = H
+                assert r.is_contiguous()
+                assert k.is_contiguous()
+                assert v.is_contiguous()
+                assert w.is_contiguous()
+                assert u.is_contiguous()
+                ew = (-torch.exp(w.float())).contiguous()
+                ctx.save_for_backward(r, k, v, ew, u)
+                y = torch.empty((B, T, C), device=r.device, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                wkv6_cuda.forward(B, T, C, H, r, k, v, ew, u, y)
+                return y
+
+        @staticmethod
+        def backward(ctx, gy):
+            with torch.no_grad():
+                B = ctx.B
+                T = ctx.T
+                C = ctx.C
+                H = ctx.H
+                assert gy.is_contiguous()
+                r, k, v, ew, u = ctx.saved_tensors
+                gr = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                gk = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                gv = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                gw = torch.empty((B, T, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                gu = torch.empty((B, C), device=gy.device, requires_grad=False, dtype=torch.float32, memory_format=torch.contiguous_format)#.uniform_(-100, 100)
+                wkv6_cuda.backward(B, T, C, H, r, k, v, ew, u, gy, gr, gk, gv, gw, gu)
+                gu = torch.sum(gu, 0).view(H, C//H)
+                return (None, None, None, None, gr, gk, gv, gw, gu)
+    def RUN_CUDA_RWKV6(B, T, C, H, r, k, v, w, u):
+        return WKV_6.apply(B, T, C, H, r, k, v, w, u)
+
+    def q_shift_multihead(input, shift_pixel=1, head_dim=HEAD_SIZE,
+                          patch_resolution=None, with_cls_token=False):
+        B, N, C = input.shape
+        assert C % head_dim == 0
+        assert head_dim % 4 == 0
+        if with_cls_token:
+            cls_tokens = input[:, [-1], :]
+            input = input[:, :-1, :]
+        input = input.transpose(1, 2).reshape(
+            B, -1, head_dim, patch_resolution[0], patch_resolution[1])  # [B, n_head, head_dim H, W]
+        B, _, _, H, W = input.shape
+        output = torch.zeros_like(input)
+        output[:, :, 0:int(head_dim*1/4), :, shift_pixel:W] = \
+            input[:, :, 0:int(head_dim*1/4), :, 0:W-shift_pixel]
+        output[:, :, int(head_dim/4):int(head_dim/2), :, 0:W-shift_pixel] = \
+            input[:, :, int(head_dim/4):int(head_dim/2), :, shift_pixel:W]
+        output[:, :, int(head_dim/2):int(head_dim/4*3), shift_pixel:H, :] = \
+            input[:, :, int(head_dim/2):int(head_dim/4*3), 0:H-shift_pixel, :]
+        output[:, :, int(head_dim*3/4):int(head_dim), 0:H-shift_pixel, :] = \
+            input[:, :, int(head_dim*3/4):int(head_dim), shift_pixel:H, :]
+        if with_cls_token:
+            output = output.reshape(B, C, N-1).transpose(1, 2)
+            output = torch.cat((output, cls_tokens), dim=1)
+        else:
+            output = output.reshape(B, C, N).transpose(1, 2)
+        return output
+    class VRWKV_SpatialMix_V6(BaseModule):
+        def __init__(self, n_embd, n_head, n_layer, layer_id, shift_mode='q_shift_multihead',
+                     shift_pixel=1, init_mode='fancy', key_norm=False, with_cls_token=False,
+                     with_cp=False):
+            super().__init__()
+            self.layer_id = layer_id
+            self.n_layer = n_layer
+            self.n_embd = n_embd
+            self.attn_sz = n_embd
+
+            self.n_head = n_head
+            self.head_size = self.attn_sz // self.n_head
+            assert self.head_size == HEAD_SIZE
+            self.device = None
+            self._init_weights(init_mode)
+            self.with_cls_token = with_cls_token
+            self.shift_pixel = shift_pixel
+            self.shift_mode = shift_mode
+
+
+            self.shift_func = eval(shift_mode)
+
+            self.key = nn.Linear(self.n_embd, self.attn_sz, bias=False)
+            self.value = nn.Linear(self.n_embd, self.attn_sz, bias=False)
+            self.receptance = nn.Linear(self.n_embd, self.attn_sz, bias=False)
+            self.gate = nn.Linear(self.n_embd, self.attn_sz, bias=False)
+            if key_norm:
+                self.key_norm = nn.LayerNorm(n_embd)
+            else:
+                self.key_norm = None
+            self.output = nn.Linear(self.attn_sz, n_embd, bias=False)
+
+            self.ln_x = nn.GroupNorm(self.n_head, self.attn_sz, eps=1e-5)
+            self.with_cp = with_cp
+
+        def _init_weights(self, init_mode):
+            if init_mode == 'fancy':
+                with torch.no_grad():
+                    ratio_0_to_1 = self.layer_id / (self.n_layer - 1)  # 0 to 1
+                    ratio_1_to_almost0 = 1.0 - (self.layer_id / self.n_layer)  # 1 to ~0
+                    ddd = torch.ones(1, 1, self.n_embd)
+                    for i in range(self.n_embd):
+                        ddd[0, 0, i] = i / self.n_embd
+
+                    # fancy time_mix
+                    self.time_maa_x = nn.Parameter(1.0 - torch.pow(ddd, ratio_1_to_almost0))
+                    self.time_maa_w = nn.Parameter(1.0 - torch.pow(ddd, ratio_1_to_almost0))
+                    self.time_maa_k = nn.Parameter(1.0 - torch.pow(ddd, ratio_1_to_almost0))
+                    self.time_maa_v = nn.Parameter(1.0 - (torch.pow(ddd, ratio_1_to_almost0) + 0.3 * ratio_0_to_1))
+                    self.time_maa_r = nn.Parameter(1.0 - torch.pow(ddd, 0.5 * ratio_1_to_almost0))
+                    self.time_maa_g = nn.Parameter(1.0 - torch.pow(ddd, 0.5 * ratio_1_to_almost0))
+
+                    TIME_MIX_EXTRA_DIM = 32  # generate TIME_MIX for w,k,v,r,g
+                    self.time_maa_w1 = nn.Parameter(torch.zeros(self.n_embd, TIME_MIX_EXTRA_DIM * 5).uniform_(-1e-4, 1e-4))
+                    self.time_maa_w2 = nn.Parameter(torch.zeros(5, TIME_MIX_EXTRA_DIM, self.n_embd).uniform_(-1e-4, 1e-4))
+
+                    # fancy time_decay
+                    decay_speed = torch.ones(self.attn_sz)
+                    for n in range(self.attn_sz):
+                        decay_speed[n] = -6 + 5 * (n / (self.attn_sz - 1)) ** (0.7 + 1.3 * ratio_0_to_1)
+                    self.time_decay = nn.Parameter(decay_speed.reshape(1, 1, self.attn_sz))
+
+                    TIME_DECAY_EXTRA_DIM = 64
+                    self.time_decay_w1 = nn.Parameter(torch.zeros(self.n_embd, TIME_DECAY_EXTRA_DIM).uniform_(-1e-4, 1e-4))
+                    self.time_decay_w2 = nn.Parameter(torch.zeros(TIME_DECAY_EXTRA_DIM, self.attn_sz).uniform_(-1e-4, 1e-4))
+
+                    tmp = torch.zeros(self.attn_sz)
+                    for n in range(self.attn_sz):
+                        zigzag = ((n + 1) % 3 - 1) * 0.1
+                        tmp[n] = ratio_0_to_1 * (1 - (n / (self.attn_sz - 1))) + zigzag
+
+                    self.time_faaaa = nn.Parameter(tmp.reshape(self.n_head, self.head_size))
+            else:
+                raise NotImplementedError
+
+        def jit_func(self, x, patch_resolution):
+            # Mix x with the previous timestep to produce xk, xv, xr
+            B, T, C = x.size()
+
+            xx = self.shift_func(x, self.shift_pixel, patch_resolution=patch_resolution,
+                                 with_cls_token=self.with_cls_token) - x  # shiftq - x
+            xxx = x + xx * self.time_maa_x  # [B, T, C]
+            xxx = torch.tanh(xxx @ self.time_maa_w1).view(B * T, 5, -1).transpose(0, 1)
+            # [5, B*T, TIME_MIX_EXTRA_DIM]
+            xxx = torch.bmm(xxx, self.time_maa_w2).view(5, B, T, -1)
+            # [5, B, T, C]
+            mw, mk, mv, mr, mg = xxx.unbind(dim=0)
+
+            xw = x + xx * (self.time_maa_w + mw)
+            xk = x + xx * (self.time_maa_k + mk)
+            xv = x + xx * (self.time_maa_v + mv)
+            xr = x + xx * (self.time_maa_r + mr)
+            xg = x + xx * (self.time_maa_g + mg)
+
+            r = self.receptance(xr)
+            k = self.key(xk)
+            v = self.value(xv)
+            g = F.silu(self.gate(xg))
+
+            ww = torch.tanh(xw @ self.time_decay_w1) @ self.time_decay_w2
+            # [B, T, C]
+            w = self.time_decay + ww
+
+            return r, k, v, g, w
+
+        def jit_func_2(self, x, g):
+            B, T, C = x.size()
+            x = x.view(B * T, C)
+
+            x = self.ln_x(x).view(B, T, C)
+            x = self.output(x * g)
+            return x
+
+        def forward(self, x, patch_resolution=None):
+            def _inner_forward(x):
+                B, T, C = x.size()
+                self.device = x.device
+
+                r, k, v, g, w = self.jit_func(x, patch_resolution)
+                #x = RUN_CUDA_RWKV6(B, T, C, self.n_head, r, k, v, w, u=self.time_faaaa)
+                x = RUN_CUDA_RWKV6(B, T, C, self.n_head, r.float(), k.float(), v.float(), w.float(), u=self.time_faaaa.float())
+
+                if self.key_norm is not None:
+                    x = self.key_norm(x)
+                return self.jit_func_2(x, g)
+
+            if self.with_cp and x.requires_grad:
+                x = cp.checkpoint(_inner_forward, x)
+            else:
+                x = _inner_forward(x)
+            return x
+
+
+    class VRWKV_ChannelMix(BaseModule):
+        def __init__(self, n_embd, n_head, n_layer, layer_id, shift_mode='q_shift_multihead',
+                     shift_pixel=1, hidden_rate=4, init_mode='fancy', key_norm=False,
+                     with_cls_token=False, with_cp=False):
+            super().__init__()
+            self.layer_id = layer_id
+            self.n_layer = n_layer
+            self.n_embd = n_embd
+            self.attn_sz = n_embd
+            self.n_head = n_head
+            self.head_size = self.attn_sz // self.n_head
+            assert self.head_size == HEAD_SIZE
+            self.with_cp = with_cp
+            self._init_weights(init_mode)
+            self.with_cls_token = with_cls_token
+            self.shift_pixel = shift_pixel
+            self.shift_mode = shift_mode
+            self.shift_func = eval(shift_mode)
+
+            hidden_sz = hidden_rate * n_embd
+            self.key = nn.Linear(n_embd, hidden_sz, bias=False)
+            if key_norm:
+                self.key_norm = nn.LayerNorm(hidden_sz)
+            else:
+                self.key_norm = None
+            self.receptance = nn.Linear(n_embd, n_embd, bias=False)
+            self.value = nn.Linear(hidden_sz, n_embd, bias=False)
+
+        def _init_weights(self, init_mode):
+            if init_mode == 'fancy':
+                with torch.no_grad():  # fancy init of time_mix
+                    ratio_1_to_almost0 = (1.0 - (self.layer_id / self.n_layer))  # 1 to ~0
+                    x = torch.ones(1, 1, self.n_embd)
+                    for i in range(self.n_embd):
+                        x[0, 0, i] = i / self.n_embd
+                    self.spatial_mix_k = nn.Parameter(torch.pow(x, ratio_1_to_almost0))
+                    self.spatial_mix_r = nn.Parameter(torch.pow(x, ratio_1_to_almost0))
+            else:
+                raise NotImplementedError
+
+        def forward(self, x, patch_resolution=None):
+            def _inner_forward(x):
+                xx = self.shift_func(x, self.shift_pixel, patch_resolution=patch_resolution,
+                                     with_cls_token=self.with_cls_token)
+                xk = x * self.spatial_mix_k + xx * (1 - self.spatial_mix_k)
+                xr = x * self.spatial_mix_r + xx * (1 - self.spatial_mix_r)
+
+                k = self.key(xk)
+                k = torch.square(torch.relu(k))
+                if self.key_norm is not None:
+                    k = self.key_norm(k)
+                kv = self.value(k)
+                x = torch.sigmoid(self.receptance(xr)) * kv
+                return x
+
+            if self.with_cp and x.requires_grad:
+                x = cp.checkpoint(_inner_forward, x)
+            else:
+                x = _inner_forward(x)
+            return x
+
+
+    class Block(BaseModule):
+        def __init__(self, n_embd, n_head, n_layer, layer_id, shift_mode='q_shift_multihead',
+                     shift_pixel=1, drop_path=0., hidden_rate=4, init_mode='fancy',
+                     init_values=None, post_norm=False, key_norm=False, with_cls_token=False,
+                     with_cp=False):
+            super().__init__()
+            self.layer_id = layer_id
+            self.ln1 = nn.LayerNorm(n_embd)
+            self.ln2 = nn.LayerNorm(n_embd)
+            #self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+            self.drop_path = nn.Identity()
+            if self.layer_id == 0:
+                self.ln0 = nn.LayerNorm(n_embd)
+
+            self.att = VRWKV_SpatialMix_V6(n_embd, n_head, n_layer, layer_id, shift_mode,
+                                           shift_pixel, init_mode, key_norm=key_norm,
+                                           with_cls_token=with_cls_token)
+
+            self.ffn = VRWKV_ChannelMix(n_embd, n_head, n_layer, layer_id, shift_mode,
+                                        shift_pixel, hidden_rate, init_mode, key_norm=key_norm,
+                                        with_cls_token=with_cls_token)
+            self.layer_scale = (init_values is not None)
+            self.post_norm = post_norm
+            if self.layer_scale:
+                self.gamma1 = nn.Parameter(init_values * torch.ones((n_embd)), requires_grad=True)
+                self.gamma2 = nn.Parameter(init_values * torch.ones((n_embd)), requires_grad=True)
+            self.with_cp = with_cp
+
+        def forward(self, x, patch_resolution=None):
+            def _inner_forward(x):
+                if self.layer_id == 0:
+                    x = self.ln0(x)
+                if self.post_norm:
+                    if self.layer_scale:
+                        x = x + self.drop_path(self.gamma1 * self.ln1(self.att(x, patch_resolution)))
+                        x = x + self.drop_path(self.gamma2 * self.ln2(self.ffn(x, patch_resolution)))
+                    else:
+                        x = x + self.drop_path(self.ln1(self.att(x, patch_resolution)))
+                        x = x + self.drop_path(self.ln2(self.ffn(x, patch_resolution)))
+                else:
+                    if self.layer_scale:
+                        x = x + self.drop_path(self.gamma1 * self.att(self.ln1(x), patch_resolution))
+                        x = x + self.drop_path(self.gamma2 * self.ffn(self.ln2(x), patch_resolution))
+                    else:
+                        x = x + self.drop_path(self.att(self.ln1(x), patch_resolution))
+                        x = x + self.drop_path(self.ffn(self.ln2(x), patch_resolution))
+                return x
+
+            if self.with_cp and x.requires_grad:
+                x = cp.checkpoint(_inner_forward, x)
+            else:
+                x = _inner_forward(x)
+            return x
+
 
 
 
@@ -110,14 +446,103 @@ class GatingNetwork(nn.Module):
         return gates
 
 
+# class MoM(nn.Module):
+#     def __init__(self, input_dim, num_experts, head):
+#         super(MoM, self).__init__()
+#         self.head_dim = input_dim // head
+#         self.head = head
+#         self.experts = nn.ModuleList(
+#             [ExpertHead(self.head_dim, num_experts) for _ in range(head)])
+#         self.gating_network = GatingNetwork(input_dim, head)
+#
+#     def forward(self, x1, x2, x3, x4, x5, x6, x7):
+#         if x1.dim() == 1:
+#             x1 = x1.unsqueeze(0)
+#             x2 = x2.unsqueeze(0)
+#             x3 = x3.unsqueeze(0)
+#             x4 = x4.unsqueeze(0)
+#             x5 = x5.unsqueeze(0)
+#             x6 = x6.unsqueeze(0)
+#             x7 = x7.unsqueeze(0)
+#
+#         x1_chunk = torch.chunk(x1, self.head, dim=-1)
+#         x2_chunk = torch.chunk(x2, self.head, dim=-1)
+#         x3_chunk = torch.chunk(x3, self.head, dim=-1)
+#         x4_chunk = torch.chunk(x4, self.head, dim=-1)
+#         x5_chunk = torch.chunk(x5, self.head, dim=-1)
+#         x6_chunk = torch.chunk(x6, self.head, dim=-1)
+#         x7_chunk = torch.chunk(x7, self.head, dim=-1)
+#         head_input = [[x1_chunk[i], x2_chunk[i], x3_chunk[i], x4_chunk[i], x5_chunk[i], x6_chunk[i], x7_chunk[i]] for i
+#                       in range(self.head)] #按head 分块，每个head 有7个输入
+#         query = torch.cat([x1, x2, x3, x4, x5, x6, x7], dim=-1)
+#         key = torch.stack([x1, x2, x3, x4, x5, x6, x7], dim=1)
+#         gate_heads = self.gating_network(query, key) # Multi-HeadAttentionGating 似乎思这个，就是拿 query 和key 生成的attn作为门控
+#         expert_outputs = [expert(head_input[i], gate_heads[:, i]) for i, expert in enumerate(self.experts)]
+#         outputs = torch.cat(expert_outputs, dim=-1).flatten(start_dim=1, end_dim=-1)
+#         loss = 0
+#         if self.training:
+#             return outputs, loss
+#         return outputs
+
+
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
 class MoM(nn.Module):
-    def __init__(self, input_dim, num_experts, head):
+    def __init__(self, input_dim, num_experts, head,
+                 lb_weight=0.1, div_weight=0.1, margin_weight=0.1, margin=0.3):
         super(MoM, self).__init__()
         self.head_dim = input_dim // head
         self.head = head
+        self.num_experts = num_experts
+        self.lb_weight = lb_weight
+        self.div_weight = div_weight
+        self.margin_weight = margin_weight
+        self.margin = margin
+
         self.experts = nn.ModuleList(
             [ExpertHead(self.head_dim, num_experts) for _ in range(head)])
         self.gating_network = GatingNetwork(input_dim, head)
+
+    def compute_uniform_kl_loss(self, gate_weights):
+        """
+        KL divergence between average gate distribution and uniform prior.
+        gate_weights: [B, H, E]
+        """
+        avg = gate_weights.mean(dim=(0, 1))  # [E]
+        uniform = torch.full_like(avg, 1.0 / avg.numel())
+        return F.kl_div(avg.log(), uniform, reduction='batchmean')
+
+    def compute_js_divergence(self, gate_weights):
+        """
+        Jensen-Shannon divergence across heads to encourage diversity.
+        gate_weights: [B, H, E]
+        """
+        B, H, E = gate_weights.shape
+        # pairwise distributions p1, p2: [B, H, H, E]
+        p1 = gate_weights.unsqueeze(2).expand(-1, -1, H, -1)
+        p2 = gate_weights.unsqueeze(1).expand(-1, H, -1, -1)
+        m = 0.5 * (p1 + p2)
+        # compute KL divergences, sum over experts dim
+        kl1 = F.kl_div(p1.log(), m, reduction='none').sum(-1)  # [B,H,H]
+        kl2 = F.kl_div(p2.log(), m, reduction='none').sum(-1)  # [B,H,H]
+        js = 0.5 * (kl1 + kl2)  # [B,H,H]
+        # mask out self-pairs
+        mask = (1 - torch.eye(H, device=gate_weights.device)).unsqueeze(0)  # [1,H,H]
+        js = js * mask  # [B,H,H]
+        # average over batch and head pairs
+        return js.sum() / (B * H * (H - 1))
+
+    def compute_margin_loss(self, gate_weights):
+        """
+        Margin-based loss between top-2 experts per head.
+        gate_weights: [B, H, E]
+        """
+        top2 = torch.topk(gate_weights, k=2, dim=-1).values  # [B, H, 2]
+        margin_diff = top2[..., 0] - top2[..., 1]
+        return F.relu(self.margin - margin_diff).mean()
 
     def forward(self, x1, x2, x3, x4, x5, x6, x7):
         if x1.dim() == 1:
@@ -129,25 +554,47 @@ class MoM(nn.Module):
             x6 = x6.unsqueeze(0)
             x7 = x7.unsqueeze(0)
 
-        x1_chunk = torch.chunk(x1, self.head, dim=-1)
-        x2_chunk = torch.chunk(x2, self.head, dim=-1)
-        x3_chunk = torch.chunk(x3, self.head, dim=-1)
-        x4_chunk = torch.chunk(x4, self.head, dim=-1)
-        x5_chunk = torch.chunk(x5, self.head, dim=-1)
-        x6_chunk = torch.chunk(x6, self.head, dim=-1)
-        x7_chunk = torch.chunk(x7, self.head, dim=-1)
-        head_input = [[x1_chunk[i], x2_chunk[i], x3_chunk[i], x4_chunk[i], x5_chunk[i], x6_chunk[i], x7_chunk[i]] for i
-                      in range(self.head)] #按head 分块，每个head 有7个输入
-        query = torch.cat([x1, x2, x3, x4, x5, x6, x7], dim=-1)
-        key = torch.stack([x1, x2, x3, x4, x5, x6, x7], dim=1)
-        gate_heads = self.gating_network(query, key) # Multi-HeadAttentionGating 似乎思这个，就是拿 query 和key 生成的attn作为门控
-        expert_outputs = [expert(head_input[i], gate_heads[:, i]) for i, expert in enumerate(self.experts)]
-        outputs = torch.cat(expert_outputs, dim=-1).flatten(start_dim=1, end_dim=-1)
-        loss = 0
-        if self.training:
-            return outputs, loss
-        return outputs
+        # split into heads
+        chunks = [torch.chunk(x, self.head, dim=-1)
+                  for x in (x1, x2, x3, x4, x5, x6, x7)]
+        head_inputs = [[chunks[v][i] for v in range(7)]
+                        for i in range(self.head)]
 
+        # build query and key
+        query = torch.cat([x1, x2, x3, x4, x5, x6, x7], dim=-1)
+        key   = torch.stack([x1, x2, x3, x4, x5, x6, x7], dim=1)
+
+        # gating
+        gate_heads = self.gating_network(query, key)  # [B, H, 1, E]
+        all_gw = []
+        outputs = []
+        for i, expert in enumerate(self.experts):
+            gh = gate_heads[:, i]
+            out = expert(head_inputs[i], gh)
+            outputs.append(out)
+            # collect gate weights [B, E]
+            all_gw.append(gh.squeeze(1))
+
+        # combine expert outputs
+        features = torch.cat(outputs, dim=-1).flatten(start_dim=1)
+
+        if not self.training:
+            return features
+
+        # compute auxiliary losses
+        gate_weights = torch.stack(all_gw, dim=1)  # [B, H, E]
+        lb_loss  = self.compute_uniform_kl_loss(gate_weights)
+        js_loss  = self.compute_js_divergence(gate_weights)
+        m_loss   = self.compute_margin_loss(gate_weights)
+
+        loss = (self.lb_weight   * lb_loss
+              + self.div_weight  * js_loss
+              + self.margin_weight * m_loss)
+
+        return features, loss
+
+
+##
 class DAttentionBaseline(nn.Module):
 
     def __init__(
@@ -747,6 +1194,7 @@ class DAttentionBaseline(nn.Module):
         out = self.proj_drop(self.proj_out(out))
         out = query + out
         return out.squeeze(2)
+
 
 import torch
 import torch.nn as nn
@@ -4235,7 +4683,7 @@ class GeneralFusion(nn.Module):
         self.HDM = cfg.MODEL.HDM
         self.ATM = cfg.MODEL.ATM
 
-        self.combineway = 'adaptiveboqdeformablation'
+        self.combineway = 'adaptiveboq'
         print('combineway:', self.combineway,'mxa')
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')
@@ -4335,7 +4783,19 @@ class GeneralFusion(nn.Module):
 
         elif self.combineway == 'adaptiveboqdeformablation':
             # ./runrgbnt201.sh 3 aboqnewdeform_ablation_full_no_msof
-            # ./runrgbnt201.sh 0 aboqnewdeform_ablation_no_HQ_full . ./runmsvr310.sh 1 aboqnewdeform_ablation_FULL_no_amw
+            # ./runrgbnt201.sh 0 aboqnewdeform_ablation_no_HQ_full
+
+            ablation_configs_boq = create_haqn_ablation_configs()
+
+            # 示例：创建移除查询传播的模型
+            configboq = ablation_configs_boq['Full']
+
+            # 测试模态特异性BoQ
+            self.modalityboqablation = ModalitySpecificBoQAblation(
+                input_dim=self.feat_dim, num_queries=64, num_layers=4, row_dim=1,
+                ablation_config=configboq
+            )
+
 
             if self.datasetsname == 'RGBNT201':
                 q_size = (16,8)
@@ -4344,21 +4804,10 @@ class GeneralFusion(nn.Module):
             else:
                 q_size = (8, 16)
 
-
-            ablation_configs_boq = create_haqn_ablation_configs()
             ablation_configs_deform = create_eda_ablation_configs()
 
-            # 示例：创建移除查询传播的模型
-            configboq = ablation_configs_boq['Baseline']
-            configdeform = ablation_configs_deform['Baseline']
-
-            # 测试模态特异性BoQ
-            self.modalityboqablation = ModalitySpecificBoQAblation(
-                input_dim=self.feat_dim, num_queries=64, num_layers=4, row_dim=1,
-                ablation_config=configboq
-            )
-
             # 示例：创建移除AMW组件的模型
+            configdeform = ablation_configs_deform['Full']
             self.deformselectablation = DAttentionEnhancedAblation(
                 q_size=q_size, n_heads=1, n_head_channels=512, n_groups=1,
                 attn_drop=0.0, proj_drop=0.0, stride=2,
@@ -4366,6 +4815,11 @@ class GeneralFusion(nn.Module):
                 ablation_config=configdeform
             )
 
+            # 直接替换
+            # self.deformselect = DAttentionEnhanced(
+            #     q_size, 1, 512, 1, 0.0, 0.0, 2,
+            #     5.0, 4, True
+            # )
 
         elif self.combineway == 'newablation':
             # ./runrgbnt201.sh 3 aboqnewdeform_ablation_full_no_msof
@@ -4509,6 +4963,40 @@ class GeneralFusion(nn.Module):
 
                 # 区分度损失权重
                 self.diversity_weight = 0.1
+
+            
+        elif self.combineway == 'rwkvadd' or self.combineway == 'rwkvaddlinear':
+            rwkv_cfg = dict(
+                #n_embd=feat_dim,
+                #n_head=12,
+                n_layer=12,
+                layer_id=0,
+                shift_mode='q_shift_multihead',
+                shift_pixel=1,
+                drop_path=0,
+                hidden_rate=4,
+                init_mode='fancy',
+                key_norm=False,
+                with_cls_token=False,
+                with_cp=False,
+
+                ########
+                n_embd=feat_dim,
+                n_head=8,
+                init_values=1e-5,
+                post_norm=True,
+
+            )
+
+            self.rwkvblock_r = Block(**rwkv_cfg)
+            self.rwkvblock_n = Block(**rwkv_cfg)
+            self.rwkvblock_t = Block(**rwkv_cfg)
+            self.rwkvblock_rn = Block(**rwkv_cfg)
+            self.rwkvblock_rt = Block(**rwkv_cfg)
+            self.rwkvblock_nt = Block(**rwkv_cfg)
+            self.rwkvblock_rnt = Block(**rwkv_cfg)
+            #in_features = 128 +128 +128 + 256 +256 +256 + 384
+            self.linearrwkv = nn.Linear(feat_dim, feat_dim)
         elif self.combineway == 'rwkvcross':
             self.rwkvcross_r = RWKV_CrossAttention(feat_dim, n_query=1)
             self.rwkvcross_n = RWKV_CrossAttention(feat_dim, n_query=1)
@@ -5696,7 +6184,12 @@ class GeneralFusion(nn.Module):
         elif self.combineway == 'ebblockdeform':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMebblockDeform(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
-
+        elif self.combineway == 'rwkvadd':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrw(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'rwkvaddlinear':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMrwpluslinear(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
         elif self.combineway == 'rwkvcross':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMcrossrwkv(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
