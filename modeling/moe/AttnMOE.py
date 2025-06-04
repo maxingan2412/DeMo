@@ -4235,7 +4235,7 @@ class GeneralFusion(nn.Module):
         self.HDM = cfg.MODEL.HDM
         self.ATM = cfg.MODEL.ATM
 
-        self.combineway = 'adaptiveboqdeformablation'
+        self.combineway = 'normal'
         print('combineway:', self.combineway,'mxa')
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')
