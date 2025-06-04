@@ -316,7 +316,7 @@ class R1_mAP():
 
 
 class R1_mAP_eval():
-    def __init__(self, num_query, max_rank=50, feat_norm=True, reranking=False):
+    def __init__(self, num_query, max_rank=50, feat_norm=True, reranking=True):
         super(R1_mAP_eval, self).__init__()
         self.num_query = num_query
         self.max_rank = max_rank
@@ -485,10 +485,15 @@ class R1_mAP_eval():
 
         # Visualize top10 results for each query
         # self.visualize_ranked_results(distmat, topk=10, save_dir='rankList/your model name')
+        tstpic = True
+        print('tstpic',tstpic)
+        if tstpic:
+            self.showPointMultiModal(feats, real_label=self.pids,
+                                     draw_label=[258, 260, 269, 271, 273, 280, 282, 284, 285, 286, 287, 289])
 
         return cmc, mAP, distmat, self.pids, self.camids, qf, gf
 
-    def showPointMultiModal(self, features, real_label, draw_label, save_path='../TSNE'):
+    def showPointMultiModalnew(self, features, real_label, draw_label, save_path='../TSNE'):
         id_show = 25
         save_path = os.path.join(save_path, str(draw_label) + ".pdf")
         print("Draw points of features to {}".format(save_path))
@@ -513,62 +518,39 @@ class R1_mAP_eval():
         plt.show()
         plt.close()
 
-    # def showPointMultiModal(self, features, real_label, draw_label, save_path='.'):
-    #     id_show = 25
-    #
-    #     # 确保保存目录存在
-    #     import os
-    #     os.makedirs(save_path, exist_ok=True)
-    #
-    #     save_file = os.path.join(save_path, str(draw_label) + ".pdf")
-    #     print("Draw points of features to {}".format(save_file))
-    #
-    #     # 简化的标签搜索 - 直接搜索匹配的索引
-    #     indices = [i for i, label in enumerate(real_label) if label == draw_label][:id_show]
-    #
-    #     if len(indices) < 2:
-    #         print(f"Warning: Only found {len(indices)} samples for label {draw_label}, need at least 2")
-    #         return
-    #
-    #     print(f"Found {len(indices)} samples for PID {draw_label}")
-    #
-    #     feat = features[indices]
-    #
-    #     # 动态调整perplexity
-    #     n_samples = feat.shape[0]
-    #     perplexity = min(30, max(1, n_samples - 1))
-    #     print(f"Using perplexity={perplexity} for {n_samples} samples")
-    #
-    #     tsne = manifold.TSNE(n_components=2, init='pca', random_state=1,
-    #                          learning_rate=100, perplexity=perplexity)
-    #     features_tsne = tsne.fit_transform(feat)
-    #
-    #     colors = ['#1f78b4', '#33a02c', '#e31a1c', '#ff7f00', '#6a3d9a', '#b15928',
-    #               '#a6cee3', '#b2df8a', '#fb9a99', '#fdbf6f', '#cab2d6', '#ffff99']
-    #     MARKS = ['*']
-    #
-    #     plt.figure(figsize=(10, 10))
-    #     for i in range(features_tsne.shape[0]):
-    #         plt.scatter(features_tsne[i, 0], features_tsne[i, 1], s=300,
-    #                     color=colors[i // id_show], marker=MARKS[0], alpha=0.4)
-    #
-    #     plt.title(f"t-SNE Visualization of PID {draw_label}")
-    #     plt.xlabel("t-SNE Dimension 1")
-    #     plt.ylabel("t-SNE Dimension 2")
-    #
-    #     # 保存并显示绝对路径
-    #     abs_path = os.path.abspath(save_file)
-    #     plt.savefig(save_file)
-    #     print(f"✅ File saved to: {abs_path}")
-    #
-    #     # 检查文件是否真的存在
-    #     if os.path.exists(save_file):
-    #         print("✅ File confirmed to exist!")
-    #     else:
-    #         print("❌ File NOT found after saving!")
-    #
-    #     plt.show()
-    #     plt.close()
+    def showPointMultiModal(self, features, real_label, draw_label, save_path='../TSNE'):
+        id_show = 25
+        save_path = os.path.join(save_path, str(draw_label) + ".pdf")
+
+        # 确保保存目录存在，如果不存在则创建
+        save_dir = os.path.dirname(save_path)
+        os.makedirs(save_dir, exist_ok=True)
+
+        print("Draw points of features to {}".format(save_path))
+
+        indices = find_label_indices(real_label, draw_label, max_indices_per_label=id_show)
+        feat = features[indices]
+
+        tsne = manifold.TSNE(n_components=2, init='pca', random_state=1, learning_rate=100, perplexity=60)
+        features_tsne = tsne.fit_transform(feat)
+
+        colors = ['#1f78b4', '#33a02c', '#e31a1c', '#ff7f00', '#6a3d9a', '#b15928',
+                  '#a6cee3', '#b2df8a', '#fb9a99', '#fdbf6f', '#cab2d6', '#ffff99']
+        MARKS = ['*']
+
+        plt.figure(figsize=(10, 10))
+        for i in range(features_tsne.shape[0]):
+            plt.scatter(features_tsne[i, 0], features_tsne[i, 1], s=300,
+                        color=colors[i // id_show], marker=MARKS[0], alpha=0.4)
+
+        plt.title("t-SNE Visualization of Different IDs")
+        plt.xlabel("t-SNE Dimension 1")
+        plt.ylabel("t-SNE Dimension 2")
+        # plt.legend()
+
+        plt.savefig(save_path)
+        plt.show()
+        plt.close()
 
 
 def euclidean_distance(qf, gf):

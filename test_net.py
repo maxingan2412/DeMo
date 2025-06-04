@@ -40,5 +40,6 @@ if __name__ == "__main__":
 
     model = make_model(cfg, num_class=num_classes, camera_num=camera_num, view_num=view_num)
     model.eval()
-    model.load_param("your_model.pth")
+    model.load_param("/home/ma1/work/demorelated/DeMo/DeMobest.pth")
+    #model.load_param('/home/ma1/work/demorelated/DeMo/RGBNT201-DeMo/aboqdeform_init1_full_full_20250601_205142/DeMobest.pth')
     do_inference(cfg, model, val_loader, num_query, return_pattern=3)

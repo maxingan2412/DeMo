@@ -1,0 +1,64 @@
+Baseline
+The test feature is normalized
+=> Computing DistMat with euclidean_distance
+=> Results:
+mAP: 0.7319
+CMC curve: Rank-1: 0.7500, Rank-5: 0.8313, Rank-10: 0.8828
+Draw points of features to ../TSNE/[258, 260, 269, 271, 273, 280, 282, 284, 285, 286, 287, 289].pdf
+2025-06-05 00:22:07,106 DeMo.test INFO: Validation Results
+2025-06-05 00:22:07,107 DeMo.test INFO: mAP: 73.2%
+2025-06-05 00:22:07,107 DeMo.test INFO: CMC curve, Rank-1  :75.0%
+2025-06-05 00:22:07,107 DeMo.test INFO: CMC curve, Rank-5  :83.1%
+2025-06-05 00:22:07,107 DeMo.test INFO: CMC curve, Rank-10 :88.3%
+
+Process finished with exit code 0
+
+
+Baseline+ HDM
+The test feature is normalized
+=> Computing DistMat with euclidean_distance
+=> Results:
+mAP: 0.7425
+CMC curve: Rank-1: 0.7620, Rank-5: 0.8469, Rank-10: 0.8864
+Draw points of features to ../TSNE/[258, 260, 269, 271, 273, 280, 282, 284, 285, 286, 287, 289].pdf
+2025-06-05 00:24:24,370 DeMo.test INFO: Validation Results
+2025-06-05 00:24:24,371 DeMo.test INFO: mAP: 74.2%
+2025-06-05 00:24:24,371 DeMo.test INFO: CMC curve, Rank-1  :76.2%
+2025-06-05 00:24:24,371 DeMo.test INFO: CMC curve, Rank-5  :84.7%
+2025-06-05 00:24:24,371 DeMo.test INFO: CMC curve, Rank-10 :88.6%
+
+Process finished with exit code 0
+
+Baseline+ PIFE
+The test feature is normalized
+=> Computing DistMat with euclidean_distance
+=> Results:
+mAP: 0.7815
+CMC curve: Rank-1: 0.8182, Rank-5: 0.8768, Rank-10: 0.9187
+Draw points of features to ../TSNE/[258, 260, 269, 271, 273, 280, 282, 284, 285, 286, 287, 289].pdf
+2025-06-05 00:26:05,065 DeMo.test INFO: Validation Results
+2025-06-05 00:26:05,065 DeMo.test INFO: mAP: 78.1%
+2025-06-05 00:26:05,065 DeMo.test INFO: CMC curve, Rank-1  :81.8%
+2025-06-05 00:26:05,066 DeMo.test INFO: CMC curve, Rank-5  :87.7%
+2025-06-05 00:26:05,066 DeMo.test INFO: CMC curve, Rank-10 :91.9%
+
+Baseline+ PIFE+ HDM
+=> Results:
+mAP: 0.7825
+CMC curve: Rank-1: 0.8170, Rank-5: 0.8780, Rank-10: 0.9175
+Draw points of features to ../TSNE/[258, 260, 269, 271, 273, 280, 282, 284, 285, 286, 287, 289].pdf
+2025-06-05 00:28:00,987 DeMo.test INFO: Validation Results
+2025-06-05 00:28:00,988 DeMo.test INFO: mAP: 78.2%
+2025-06-05 00:28:00,988 DeMo.test INFO: CMC curve, Rank-1  :81.7%
+2025-06-05 00:28:00,988 DeMo.test INFO: CMC curve, Rank-5  :87.8%
+2025-06-05 00:28:00,988 DeMo.test INFO: CMC curve, Rank-10 :91.7%
+
+Baseline+ PIFE+ HDM + ATM
+mAP: 0.7903
+CMC curve: Rank-1: 0.8230, Rank-5: 0.8876, Rank-10: 0.9199
+Draw points of features to ../TSNE/[258, 260, 269, 271, 273, 280, 282, 284, 285, 286, 287, 289].pdf
+2025-06-05 00:32:05,216 DeMo.test INFO: Validation Results
+2025-06-05 00:32:05,216 DeMo.test INFO: mAP: 79.0%
+2025-06-05 00:32:05,216 DeMo.test INFO: CMC curve, Rank-1  :82.3%
+2025-06-05 00:32:05,216 DeMo.test INFO: CMC curve, Rank-5  :88.8%
+2025-06-05 00:32:05,216 DeMo.test INFO: CMC curve, Rank-10 :92.0%
