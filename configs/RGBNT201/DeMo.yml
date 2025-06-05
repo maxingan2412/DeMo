@@ -8,7 +8,7 @@ MODEL:
   TRIPLET_LOSS_WEIGHT: 1.0
   GLOBAL_LOCAL: True
   HDM: True
-  ATM: True
+  ATM: False
   HEAD: 4 # orginal 4
   FROZEN: False
   CENGJIFUSION: False

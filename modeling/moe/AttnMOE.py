@@ -25,6 +25,15 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import textwrap
 
+# 在attnmoe.py顶部添加这些导入
+from .newboq import (
+    CMQEConfig,
+    CMQEModalitySystem,
+    CrossModalQueryExchange,
+    CMQEAdaptiveBoQ,
+    create_cmqe_ablation_configs
+)
+
 
 
 
@@ -3170,6 +3179,60 @@ class ModalitySpecificBoQAblation(nn.Module):
         return results, attentions
 
 
+class TrulyModalitySpecificBoQAblation(nn.Module):
+    def __init__(self, input_dim=512, num_queries=32, num_layers=2, row_dim=32, ablation_config=None):
+        super().__init__()
+
+        self.config = ablation_config if ablation_config is not None else HAQNConfig()
+
+        if self.config.enable_modality_specific:
+            # 为每个模态/组合创建独立的BoQ
+            self.rgb_boq = AdaptiveBoQAblation(input_dim, num_queries, num_layers, row_dim, True, self.config)
+            self.ni_boq = AdaptiveBoQAblation(input_dim, num_queries, num_layers, row_dim, True, self.config)
+            self.ti_boq = AdaptiveBoQAblation(input_dim, num_queries, num_layers, row_dim, True, self.config)
+
+            self.rgb_ni_boq = AdaptiveBoQAblation(input_dim, int(num_queries * 1.2), num_layers, row_dim, True,
+                                                  self.config)
+            self.rgb_ti_boq = AdaptiveBoQAblation(input_dim, int(num_queries * 1.2), num_layers, row_dim, True,
+                                                  self.config)
+            self.ni_ti_boq = AdaptiveBoQAblation(input_dim, int(num_queries * 1.2), num_layers, row_dim, True,
+                                                 self.config)
+
+            self.rgb_ni_ti_boq = AdaptiveBoQAblation(input_dim, int(num_queries * 1.5), num_layers, row_dim, True,
+                                                     self.config)
+
+            print("[HAQN Ablation] ✓ Truly modality-specific: 7 independent BoQ modules")
+        else:
+            # 禁用时共享
+            shared_boq = AdaptiveBoQAblation(input_dim, num_queries, num_layers, row_dim, True, self.config)
+            self.rgb_boq = self.ni_boq = self.ti_boq = shared_boq
+            self.rgb_ni_boq = self.rgb_ti_boq = self.ni_ti_boq = shared_boq
+            self.rgb_ni_ti_boq = shared_boq
+
+    def forward(self, features_dict):
+        results = {}
+        attentions = {}
+
+        # 每个模态/组合使用专门的BoQ
+        modality_boq_mapping = {
+            'RGB': self.rgb_boq,
+            'NI': self.ni_boq,
+            'TI': self.ti_boq,
+            'RGB_NI': self.rgb_ni_boq,
+            'RGB_TI': self.rgb_ti_boq,
+            'NI_TI': self.ni_ti_boq,
+            'RGB_NI_TI': self.rgb_ni_ti_boq
+        }
+
+        for modality, feat in features_dict.items():
+            feat = feat.permute(1, 0, 2)  # [N, B, D] -> [B, N, D]
+            boq_module = modality_boq_mapping[modality]
+            out, attn = boq_module(feat)
+            results[modality] = out
+            attentions[modality] = attn
+
+        return results, attentions
+
 # 创建所有可能的HAQN消融配置
 def create_haqn_ablation_configs():
     """创建所有可能的HAQN消融配置"""
@@ -4235,7 +4298,7 @@ class GeneralFusion(nn.Module):
         self.HDM = cfg.MODEL.HDM
         self.ATM = cfg.MODEL.ATM
 
-        self.combineway = 'normal'
+        self.combineway = 'cmeboqablation'
         print('combineway:', self.combineway,'mxa')
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')
@@ -4349,16 +4412,41 @@ class GeneralFusion(nn.Module):
             ablation_configs_deform = create_eda_ablation_configs()
 
             # 示例：创建移除查询传播的模型
-            configboq = ablation_configs_boq['Baseline']
-            configdeform = ablation_configs_deform['Baseline']
+            configboq = ablation_configs_boq['Full']
+            configdeform = ablation_configs_deform['Full']
 
             # 测试模态特异性BoQ
-            self.modalityboqablation = ModalitySpecificBoQAblation(
+            self.modalityboqablation = TrulyModalitySpecificBoQAblation(
                 input_dim=self.feat_dim, num_queries=64, num_layers=4, row_dim=1,
                 ablation_config=configboq
             )
 
             # 示例：创建移除AMW组件的模型
+            self.deformselectablation = DAttentionEnhancedAblation(
+                q_size=q_size, n_heads=1, n_head_channels=512, n_groups=1,
+                attn_drop=0.0, proj_drop=0.0, stride=2,
+                offset_range_factor=5.0, ksize=4, share=True,
+                ablation_config=configdeform
+            )
+        elif self.combineway == 'cmeboqablation':
+            if self.datasetsname == 'RGBNT201':
+                q_size = (16,8)
+            elif self.datasetsname == 'RGBNT100':
+                q_size = (8, 16)
+            else:
+                q_size = (8, 16)
+            # enable_hierarchical_queries = True,  # HQ: Progressive query learning (层次化查询学习)
+            # enable_query_propagation = True,  # QP: Inter-layer query propagation (跨层查询传播)
+            # enable_cross_modal_exchange = True,  # CMQE: Cross-Modal Query Exchange (跨模态查询交换)
+            # enable_adaptive_fusion = True,  # AF: Adaptive feature fusion (自适应特征融合)
+            # exchange_ratio = 0.2):  # CMQE交换强度
+            self.cmqe_config = CMQEConfig(enable_cross_modal_exchange=True)
+            self.cmqe_system = CMQEModalitySystem(input_dim=self.feat_dim, num_queries=64, num_layers=4, row_dim=1, cmqe_config=self.cmqe_config)
+
+
+            ablation_configs_deform = create_eda_ablation_configs()
+
+            configdeform = ablation_configs_deform['Full']
             self.deformselectablation = DAttentionEnhancedAblation(
                 q_size=q_size, n_heads=1, n_head_channels=512, n_groups=1,
                 attn_drop=0.0, proj_drop=0.0, stride=2,
@@ -5530,6 +5618,68 @@ class GeneralFusion(nn.Module):
         return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
 
 
+    def forward_HDMcmeboqablation(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
+        # get the global feature
+        r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
+        n_global = NI_global.unsqueeze(1).permute(1, 0, 2)
+        t_global = TI_global.unsqueeze(1).permute(1, 0, 2)
+        # permute for the cross attn input
+        RGB_cash = RGB_cash.permute(1, 0, 2)
+        NI_cash = NI_cash.permute(1, 0, 2)
+        TI_cash = TI_cash.permute(1, 0, 2)
+
+        # token selectect 用可变哪个东西
+        RGB_cash = RGB_cash.permute(1, 2, 0)
+        NI_cash = NI_cash.permute(1, 2, 0)
+        TI_cash = TI_cash.permute(1, 2, 0)
+
+        if self.datasetsname == 'RGBNT100':
+            q_size = (8, 16)
+        elif self.datasetsname == 'RGBNT201':
+            q_size = (16, 8)
+        else:
+            q_size = (8, 16)
+
+        RGB_cash = RGB_cash.reshape(RGB_cash.size(0), RGB_cash.size(1), q_size[0], q_size[1])
+        NI_cash = NI_cash.reshape(NI_cash.size(0), NI_cash.size(1), q_size[0], q_size[1])
+        TI_cash = TI_cash.reshape(TI_cash.size(0), TI_cash.size(1), q_size[0], q_size[1])
+
+        # B, C, H, W = RGB_cash.size()
+        # dtype, device = RGB_cash.dtype, RGB_cash.device
+        # data = torch.cat([RGB_cash, NI_cash, TI_cash], dim=1)
+        RGB_cash, NI_cash, TI_cash = self.deformselectablation(RGB_cash, NI_cash, TI_cash)
+
+        # get the embedding
+        RGB = torch.cat([r_global, RGB_cash], dim=0)
+        NI = torch.cat([n_global, NI_cash], dim=0)
+        TI = torch.cat([t_global, TI_cash], dim=0)
+        RGB_NI = torch.cat([RGB, NI], dim=0)
+        RGB_TI = torch.cat([RGB, TI], dim=0)
+        NI_TI = torch.cat([NI, TI], dim=0)
+        RGB_NI_TI = torch.cat([RGB, NI, TI], dim=0)
+
+        # 创建特征字典
+        features_dict = {
+            'RGB': RGB,
+            'NI': NI,
+            'TI': TI,
+            'RGB_NI': RGB_NI,
+            'RGB_TI': RGB_TI,
+            'NI_TI': NI_TI,
+            'RGB_NI_TI': RGB_NI_TI
+        }
+
+        results, attentions = self.cmqe_system(features_dict)
+        RGB_special = results['RGB']
+        NI_special = results['NI']
+        TI_special = results['TI']
+        RN_shared = results['RGB_NI']
+        RT_shared = results['RGB_TI']
+        NT_shared = results['NI_TI']
+        RNT_shared = results['RGB_NI_TI']
+
+        return RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared
+
     def forward_HDMnewablation(self, RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global):
         # get the global feature
         r_global = RGB_global.unsqueeze(1).permute(1, 0, 2)
@@ -5671,6 +5821,9 @@ class GeneralFusion(nn.Module):
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
         elif self.combineway == 'adaptiveboqdeformablation':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMadaptiveboqDeformAblation(
+                RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
+        elif self.combineway == 'cmeboqablation':
+            RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMcmeboqablation(
                 RGB_cash, NI_cash, TI_cash, RGB_global, NI_global, TI_global)
         elif self.combineway == 'newablation':
             RGB_special, NI_special, TI_special, RN_shared, RT_shared, NT_shared, RNT_shared = self.forward_HDMnewablation(

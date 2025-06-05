@@ -485,8 +485,8 @@ class R1_mAP_eval():
 
         # Visualize top10 results for each query
         # self.visualize_ranked_results(distmat, topk=10, save_dir='rankList/your model name')
-        tstpic = True
-        print('tstpic',tstpic)
+        tstpic = False
+        print('tstpic',tstpic,'mxa')
         if tstpic:
             self.showPointMultiModal(feats, real_label=self.pids,
                                      draw_label=[258, 260, 269, 271, 273, 280, 282, 284, 285, 286, 287, 289])
