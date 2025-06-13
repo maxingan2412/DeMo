@@ -1,0 +1,189 @@
+2025-05-27 22:31:58,895 DeMo INFO: Saving model in the path :./RGBNT100-DeMo/multimodelse_jiange_deform_20250527_223155
+2025-05-27 22:31:58,895 DeMo INFO: Namespace(config_file='configs/RGBNT100/DeMo.yml', fea_cft=0, local_rank=0, opts=['OUTPUT_DIR', './RGBNT100-DeMo/multimodelse_jiange_deform_20250527_223155'])
+2025-05-27 22:31:58,895 DeMo INFO: Loaded configuration file configs/RGBNT100/DeMo.yml
+2025-05-27 22:31:58,896 DeMo INFO: 
+MODEL:
+  TRANSFORMER_TYPE: 'ViT-B-16'
+  STRIDE_SIZE: [ 16, 16 ]
+  SIE_CAMERA: True
+  DIRECT: 0
+  SIE_COE: 1.0
+  ID_LOSS_WEIGHT: 0.25
+  TRIPLET_LOSS_WEIGHT: 1.0
+  GLOBAL_LOCAL: True
+  HDM: True
+  ATM: True
+  HEAD: 8
+  CENGJIFUSION: True
+
+INPUT:
+  SIZE_TRAIN: [ 128, 256 ]
+  SIZE_TEST: [ 128, 256 ]
+  PROB: 0.5 # random horizontal flip
+  RE_PROB: 0.5 # random erasing
+  PADDING: 10
+
+DATALOADER:
+  SAMPLER: 'softmax_triplet'
+  NUM_INSTANCE: 16
+  NUM_WORKERS: 14
+
+DATASETS:
+  NAMES: ('RGBNT100')
+  ROOT_DIR: '..'
+
+SOLVER:
+  BASE_LR: 0.00035
+  WARMUP_ITERS: 5
+  MAX_EPOCHS: 30
+  OPTIMIZER_NAME: 'Adam'
+  GAMMA: 0.1
+  IMS_PER_BATCH: 64
+  EVAL_PERIOD: 1
+  SEED: 1111
+
+TEST:
+  IMS_PER_BATCH: 128
+  RE_RANKING: 'no'
+  WEIGHT: ''
+  NECK_FEAT: 'before'
+  FEAT_NORM: 'yes'
+  MISS: "nothing"
+
+OUTPUT_DIR: '..'
+
+
+
+
+2025-05-27 22:31:58,896 DeMo INFO: Running with config:
+DATALOADER:
+  NUM_INSTANCE: 16
+  NUM_WORKERS: 14
+  SAMPLER: softmax_triplet
+DATASETS:
+  NAMES: RGBNT100
+  ROOT_DIR: ..
+INPUT:
+  PADDING: 10
+  PIXEL_MEAN: [0.5, 0.5, 0.5]
+  PIXEL_STD: [0.5, 0.5, 0.5]
+  PROB: 0.5
+  RE_PROB: 0.5
+  SIZE_TEST: [128, 256]
+  SIZE_TRAIN: [128, 256]
+MODEL:
+  ADAPTER: False
+  ATM: True
+  ATT_DROP_RATE: 0.0
+  CENGJIFUSION: True
+  DEVICE: cuda
+  DEVICE_ID: 0
+  DIRECT: 0
+  DIST_TRAIN: False
+  DROP_OUT: 0.0
+  DROP_PATH: 0.1
+  FROZEN: False
+  GLOBAL_LOCAL: True
+  HDM: True
+  HEAD: 8
+  ID_LOSS_TYPE: softmax
+  ID_LOSS_WEIGHT: 0.25
+  IF_LABELSMOOTH: on
+  IF_WITH_CENTER: no
+  METRIC_LOSS_TYPE: triplet
+  NAME: DeMo
+  NECK: bnneck
+  NO_MARGIN: True
+  PRETRAIN_PATH_T: /path/to/your/vitb_16_224_21k.pth
+  PROMPT: False
+  SIE_CAMERA: True
+  SIE_COE: 1.0
+  SIE_VIEW: False
+  STRIDE_SIZE: [16, 16]
+  TRANSFORMER_TYPE: ViT-B-16
+  TRIPLET_LOSS_WEIGHT: 1.0
+OUTPUT_DIR: ./RGBNT100-DeMo/multimodelse_jiange_deform_20250527_223155
+SOLVER:
+  BASE_LR: 0.00035
+  BIAS_LR_FACTOR: 2
+  CENTER_LOSS_WEIGHT: 0.0005
+  CENTER_LR: 0.5
+  CHECKPOINT_PERIOD: 60
+  CLUSTER_MARGIN: 0.3
+  COSINE_MARGIN: 0.5
+  COSINE_SCALE: 30
+  EVAL_PERIOD: 1
+  GAMMA: 0.1
+  IMS_PER_BATCH: 64
+  LARGE_FC_LR: False
+  LOG_PERIOD: 10
+  MARGIN: 0.3
+  MAX_EPOCHS: 30
+  MOMENTUM: 0.9
+  OPTIMIZER_NAME: Adam
+  RANGE_ALPHA: 0
+  RANGE_BETA: 1
+  RANGE_K: 2
+  RANGE_LOSS_WEIGHT: 1
+  RANGE_MARGIN: 0.3
+  SEED: 1111
+  STEPS: (40, 70)
+  WARMUP_FACTOR: 0.01
+  WARMUP_ITERS: 5
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY_BIAS: 0.0001
+TEST:
+  FEAT: 0
+  FEAT_NORM: yes
+  IMS_PER_BATCH: 128
+  MISS: nothing
+  NECK_FEAT: before
+  RE_RANKING: no
+  WEIGHT: 
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/helpers.py:7: FutureWarning: Importing from timm.models.helpers is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/registry.py:4: FutureWarning: Importing from timm.models.registry is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/home/ma1/work/demorelated/DeMo/modeling/clip/clip.py:23: UserWarning: PyTorch version 1.7.1 or higher is recommended
+  warnings.warn("PyTorch version 1.7.1 or higher is recommended")
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/mmcv/__init__.py:20: UserWarning: On January 1, 2023, MMCV will release v2.0.0, in which it will remove components related to the training process and add a data transformation module. In addition, it will rename the package names mmcv to mmcv-lite and mmcv-full to mmcv. See https://github.com/open-mmlab/mmcv/blob/master/docs/en/compatibility.md for more details.
+  warnings.warn(
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/torchvision/transforms/transforms.py:329: UserWarning: Argument 'interpolation' of type int is deprecated since 0.13 and will be removed in 0.15. Please use InterpolationMode enum.
+  warnings.warn(
+=> RGB_IR loaded
+Dataset statistics:
+  ----------------------------------------
+  subset   | # ids | # images | # cameras
+  ----------------------------------------
+  train    |    50 |     8675 |         8
+  query    |    50 |     1715 |         8
+  gallery  |    50 |     8575 |         8
+  ----------------------------------------
+data is ready
+cengjifusion: True
+rwkvbackbone: False
+using Transformer_type: ViT-B-16 as a backbone
+simplegate: False
+Traceback (most recent call last):
+  File "train_net.py", line 70, in <module>
+    model = make_model(cfg, num_class=num_classes, camera_num=camera_num, view_num=view_num)
+  File "/home/ma1/work/demorelated/DeMo/modeling/make_model.py", line 253, in make_model
+    model = DeMo(num_class, cfg, camera_num, view_num, __factory_T_type)
+  File "/home/ma1/work/demorelated/DeMo/modeling/make_model.py", line 52, in __init__
+    self.BACKBONE = build_transformer_new(num_classes, cfg, camera_num, view_num, factory, feat_dim=self.feat_dim)
+  File "/home/ma1/work/demorelated/DeMo/modeling/meta_arch.py", line 504, in __init__
+    clip_model = load_clip_to_cpu(cfg, self.model_name, cfg.INPUT.SIZE_TRAIN[0] // cfg.MODEL.STRIDE_SIZE[0],
+  File "/home/ma1/work/demorelated/DeMo/modeling/make_model_clipreid.py", line 186, in load_clip_to_cpu
+    model = clip.build_model(cfg,state_dict or model.state_dict(), h_resolution, w_resolution, vision_stride_size)
+  File "/home/ma1/work/demorelated/DeMo/modeling/clip/model.py", line 1865, in build_model
+    model = CLIP(cfg,
+  File "/home/ma1/work/demorelated/DeMo/modeling/clip/model.py", line 1709, in __init__
+    self.visual = VisionTransformer(
+  File "/home/ma1/work/demorelated/DeMo/modeling/clip/model.py", line 1253, in __init__
+    print('tiaoyuelianjie:', self.tiaoyue)
+  File "/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1269, in __getattr__
+    raise AttributeError("'{}' object has no attribute '{}'".format(
+AttributeError: 'VisionTransformer' object has no attribute 'tiaoyue'

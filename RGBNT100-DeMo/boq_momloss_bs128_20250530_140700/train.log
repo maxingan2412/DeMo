@@ -1,0 +1,3396 @@
+2025-05-30 14:07:04,221 DeMo INFO: Saving model in the path :./RGBNT100-DeMo/boq_momloss_bs128_20250530_140700
+2025-05-30 14:07:04,221 DeMo INFO: Namespace(config_file='configs/RGBNT100/DeMo.yml', fea_cft=0, local_rank=0, opts=['OUTPUT_DIR', './RGBNT100-DeMo/boq_momloss_bs128_20250530_140700'])
+2025-05-30 14:07:04,221 DeMo INFO: Loaded configuration file configs/RGBNT100/DeMo.yml
+2025-05-30 14:07:04,222 DeMo INFO: 
+MODEL:
+  TRANSFORMER_TYPE: 'ViT-B-16'
+  STRIDE_SIZE: [ 16, 16 ]
+  SIE_CAMERA: True
+  DIRECT: 0
+  SIE_COE: 1.0
+  ID_LOSS_WEIGHT: 0.25
+  TRIPLET_LOSS_WEIGHT: 1.0
+  GLOBAL_LOCAL: True
+  HDM: True
+  ATM: True
+  HEAD: 8
+  FROZEN: False
+  CENGJIFUSION: False
+
+INPUT:
+  SIZE_TRAIN: [ 128, 256 ]
+  SIZE_TEST: [ 128, 256 ]
+  PROB: 0.5 # random horizontal flip
+  RE_PROB: 0.5 # random erasing
+  PADDING: 10
+
+DATALOADER:
+  SAMPLER: 'softmax_triplet'
+  NUM_INSTANCE: 16
+  NUM_WORKERS: 14
+
+DATASETS:
+  NAMES: ('RGBNT100')
+  ROOT_DIR: '..'
+
+SOLVER:
+  BASE_LR: 0.00035
+  WARMUP_ITERS: 5
+  MAX_EPOCHS: 30
+  OPTIMIZER_NAME: 'Adam'
+  GAMMA: 0.1
+  IMS_PER_BATCH: 128
+  EVAL_PERIOD: 1
+  SEED: 1111
+
+TEST:
+  IMS_PER_BATCH: 128
+  RE_RANKING: 'no'
+  WEIGHT: ''
+  NECK_FEAT: 'before'
+  FEAT_NORM: 'yes'
+  MISS: "nothing"
+
+OUTPUT_DIR: '..'
+
+
+
+
+2025-05-30 14:07:04,222 DeMo INFO: Running with config:
+DATALOADER:
+  NUM_INSTANCE: 16
+  NUM_WORKERS: 14
+  SAMPLER: softmax_triplet
+DATASETS:
+  NAMES: RGBNT100
+  ROOT_DIR: ..
+INPUT:
+  PADDING: 10
+  PIXEL_MEAN: [0.5, 0.5, 0.5]
+  PIXEL_STD: [0.5, 0.5, 0.5]
+  PROB: 0.5
+  RE_PROB: 0.5
+  SIZE_TEST: [128, 256]
+  SIZE_TRAIN: [128, 256]
+MODEL:
+  ADAPTER: False
+  ATM: True
+  ATT_DROP_RATE: 0.0
+  CENGJIFUSION: False
+  DEVICE: cuda
+  DEVICE_ID: 0
+  DIRECT: 0
+  DIST_TRAIN: False
+  DROP_OUT: 0.0
+  DROP_PATH: 0.1
+  FROZEN: False
+  GLOBAL_LOCAL: True
+  HDM: True
+  HEAD: 8
+  ID_LOSS_TYPE: softmax
+  ID_LOSS_WEIGHT: 0.25
+  IF_LABELSMOOTH: on
+  IF_WITH_CENTER: no
+  METRIC_LOSS_TYPE: triplet
+  NAME: DeMo
+  NECK: bnneck
+  NO_MARGIN: True
+  PRETRAIN_PATH_T: /path/to/your/vitb_16_224_21k.pth
+  PROMPT: False
+  SIE_CAMERA: True
+  SIE_COE: 1.0
+  SIE_VIEW: False
+  STRIDE_SIZE: [16, 16]
+  TRANSFORMER_TYPE: ViT-B-16
+  TRIPLET_LOSS_WEIGHT: 1.0
+OUTPUT_DIR: ./RGBNT100-DeMo/boq_momloss_bs128_20250530_140700
+SOLVER:
+  BASE_LR: 0.00035
+  BIAS_LR_FACTOR: 2
+  CENTER_LOSS_WEIGHT: 0.0005
+  CENTER_LR: 0.5
+  CHECKPOINT_PERIOD: 60
+  CLUSTER_MARGIN: 0.3
+  COSINE_MARGIN: 0.5
+  COSINE_SCALE: 30
+  EVAL_PERIOD: 1
+  GAMMA: 0.1
+  IMS_PER_BATCH: 128
+  LARGE_FC_LR: False
+  LOG_PERIOD: 10
+  MARGIN: 0.3
+  MAX_EPOCHS: 30
+  MOMENTUM: 0.9
+  OPTIMIZER_NAME: Adam
+  RANGE_ALPHA: 0
+  RANGE_BETA: 1
+  RANGE_K: 2
+  RANGE_LOSS_WEIGHT: 1
+  RANGE_MARGIN: 0.3
+  SEED: 1111
+  STEPS: (40, 70)
+  WARMUP_FACTOR: 0.01
+  WARMUP_ITERS: 5
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY_BIAS: 0.0001
+TEST:
+  FEAT: 0
+  FEAT_NORM: yes
+  IMS_PER_BATCH: 128
+  MISS: nothing
+  NECK_FEAT: before
+  RE_RANKING: no
+  WEIGHT: 
+=> RGB_IR loaded
+Dataset statistics:
+  ----------------------------------------
+  subset   | # ids | # images | # cameras
+  ----------------------------------------
+  train    |    50 |     8675 |         8
+  query    |    50 |     1715 |         8
+  gallery  |    50 |     8575 |         8
+  ----------------------------------------
+data is ready
+cengjifusion: False mxa
+rwkvbackbone: False mxa
+using Transformer_type: ViT-B-16 as a backbone
+Resized position embedding: %s to %s torch.Size([197, 768]) torch.Size([129, 768])
+Position embedding resize to height:8 width: 16
+Successfully load ckpt!
+<All keys matched successfully>
+Loading pretrained model from CLIP
+camera number is : 8
+combineway: boq mxa
+2025-05-30 14:07:10,693 DeMo INFO: combineway: boq
+UsingDiversity: False mxa
+===========Building DeMo===========
+2025-05-30 14:07:11,048 DeMo INFO: DeMo(
+  (BACKBONE): build_transformer(
+    (base): VisionTransformer(
+      (conv1): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16), bias=False)
+      (ln_pre): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (transformer): Transformer(
+        (resblocks): Sequential(
+          (0): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (1): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (2): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (3): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (4): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (5): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (6): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (7): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (8): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (9): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (10): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (11): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+      )
+      (ln_post): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+  (pool): AdaptiveAvgPool1d(output_size=1)
+  (rgb_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (nir_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (tir_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (generalFusion): GeneralFusion(
+    (r): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (n): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (t): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (rn): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (rt): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (nt): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (rnt): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (moe): MoM(
+      (experts): ModuleList(
+        (0): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (1): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (2): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (3): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (4): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (5): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (6): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (7): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+      )
+      (gating_network): GatingNetwork(
+        (gate): CrossAttention(
+          (linear_re): Sequential(
+            (0): Linear(in_features=3584, out_features=512, bias=True)
+            (1): QuickGELU()
+            (2): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (q_): Linear(in_features=512, out_features=512, bias=False)
+          (k_): Linear(in_features=512, out_features=512, bias=False)
+        )
+      )
+    )
+    (multimodalboq): MultiModalBoQ(
+      (boq_single): BoQ(
+        (norm_input): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+        (boqs): ModuleList(
+          (0): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (1): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (2): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (3): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+        (fc): Linear(in_features=256, out_features=1, bias=True)
+      )
+      (boq_dual): BoQ(
+        (norm_input): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+        (boqs): ModuleList(
+          (0): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (1): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (2): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (3): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+        (fc): Linear(in_features=256, out_features=1, bias=True)
+      )
+      (boq_triple): BoQ(
+        (norm_input): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+        (boqs): ModuleList(
+          (0): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (1): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (2): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (3): BoQBlock(
+            (encoder): TransformerEncoderLayer(
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (linear1): Linear(in_features=512, out_features=2048, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=2048, out_features=512, bias=True)
+              (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (dropout2): Dropout(p=0.0, inplace=False)
+            )
+            (self_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (cross_attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+        (fc): Linear(in_features=256, out_features=1, bias=True)
+      )
+    )
+  )
+  (classifier_moe): Linear(in_features=3584, out_features=50, bias=False)
+  (bottleneck_moe): BatchNorm1d(3584, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier_r): Linear(in_features=512, out_features=50, bias=False)
+  (bottleneck_r): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier_n): Linear(in_features=512, out_features=50, bias=False)
+  (bottleneck_n): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier_t): Linear(in_features=512, out_features=50, bias=False)
+  (bottleneck_t): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+2025-05-30 14:07:11,051 DeMo INFO: number of parameters:161.412355
+using soft triplet loss for training
+label smooth on, numclasses: 50
+2025-05-30 14:07:11,158 DeMo.train INFO: start training
+diversityweight: 10 mxa
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/helpers.py:7: FutureWarning: Importing from timm.models.helpers is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/registry.py:4: FutureWarning: Importing from timm.models.registry is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/home/ma1/work/demorelated/DeMo/modeling/clip/clip.py:23: UserWarning: PyTorch version 1.7.1 or higher is recommended
+  warnings.warn("PyTorch version 1.7.1 or higher is recommended")
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/mmcv/__init__.py:20: UserWarning: On January 1, 2023, MMCV will release v2.0.0, in which it will remove components related to the training process and add a data transformation module. In addition, it will rename the package names mmcv to mmcv-lite and mmcv-full to mmcv. See https://github.com/open-mmlab/mmcv/blob/master/docs/en/compatibility.md for more details.
+  warnings.warn(
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/torchvision/transforms/transforms.py:329: UserWarning: Argument 'interpolation' of type int is deprecated since 0.13 and will be removed in 0.15. Please use InterpolationMode enum.
+  warnings.warn(
+2025-05-30 14:07:32,668 DeMo.train INFO: Epoch[1] Iteration[10/65] Loss: 11.309, Acc: 0.082, Base Lr: 9.80e-05
+2025-05-30 14:07:42,245 DeMo.train INFO: Epoch[1] Iteration[20/65] Loss: 9.490, Acc: 0.142, Base Lr: 9.80e-05
+2025-05-30 14:07:51,849 DeMo.train INFO: Epoch[1] Iteration[30/65] Loss: 8.734, Acc: 0.202, Base Lr: 9.80e-05
+2025-05-30 14:08:01,414 DeMo.train INFO: Epoch[1] Iteration[40/65] Loss: 8.325, Acc: 0.281, Base Lr: 9.80e-05
+2025-05-30 14:08:10,975 DeMo.train INFO: Epoch[1] Iteration[50/65] Loss: 8.065, Acc: 0.337, Base Lr: 9.80e-05
+2025-05-30 14:08:20,579 DeMo.train INFO: Epoch[1] Iteration[60/65] Loss: 7.877, Acc: 0.388, Base Lr: 9.80e-05
+2025-05-30 14:08:23,559 DeMo.train INFO: Epoch 1 done. Time per batch: 1.138[s] Speed: 112.5[samples/s]
+2025-05-30 14:08:23,563 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:08:23,563 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 14:08:23,563 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.5295
+CMC curve: Rank-1: 0.7854, Rank-5: 0.8332, Rank-10: 0.8589
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.5473
+CMC curve: Rank-1: 0.8128, Rank-5: 0.8297, Rank-10: 0.8397
+=> Improvement:
+mAP improvement: 0.0178 (+3.36%)
+Rank-1 improvement: 0.0274 (+3.49%)
+2025-05-30 14:10:58,232 DeMo.train INFO: Validation Results - Epoch: 1
+2025-05-30 14:10:58,232 DeMo.train INFO: mAP: 54.7%
+2025-05-30 14:10:58,232 DeMo.train INFO: CMC curve, Rank-1  :81.3%
+2025-05-30 14:10:58,233 DeMo.train INFO: CMC curve, Rank-5  :83.0%
+2025-05-30 14:10:58,233 DeMo.train INFO: CMC curve, Rank-10 :84.0%
+2025-05-30 14:10:58,233 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:10:58,951 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:10:58,951 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 14:10:58,951 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ma1/work/demorelated/DeMo/utils/reranking.py:40: UserWarning: This overload of addmm_ is deprecated:
+	addmm_(Number beta, Number alpha, Tensor mat1, Tensor mat2)
+Consider using one of the following signatures instead:
+	addmm_(Tensor mat1, Tensor mat2, *, Number beta, Number alpha) (Triggered internally at ../torch/csrc/utils/python_arg_parser.cpp:1420.)
+  distmat.addmm_(1, -2, feat, feat.t())
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.5449
+CMC curve: Rank-1: 0.7936, Rank-5: 0.8315, Rank-10: 0.8472
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.5565
+CMC curve: Rank-1: 0.8257, Rank-5: 0.8420, Rank-10: 0.8507
+=> Improvement:
+mAP improvement: 0.0116 (+2.13%)
+Rank-1 improvement: 0.0321 (+4.04%)
+2025-05-30 14:13:33,704 DeMo.train INFO: Validation Results - Epoch: 1
+2025-05-30 14:13:33,704 DeMo.train INFO: mAP: 55.7%
+2025-05-30 14:13:33,704 DeMo.train INFO: CMC curve, Rank-1  :82.6%
+2025-05-30 14:13:33,704 DeMo.train INFO: CMC curve, Rank-5  :84.2%
+2025-05-30 14:13:33,705 DeMo.train INFO: CMC curve, Rank-10 :85.1%
+2025-05-30 14:13:33,705 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:13:34,262 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:13:34,262 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 14:13:34,263 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.5300
+CMC curve: Rank-1: 0.7854, Rank-5: 0.8350, Rank-10: 0.8595
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.5477
+CMC curve: Rank-1: 0.8134, Rank-5: 0.8286, Rank-10: 0.8402
+=> Improvement:
+mAP improvement: 0.0177 (+3.33%)
+Rank-1 improvement: 0.0280 (+3.56%)
+2025-05-30 14:16:11,930 DeMo.train INFO: Validation Results - Epoch: 1
+2025-05-30 14:16:11,931 DeMo.train INFO: mAP: 54.8%
+2025-05-30 14:16:11,931 DeMo.train INFO: CMC curve, Rank-1  :81.3%
+2025-05-30 14:16:11,931 DeMo.train INFO: CMC curve, Rank-5  :82.9%
+2025-05-30 14:16:11,931 DeMo.train INFO: CMC curve, Rank-10 :84.0%
+2025-05-30 14:16:11,931 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:16:18,188 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:16:18,189 DeMo.train INFO: Best mAP: 54.8%
+2025-05-30 14:16:18,189 DeMo.train INFO: Best Rank-1: 81.3%
+2025-05-30 14:16:18,189 DeMo.train INFO: Best Rank-5: 82.9%
+2025-05-30 14:16:18,189 DeMo.train INFO: Best Rank-10: 84.0%
+2025-05-30 14:16:18,189 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:16:30,696 DeMo.train INFO: Epoch[2] Iteration[10/65] Loss: 6.668, Acc: 0.555, Base Lr: 1.61e-04
+2025-05-30 14:16:40,636 DeMo.train INFO: Epoch[2] Iteration[20/65] Loss: 6.474, Acc: 0.577, Base Lr: 1.61e-04
+2025-05-30 14:16:50,280 DeMo.train INFO: Epoch[2] Iteration[30/65] Loss: 6.297, Acc: 0.579, Base Lr: 1.61e-04
+2025-05-30 14:16:59,971 DeMo.train INFO: Epoch[2] Iteration[40/65] Loss: 6.117, Acc: 0.615, Base Lr: 1.61e-04
+2025-05-30 14:17:09,577 DeMo.train INFO: Epoch[2] Iteration[50/65] Loss: 5.963, Acc: 0.656, Base Lr: 1.61e-04
+2025-05-30 14:17:19,189 DeMo.train INFO: Epoch[2] Iteration[60/65] Loss: 5.785, Acc: 0.695, Base Lr: 1.61e-04
+2025-05-30 14:17:21,246 DeMo.train INFO: Epoch 2 done. Time per batch: 1.017[s] Speed: 125.9[samples/s]
+2025-05-30 14:17:21,258 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:17:21,258 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 14:17:21,258 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6715
+CMC curve: Rank-1: 0.8618, Rank-5: 0.8886, Rank-10: 0.9015
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6748
+CMC curve: Rank-1: 0.8612, Rank-5: 0.8641, Rank-10: 0.8717
+=> Improvement:
+mAP improvement: 0.0033 (+0.50%)
+Rank-1 improvement: -0.0006 (-0.07%)
+2025-05-30 14:19:55,091 DeMo.train INFO: Validation Results - Epoch: 2
+2025-05-30 14:19:55,092 DeMo.train INFO: mAP: 67.5%
+2025-05-30 14:19:55,092 DeMo.train INFO: CMC curve, Rank-1  :86.1%
+2025-05-30 14:19:55,092 DeMo.train INFO: CMC curve, Rank-5  :86.4%
+2025-05-30 14:19:55,092 DeMo.train INFO: CMC curve, Rank-10 :87.2%
+2025-05-30 14:19:55,092 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:19:55,915 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:19:55,916 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 14:19:55,916 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6232
+CMC curve: Rank-1: 0.8280, Rank-5: 0.8496, Rank-10: 0.8659
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6346
+CMC curve: Rank-1: 0.8257, Rank-5: 0.8356, Rank-10: 0.8484
+=> Improvement:
+mAP improvement: 0.0114 (+1.82%)
+Rank-1 improvement: -0.0023 (-0.28%)
+2025-05-30 14:22:32,248 DeMo.train INFO: Validation Results - Epoch: 2
+2025-05-30 14:22:32,249 DeMo.train INFO: mAP: 63.5%
+2025-05-30 14:22:32,249 DeMo.train INFO: CMC curve, Rank-1  :82.6%
+2025-05-30 14:22:32,249 DeMo.train INFO: CMC curve, Rank-5  :83.6%
+2025-05-30 14:22:32,249 DeMo.train INFO: CMC curve, Rank-10 :84.8%
+2025-05-30 14:22:32,249 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:22:32,623 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:22:32,624 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 14:22:32,624 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6424
+CMC curve: Rank-1: 0.8472, Rank-5: 0.8706, Rank-10: 0.8776
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6518
+CMC curve: Rank-1: 0.8496, Rank-5: 0.8571, Rank-10: 0.8606
+=> Improvement:
+mAP improvement: 0.0094 (+1.46%)
+Rank-1 improvement: 0.0023 (+0.28%)
+2025-05-30 14:25:09,089 DeMo.train INFO: Validation Results - Epoch: 2
+2025-05-30 14:25:09,089 DeMo.train INFO: mAP: 65.2%
+2025-05-30 14:25:09,090 DeMo.train INFO: CMC curve, Rank-1  :85.0%
+2025-05-30 14:25:09,090 DeMo.train INFO: CMC curve, Rank-5  :85.7%
+2025-05-30 14:25:09,090 DeMo.train INFO: CMC curve, Rank-10 :86.1%
+2025-05-30 14:25:09,090 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:25:14,880 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:25:14,880 DeMo.train INFO: Best mAP: 65.2%
+2025-05-30 14:25:14,880 DeMo.train INFO: Best Rank-1: 85.0%
+2025-05-30 14:25:14,880 DeMo.train INFO: Best Rank-5: 85.7%
+2025-05-30 14:25:14,880 DeMo.train INFO: Best Rank-10: 86.1%
+2025-05-30 14:25:14,880 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:25:28,148 DeMo.train INFO: Epoch[3] Iteration[10/65] Loss: 4.616, Acc: 0.768, Base Lr: 2.24e-04
+2025-05-30 14:25:38,108 DeMo.train INFO: Epoch[3] Iteration[20/65] Loss: 4.566, Acc: 0.814, Base Lr: 2.24e-04
+2025-05-30 14:25:47,764 DeMo.train INFO: Epoch[3] Iteration[30/65] Loss: 4.370, Acc: 0.838, Base Lr: 2.24e-04
+2025-05-30 14:25:57,481 DeMo.train INFO: Epoch[3] Iteration[40/65] Loss: 4.207, Acc: 0.868, Base Lr: 2.24e-04
+2025-05-30 14:26:07,076 DeMo.train INFO: Epoch[3] Iteration[50/65] Loss: 4.029, Acc: 0.886, Base Lr: 2.24e-04
+2025-05-30 14:26:16,778 DeMo.train INFO: Epoch[3] Iteration[60/65] Loss: 3.904, Acc: 0.899, Base Lr: 2.24e-04
+2025-05-30 14:26:19,835 DeMo.train INFO: Epoch 3 done. Time per batch: 1.031[s] Speed: 124.1[samples/s]
+2025-05-30 14:26:19,846 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:26:19,846 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 14:26:19,847 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7278
+CMC curve: Rank-1: 0.8816, Rank-5: 0.8980, Rank-10: 0.9032
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7336
+CMC curve: Rank-1: 0.8892, Rank-5: 0.8991, Rank-10: 0.9038
+=> Improvement:
+mAP improvement: 0.0058 (+0.79%)
+Rank-1 improvement: 0.0076 (+0.86%)
+2025-05-30 14:28:53,466 DeMo.train INFO: Validation Results - Epoch: 3
+2025-05-30 14:28:53,467 DeMo.train INFO: mAP: 73.4%
+2025-05-30 14:28:53,467 DeMo.train INFO: CMC curve, Rank-1  :88.9%
+2025-05-30 14:28:53,467 DeMo.train INFO: CMC curve, Rank-5  :89.9%
+2025-05-30 14:28:53,467 DeMo.train INFO: CMC curve, Rank-10 :90.4%
+2025-05-30 14:28:53,467 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:28:54,161 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:28:54,162 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 14:28:54,162 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6945
+CMC curve: Rank-1: 0.8671, Rank-5: 0.8956, Rank-10: 0.9079
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6994
+CMC curve: Rank-1: 0.8659, Rank-5: 0.8758, Rank-10: 0.8851
+=> Improvement:
+mAP improvement: 0.0049 (+0.70%)
+Rank-1 improvement: -0.0012 (-0.13%)
+2025-05-30 14:31:30,092 DeMo.train INFO: Validation Results - Epoch: 3
+2025-05-30 14:31:30,093 DeMo.train INFO: mAP: 69.9%
+2025-05-30 14:31:30,093 DeMo.train INFO: CMC curve, Rank-1  :86.6%
+2025-05-30 14:31:30,093 DeMo.train INFO: CMC curve, Rank-5  :87.6%
+2025-05-30 14:31:30,093 DeMo.train INFO: CMC curve, Rank-10 :88.5%
+2025-05-30 14:31:30,093 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:31:30,872 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:31:30,873 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 14:31:30,873 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7511
+CMC curve: Rank-1: 0.9102, Rank-5: 0.9236, Rank-10: 0.9283
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7549
+CMC curve: Rank-1: 0.9190, Rank-5: 0.9259, Rank-10: 0.9300
+=> Improvement:
+mAP improvement: 0.0038 (+0.51%)
+Rank-1 improvement: 0.0087 (+0.96%)
+2025-05-30 14:34:06,260 DeMo.train INFO: Validation Results - Epoch: 3
+2025-05-30 14:34:06,260 DeMo.train INFO: mAP: 75.5%
+2025-05-30 14:34:06,260 DeMo.train INFO: CMC curve, Rank-1  :91.9%
+2025-05-30 14:34:06,260 DeMo.train INFO: CMC curve, Rank-5  :92.6%
+2025-05-30 14:34:06,260 DeMo.train INFO: CMC curve, Rank-10 :93.0%
+2025-05-30 14:34:06,260 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:34:12,312 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:34:12,313 DeMo.train INFO: Best mAP: 75.5%
+2025-05-30 14:34:12,313 DeMo.train INFO: Best Rank-1: 91.9%
+2025-05-30 14:34:12,313 DeMo.train INFO: Best Rank-5: 92.6%
+2025-05-30 14:34:12,313 DeMo.train INFO: Best Rank-10: 93.0%
+2025-05-30 14:34:12,313 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:34:25,228 DeMo.train INFO: Epoch[4] Iteration[10/65] Loss: 2.909, Acc: 0.928, Base Lr: 2.87e-04
+2025-05-30 14:34:34,824 DeMo.train INFO: Epoch[4] Iteration[20/65] Loss: 2.626, Acc: 0.962, Base Lr: 2.87e-04
+2025-05-30 14:34:44,457 DeMo.train INFO: Epoch[4] Iteration[30/65] Loss: 2.466, Acc: 0.972, Base Lr: 2.87e-04
+2025-05-30 14:34:54,173 DeMo.train INFO: Epoch[4] Iteration[40/65] Loss: 2.351, Acc: 0.978, Base Lr: 2.87e-04
+2025-05-30 14:35:03,760 DeMo.train INFO: Epoch[4] Iteration[50/65] Loss: 2.228, Acc: 0.982, Base Lr: 2.87e-04
+2025-05-30 14:35:13,332 DeMo.train INFO: Epoch[4] Iteration[60/65] Loss: 2.151, Acc: 0.982, Base Lr: 2.87e-04
+2025-05-30 14:35:15,405 DeMo.train INFO: Epoch 4 done. Time per batch: 1.018[s] Speed: 125.8[samples/s]
+2025-05-30 14:35:15,416 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:35:15,416 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 14:35:15,416 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8263
+CMC curve: Rank-1: 0.9475, Rank-5: 0.9580, Rank-10: 0.9638
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8303
+CMC curve: Rank-1: 0.9434, Rank-5: 0.9499, Rank-10: 0.9510
+=> Improvement:
+mAP improvement: 0.0040 (+0.48%)
+Rank-1 improvement: -0.0041 (-0.43%)
+2025-05-30 14:37:48,334 DeMo.train INFO: Validation Results - Epoch: 4
+2025-05-30 14:37:48,334 DeMo.train INFO: mAP: 83.0%
+2025-05-30 14:37:48,334 DeMo.train INFO: CMC curve, Rank-1  :94.3%
+2025-05-30 14:37:48,334 DeMo.train INFO: CMC curve, Rank-5  :95.0%
+2025-05-30 14:37:48,335 DeMo.train INFO: CMC curve, Rank-10 :95.1%
+2025-05-30 14:37:48,335 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:37:48,622 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:37:48,622 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 14:37:48,622 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7141
+CMC curve: Rank-1: 0.8653, Rank-5: 0.8875, Rank-10: 0.8974
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7192
+CMC curve: Rank-1: 0.8676, Rank-5: 0.8717, Rank-10: 0.8787
+=> Improvement:
+mAP improvement: 0.0051 (+0.71%)
+Rank-1 improvement: 0.0023 (+0.27%)
+2025-05-30 14:40:25,065 DeMo.train INFO: Validation Results - Epoch: 4
+2025-05-30 14:40:25,066 DeMo.train INFO: mAP: 71.9%
+2025-05-30 14:40:25,066 DeMo.train INFO: CMC curve, Rank-1  :86.8%
+2025-05-30 14:40:25,066 DeMo.train INFO: CMC curve, Rank-5  :87.2%
+2025-05-30 14:40:25,066 DeMo.train INFO: CMC curve, Rank-10 :87.9%
+2025-05-30 14:40:25,066 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:40:25,645 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:40:25,645 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 14:40:25,645 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8289
+CMC curve: Rank-1: 0.9464, Rank-5: 0.9528, Rank-10: 0.9574
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8308
+CMC curve: Rank-1: 0.9458, Rank-5: 0.9475, Rank-10: 0.9504
+=> Improvement:
+mAP improvement: 0.0019 (+0.23%)
+Rank-1 improvement: -0.0006 (-0.06%)
+2025-05-30 14:42:59,617 DeMo.train INFO: Validation Results - Epoch: 4
+2025-05-30 14:42:59,617 DeMo.train INFO: mAP: 83.1%
+2025-05-30 14:42:59,617 DeMo.train INFO: CMC curve, Rank-1  :94.6%
+2025-05-30 14:42:59,618 DeMo.train INFO: CMC curve, Rank-5  :94.8%
+2025-05-30 14:42:59,618 DeMo.train INFO: CMC curve, Rank-10 :95.0%
+2025-05-30 14:42:59,618 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:43:05,554 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:43:05,554 DeMo.train INFO: Best mAP: 83.1%
+2025-05-30 14:43:05,554 DeMo.train INFO: Best Rank-1: 94.6%
+2025-05-30 14:43:05,554 DeMo.train INFO: Best Rank-5: 94.8%
+2025-05-30 14:43:05,554 DeMo.train INFO: Best Rank-10: 95.0%
+2025-05-30 14:43:05,554 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:43:18,125 DeMo.train INFO: Epoch[5] Iteration[10/65] Loss: 1.710, Acc: 0.989, Base Lr: 3.27e-04
+2025-05-30 14:43:28,026 DeMo.train INFO: Epoch[5] Iteration[20/65] Loss: 1.584, Acc: 0.991, Base Lr: 3.27e-04
+2025-05-30 14:43:37,597 DeMo.train INFO: Epoch[5] Iteration[30/65] Loss: 1.499, Acc: 0.986, Base Lr: 3.27e-04
+2025-05-30 14:43:47,225 DeMo.train INFO: Epoch[5] Iteration[40/65] Loss: 1.430, Acc: 0.987, Base Lr: 3.27e-04
+2025-05-30 14:43:57,008 DeMo.train INFO: Epoch[5] Iteration[50/65] Loss: 1.394, Acc: 0.986, Base Lr: 3.27e-04
+2025-05-30 14:44:06,571 DeMo.train INFO: Epoch[5] Iteration[60/65] Loss: 1.400, Acc: 0.977, Base Lr: 3.27e-04
+2025-05-30 14:44:09,661 DeMo.train INFO: Epoch 5 done. Time per batch: 1.018[s] Speed: 125.8[samples/s]
+2025-05-30 14:44:09,678 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:44:09,678 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 14:44:09,678 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8324
+CMC curve: Rank-1: 0.9446, Rank-5: 0.9580, Rank-10: 0.9615
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8330
+CMC curve: Rank-1: 0.9423, Rank-5: 0.9481, Rank-10: 0.9504
+=> Improvement:
+mAP improvement: 0.0006 (+0.07%)
+Rank-1 improvement: -0.0023 (-0.25%)
+2025-05-30 14:46:41,799 DeMo.train INFO: Validation Results - Epoch: 5
+2025-05-30 14:46:41,800 DeMo.train INFO: mAP: 83.3%
+2025-05-30 14:46:41,800 DeMo.train INFO: CMC curve, Rank-1  :94.2%
+2025-05-30 14:46:41,800 DeMo.train INFO: CMC curve, Rank-5  :94.8%
+2025-05-30 14:46:41,800 DeMo.train INFO: CMC curve, Rank-10 :95.0%
+2025-05-30 14:46:41,800 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:46:42,900 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:46:42,900 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 14:46:42,900 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6371
+CMC curve: Rank-1: 0.8251, Rank-5: 0.8461, Rank-10: 0.8624
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6459
+CMC curve: Rank-1: 0.8327, Rank-5: 0.8367, Rank-10: 0.8443
+=> Improvement:
+mAP improvement: 0.0088 (+1.38%)
+Rank-1 improvement: 0.0076 (+0.92%)
+2025-05-30 14:49:17,928 DeMo.train INFO: Validation Results - Epoch: 5
+2025-05-30 14:49:17,928 DeMo.train INFO: mAP: 64.6%
+2025-05-30 14:49:17,928 DeMo.train INFO: CMC curve, Rank-1  :83.3%
+2025-05-30 14:49:17,928 DeMo.train INFO: CMC curve, Rank-5  :83.7%
+2025-05-30 14:49:17,928 DeMo.train INFO: CMC curve, Rank-10 :84.4%
+2025-05-30 14:49:17,928 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:49:18,443 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:49:18,444 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 14:49:18,444 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8274
+CMC curve: Rank-1: 0.9493, Rank-5: 0.9545, Rank-10: 0.9627
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8279
+CMC curve: Rank-1: 0.9429, Rank-5: 0.9452, Rank-10: 0.9493
+=> Improvement:
+mAP improvement: 0.0005 (+0.06%)
+Rank-1 improvement: -0.0064 (-0.68%)
+2025-05-30 14:51:53,031 DeMo.train INFO: Validation Results - Epoch: 5
+2025-05-30 14:51:53,032 DeMo.train INFO: mAP: 82.8%
+2025-05-30 14:51:53,032 DeMo.train INFO: CMC curve, Rank-1  :94.3%
+2025-05-30 14:51:53,032 DeMo.train INFO: CMC curve, Rank-5  :94.5%
+2025-05-30 14:51:53,032 DeMo.train INFO: CMC curve, Rank-10 :94.9%
+2025-05-30 14:51:53,032 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:51:53,356 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:51:53,357 DeMo.train INFO: Best mAP: 83.1%
+2025-05-30 14:51:53,357 DeMo.train INFO: Best Rank-1: 94.6%
+2025-05-30 14:51:53,357 DeMo.train INFO: Best Rank-5: 94.8%
+2025-05-30 14:51:53,357 DeMo.train INFO: Best Rank-10: 95.0%
+2025-05-30 14:51:53,357 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:52:05,814 DeMo.train INFO: Epoch[6] Iteration[10/65] Loss: 1.565, Acc: 0.852, Base Lr: 3.17e-04
+2025-05-30 14:52:15,485 DeMo.train INFO: Epoch[6] Iteration[20/65] Loss: 1.422, Acc: 0.892, Base Lr: 3.17e-04
+2025-05-30 14:52:25,103 DeMo.train INFO: Epoch[6] Iteration[30/65] Loss: 1.397, Acc: 0.908, Base Lr: 3.17e-04
+2025-05-30 14:52:34,733 DeMo.train INFO: Epoch[6] Iteration[40/65] Loss: 1.370, Acc: 0.920, Base Lr: 3.17e-04
+2025-05-30 14:52:44,318 DeMo.train INFO: Epoch[6] Iteration[50/65] Loss: 1.319, Acc: 0.933, Base Lr: 3.17e-04
+2025-05-30 14:52:53,926 DeMo.train INFO: Epoch[6] Iteration[60/65] Loss: 1.280, Acc: 0.944, Base Lr: 3.17e-04
+2025-05-30 14:52:56,993 DeMo.train INFO: Epoch 6 done. Time per batch: 1.010[s] Speed: 126.7[samples/s]
+2025-05-30 14:52:57,007 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:52:57,007 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 14:52:57,007 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8281
+CMC curve: Rank-1: 0.9516, Rank-5: 0.9574, Rank-10: 0.9621
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8290
+CMC curve: Rank-1: 0.9469, Rank-5: 0.9499, Rank-10: 0.9539
+=> Improvement:
+mAP improvement: 0.0009 (+0.11%)
+Rank-1 improvement: -0.0047 (-0.49%)
+2025-05-30 14:55:28,516 DeMo.train INFO: Validation Results - Epoch: 6
+2025-05-30 14:55:28,516 DeMo.train INFO: mAP: 82.9%
+2025-05-30 14:55:28,516 DeMo.train INFO: CMC curve, Rank-1  :94.7%
+2025-05-30 14:55:28,516 DeMo.train INFO: CMC curve, Rank-5  :95.0%
+2025-05-30 14:55:28,516 DeMo.train INFO: CMC curve, Rank-10 :95.4%
+2025-05-30 14:55:28,517 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:55:29,290 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:55:29,291 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 14:55:29,291 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6653
+CMC curve: Rank-1: 0.8490, Rank-5: 0.8682, Rank-10: 0.8851
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6738
+CMC curve: Rank-1: 0.8472, Rank-5: 0.8566, Rank-10: 0.8653
+=> Improvement:
+mAP improvement: 0.0085 (+1.28%)
+Rank-1 improvement: -0.0017 (-0.21%)
+2025-05-30 14:58:02,614 DeMo.train INFO: Validation Results - Epoch: 6
+2025-05-30 14:58:02,614 DeMo.train INFO: mAP: 67.4%
+2025-05-30 14:58:02,614 DeMo.train INFO: CMC curve, Rank-1  :84.7%
+2025-05-30 14:58:02,614 DeMo.train INFO: CMC curve, Rank-5  :85.7%
+2025-05-30 14:58:02,614 DeMo.train INFO: CMC curve, Rank-10 :86.5%
+2025-05-30 14:58:02,615 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:58:02,660 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 14:58:02,661 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 14:58:02,661 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8286
+CMC curve: Rank-1: 0.9499, Rank-5: 0.9557, Rank-10: 0.9592
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8295
+CMC curve: Rank-1: 0.9493, Rank-5: 0.9510, Rank-10: 0.9516
+=> Improvement:
+mAP improvement: 0.0010 (+0.11%)
+Rank-1 improvement: -0.0006 (-0.06%)
+2025-05-30 15:00:37,746 DeMo.train INFO: Validation Results - Epoch: 6
+2025-05-30 15:00:37,747 DeMo.train INFO: mAP: 83.0%
+2025-05-30 15:00:37,747 DeMo.train INFO: CMC curve, Rank-1  :94.9%
+2025-05-30 15:00:37,747 DeMo.train INFO: CMC curve, Rank-5  :95.1%
+2025-05-30 15:00:37,748 DeMo.train INFO: CMC curve, Rank-10 :95.2%
+2025-05-30 15:00:37,748 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:00:37,944 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:00:37,945 DeMo.train INFO: Best mAP: 83.1%
+2025-05-30 15:00:37,945 DeMo.train INFO: Best Rank-1: 94.6%
+2025-05-30 15:00:37,945 DeMo.train INFO: Best Rank-5: 94.8%
+2025-05-30 15:00:37,945 DeMo.train INFO: Best Rank-10: 95.0%
+2025-05-30 15:00:37,945 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:00:51,843 DeMo.train INFO: Epoch[7] Iteration[10/65] Loss: 1.017, Acc: 0.950, Base Lr: 3.05e-04
+2025-05-30 15:01:01,457 DeMo.train INFO: Epoch[7] Iteration[20/65] Loss: 1.037, Acc: 0.966, Base Lr: 3.05e-04
+2025-05-30 15:01:11,000 DeMo.train INFO: Epoch[7] Iteration[30/65] Loss: 1.032, Acc: 0.977, Base Lr: 3.05e-04
+2025-05-30 15:01:20,575 DeMo.train INFO: Epoch[7] Iteration[40/65] Loss: 1.018, Acc: 0.982, Base Lr: 3.05e-04
+2025-05-30 15:01:30,294 DeMo.train INFO: Epoch[7] Iteration[50/65] Loss: 1.007, Acc: 0.985, Base Lr: 3.05e-04
+2025-05-30 15:01:39,889 DeMo.train INFO: Epoch[7] Iteration[60/65] Loss: 1.000, Acc: 0.988, Base Lr: 3.05e-04
+2025-05-30 15:01:42,909 DeMo.train INFO: Epoch 7 done. Time per batch: 1.031[s] Speed: 124.1[samples/s]
+2025-05-30 15:01:42,921 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:01:42,921 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 15:01:42,921 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8304
+CMC curve: Rank-1: 0.9609, Rank-5: 0.9650, Rank-10: 0.9708
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8339
+CMC curve: Rank-1: 0.9638, Rank-5: 0.9673, Rank-10: 0.9691
+=> Improvement:
+mAP improvement: 0.0035 (+0.42%)
+Rank-1 improvement: 0.0029 (+0.30%)
+2025-05-30 15:04:19,155 DeMo.train INFO: Validation Results - Epoch: 7
+2025-05-30 15:04:19,156 DeMo.train INFO: mAP: 83.4%
+2025-05-30 15:04:19,156 DeMo.train INFO: CMC curve, Rank-1  :96.4%
+2025-05-30 15:04:19,156 DeMo.train INFO: CMC curve, Rank-5  :96.7%
+2025-05-30 15:04:19,156 DeMo.train INFO: CMC curve, Rank-10 :96.9%
+2025-05-30 15:04:19,156 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:04:19,671 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:04:19,671 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 15:04:19,671 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7247
+CMC curve: Rank-1: 0.8980, Rank-5: 0.9143, Rank-10: 0.9195
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7305
+CMC curve: Rank-1: 0.8997, Rank-5: 0.9061, Rank-10: 0.9096
+=> Improvement:
+mAP improvement: 0.0058 (+0.80%)
+Rank-1 improvement: 0.0017 (+0.19%)
+2025-05-30 15:06:58,049 DeMo.train INFO: Validation Results - Epoch: 7
+2025-05-30 15:06:58,049 DeMo.train INFO: mAP: 73.1%
+2025-05-30 15:06:58,049 DeMo.train INFO: CMC curve, Rank-1  :90.0%
+2025-05-30 15:06:58,049 DeMo.train INFO: CMC curve, Rank-5  :90.6%
+2025-05-30 15:06:58,049 DeMo.train INFO: CMC curve, Rank-10 :91.0%
+2025-05-30 15:06:58,049 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:06:58,958 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:06:58,958 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 15:06:58,958 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8358
+CMC curve: Rank-1: 0.9644, Rank-5: 0.9697, Rank-10: 0.9708
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8385
+CMC curve: Rank-1: 0.9638, Rank-5: 0.9668, Rank-10: 0.9673
+=> Improvement:
+mAP improvement: 0.0027 (+0.33%)
+Rank-1 improvement: -0.0006 (-0.06%)
+2025-05-30 15:09:35,288 DeMo.train INFO: Validation Results - Epoch: 7
+2025-05-30 15:09:35,289 DeMo.train INFO: mAP: 83.8%
+2025-05-30 15:09:35,289 DeMo.train INFO: CMC curve, Rank-1  :96.4%
+2025-05-30 15:09:35,289 DeMo.train INFO: CMC curve, Rank-5  :96.7%
+2025-05-30 15:09:35,289 DeMo.train INFO: CMC curve, Rank-10 :96.7%
+2025-05-30 15:09:35,289 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:09:41,429 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:09:41,429 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 15:09:41,430 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 15:09:41,430 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 15:09:41,430 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 15:09:41,430 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:09:54,492 DeMo.train INFO: Epoch[8] Iteration[10/65] Loss: 0.988, Acc: 0.998, Base Lr: 2.92e-04
+2025-05-30 15:10:04,128 DeMo.train INFO: Epoch[8] Iteration[20/65] Loss: 0.966, Acc: 0.998, Base Lr: 2.92e-04
+2025-05-30 15:10:13,819 DeMo.train INFO: Epoch[8] Iteration[30/65] Loss: 0.968, Acc: 0.993, Base Lr: 2.92e-04
+2025-05-30 15:10:23,453 DeMo.train INFO: Epoch[8] Iteration[40/65] Loss: 0.959, Acc: 0.994, Base Lr: 2.92e-04
+2025-05-30 15:10:33,077 DeMo.train INFO: Epoch[8] Iteration[50/65] Loss: 0.953, Acc: 0.995, Base Lr: 2.92e-04
+2025-05-30 15:10:42,692 DeMo.train INFO: Epoch[8] Iteration[60/65] Loss: 0.950, Acc: 0.996, Base Lr: 2.92e-04
+2025-05-30 15:10:45,718 DeMo.train INFO: Epoch 8 done. Time per batch: 1.020[s] Speed: 125.4[samples/s]
+2025-05-30 15:10:45,730 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:10:45,730 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 15:10:45,731 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8215
+CMC curve: Rank-1: 0.9475, Rank-5: 0.9580, Rank-10: 0.9627
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8263
+CMC curve: Rank-1: 0.9598, Rank-5: 0.9650, Rank-10: 0.9668
+=> Improvement:
+mAP improvement: 0.0048 (+0.59%)
+Rank-1 improvement: 0.0122 (+1.29%)
+2025-05-30 15:13:21,136 DeMo.train INFO: Validation Results - Epoch: 8
+2025-05-30 15:13:21,137 DeMo.train INFO: mAP: 82.6%
+2025-05-30 15:13:21,137 DeMo.train INFO: CMC curve, Rank-1  :96.0%
+2025-05-30 15:13:21,137 DeMo.train INFO: CMC curve, Rank-5  :96.5%
+2025-05-30 15:13:21,137 DeMo.train INFO: CMC curve, Rank-10 :96.7%
+2025-05-30 15:13:21,137 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:13:22,151 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:13:22,151 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 15:13:22,152 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6967
+CMC curve: Rank-1: 0.8816, Rank-5: 0.9020, Rank-10: 0.9125
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7064
+CMC curve: Rank-1: 0.8933, Rank-5: 0.9009, Rank-10: 0.9055
+=> Improvement:
+mAP improvement: 0.0097 (+1.39%)
+Rank-1 improvement: 0.0117 (+1.32%)
+2025-05-30 15:15:58,924 DeMo.train INFO: Validation Results - Epoch: 8
+2025-05-30 15:15:58,925 DeMo.train INFO: mAP: 70.6%
+2025-05-30 15:15:58,925 DeMo.train INFO: CMC curve, Rank-1  :89.3%
+2025-05-30 15:15:58,925 DeMo.train INFO: CMC curve, Rank-5  :90.1%
+2025-05-30 15:15:58,925 DeMo.train INFO: CMC curve, Rank-10 :90.6%
+2025-05-30 15:15:58,925 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:15:59,826 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:15:59,826 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 15:15:59,826 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8272
+CMC curve: Rank-1: 0.9499, Rank-5: 0.9621, Rank-10: 0.9644
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8309
+CMC curve: Rank-1: 0.9569, Rank-5: 0.9638, Rank-10: 0.9656
+=> Improvement:
+mAP improvement: 0.0037 (+0.45%)
+Rank-1 improvement: 0.0070 (+0.74%)
+2025-05-30 15:18:37,026 DeMo.train INFO: Validation Results - Epoch: 8
+2025-05-30 15:18:37,027 DeMo.train INFO: mAP: 83.1%
+2025-05-30 15:18:37,027 DeMo.train INFO: CMC curve, Rank-1  :95.7%
+2025-05-30 15:18:37,027 DeMo.train INFO: CMC curve, Rank-5  :96.4%
+2025-05-30 15:18:37,027 DeMo.train INFO: CMC curve, Rank-10 :96.6%
+2025-05-30 15:18:37,027 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:18:37,898 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:18:37,898 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 15:18:37,899 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 15:18:37,899 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 15:18:37,899 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 15:18:37,899 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:18:50,489 DeMo.train INFO: Epoch[9] Iteration[10/65] Loss: 0.991, Acc: 0.988, Base Lr: 2.78e-04
+2025-05-30 15:19:00,168 DeMo.train INFO: Epoch[9] Iteration[20/65] Loss: 0.982, Acc: 0.993, Base Lr: 2.78e-04
+2025-05-30 15:19:09,747 DeMo.train INFO: Epoch[9] Iteration[30/65] Loss: 0.975, Acc: 0.995, Base Lr: 2.78e-04
+2025-05-30 15:19:19,507 DeMo.train INFO: Epoch[9] Iteration[40/65] Loss: 0.956, Acc: 0.996, Base Lr: 2.78e-04
+2025-05-30 15:19:29,128 DeMo.train INFO: Epoch[9] Iteration[50/65] Loss: 0.943, Acc: 0.997, Base Lr: 2.78e-04
+2025-05-30 15:19:38,726 DeMo.train INFO: Epoch[9] Iteration[60/65] Loss: 0.931, Acc: 0.998, Base Lr: 2.78e-04
+2025-05-30 15:19:41,728 DeMo.train INFO: Epoch 9 done. Time per batch: 1.013[s] Speed: 126.3[samples/s]
+2025-05-30 15:19:41,732 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:19:41,733 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 15:19:41,733 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8252
+CMC curve: Rank-1: 0.9580, Rank-5: 0.9662, Rank-10: 0.9726
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8289
+CMC curve: Rank-1: 0.9638, Rank-5: 0.9708, Rank-10: 0.9755
+=> Improvement:
+mAP improvement: 0.0038 (+0.46%)
+Rank-1 improvement: 0.0058 (+0.61%)
+2025-05-30 15:22:16,387 DeMo.train INFO: Validation Results - Epoch: 9
+2025-05-30 15:22:16,388 DeMo.train INFO: mAP: 82.9%
+2025-05-30 15:22:16,388 DeMo.train INFO: CMC curve, Rank-1  :96.4%
+2025-05-30 15:22:16,388 DeMo.train INFO: CMC curve, Rank-5  :97.1%
+2025-05-30 15:22:16,388 DeMo.train INFO: CMC curve, Rank-10 :97.6%
+2025-05-30 15:22:16,388 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:22:16,688 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:22:16,688 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 15:22:16,688 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6741
+CMC curve: Rank-1: 0.8641, Rank-5: 0.8863, Rank-10: 0.8962
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6844
+CMC curve: Rank-1: 0.8764, Rank-5: 0.8816, Rank-10: 0.8869
+=> Improvement:
+mAP improvement: 0.0103 (+1.52%)
+Rank-1 improvement: 0.0122 (+1.42%)
+2025-05-30 15:24:54,092 DeMo.train INFO: Validation Results - Epoch: 9
+2025-05-30 15:24:54,093 DeMo.train INFO: mAP: 68.4%
+2025-05-30 15:24:54,093 DeMo.train INFO: CMC curve, Rank-1  :87.6%
+2025-05-30 15:24:54,093 DeMo.train INFO: CMC curve, Rank-5  :88.2%
+2025-05-30 15:24:54,093 DeMo.train INFO: CMC curve, Rank-10 :88.7%
+2025-05-30 15:24:54,093 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:24:54,112 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:24:54,113 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 15:24:54,113 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8308
+CMC curve: Rank-1: 0.9569, Rank-5: 0.9685, Rank-10: 0.9749
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8352
+CMC curve: Rank-1: 0.9668, Rank-5: 0.9749, Rank-10: 0.9778
+=> Improvement:
+mAP improvement: 0.0045 (+0.54%)
+Rank-1 improvement: 0.0099 (+1.04%)
+2025-05-30 15:27:28,843 DeMo.train INFO: Validation Results - Epoch: 9
+2025-05-30 15:27:28,843 DeMo.train INFO: mAP: 83.5%
+2025-05-30 15:27:28,843 DeMo.train INFO: CMC curve, Rank-1  :96.7%
+2025-05-30 15:27:28,843 DeMo.train INFO: CMC curve, Rank-5  :97.5%
+2025-05-30 15:27:28,843 DeMo.train INFO: CMC curve, Rank-10 :97.8%
+2025-05-30 15:27:28,843 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:27:28,938 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:27:28,938 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 15:27:28,938 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 15:27:28,938 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 15:27:28,939 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 15:27:28,939 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:27:43,246 DeMo.train INFO: Epoch[10] Iteration[10/65] Loss: 0.869, Acc: 1.000, Base Lr: 2.63e-04
+2025-05-30 15:27:53,753 DeMo.train INFO: Epoch[10] Iteration[20/65] Loss: 0.880, Acc: 1.000, Base Lr: 2.63e-04
+2025-05-30 15:28:03,370 DeMo.train INFO: Epoch[10] Iteration[30/65] Loss: 0.886, Acc: 0.999, Base Lr: 2.63e-04
+2025-05-30 15:28:13,064 DeMo.train INFO: Epoch[10] Iteration[40/65] Loss: 0.900, Acc: 0.998, Base Lr: 2.63e-04
+2025-05-30 15:28:22,750 DeMo.train INFO: Epoch[10] Iteration[50/65] Loss: 0.903, Acc: 0.999, Base Lr: 2.63e-04
+2025-05-30 15:28:32,511 DeMo.train INFO: Epoch[10] Iteration[60/65] Loss: 0.898, Acc: 0.999, Base Lr: 2.63e-04
+2025-05-30 15:28:35,566 DeMo.train INFO: Epoch 10 done. Time per batch: 1.058[s] Speed: 121.0[samples/s]
+2025-05-30 15:28:35,573 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:28:35,573 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 15:28:35,573 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8239
+CMC curve: Rank-1: 0.9534, Rank-5: 0.9644, Rank-10: 0.9738
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8276
+CMC curve: Rank-1: 0.9603, Rank-5: 0.9673, Rank-10: 0.9749
+=> Improvement:
+mAP improvement: 0.0037 (+0.45%)
+Rank-1 improvement: 0.0070 (+0.73%)
+2025-05-30 15:31:09,277 DeMo.train INFO: Validation Results - Epoch: 10
+2025-05-30 15:31:09,277 DeMo.train INFO: mAP: 82.8%
+2025-05-30 15:31:09,277 DeMo.train INFO: CMC curve, Rank-1  :96.0%
+2025-05-30 15:31:09,277 DeMo.train INFO: CMC curve, Rank-5  :96.7%
+2025-05-30 15:31:09,278 DeMo.train INFO: CMC curve, Rank-10 :97.5%
+2025-05-30 15:31:09,278 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:31:09,860 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:31:09,860 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 15:31:09,860 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7369
+CMC curve: Rank-1: 0.8939, Rank-5: 0.9079, Rank-10: 0.9160
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7421
+CMC curve: Rank-1: 0.8956, Rank-5: 0.9026, Rank-10: 0.9038
+=> Improvement:
+mAP improvement: 0.0052 (+0.70%)
+Rank-1 improvement: 0.0017 (+0.20%)
+2025-05-30 15:33:44,919 DeMo.train INFO: Validation Results - Epoch: 10
+2025-05-30 15:33:44,919 DeMo.train INFO: mAP: 74.2%
+2025-05-30 15:33:44,919 DeMo.train INFO: CMC curve, Rank-1  :89.6%
+2025-05-30 15:33:44,919 DeMo.train INFO: CMC curve, Rank-5  :90.3%
+2025-05-30 15:33:44,919 DeMo.train INFO: CMC curve, Rank-10 :90.4%
+2025-05-30 15:33:44,919 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:33:45,349 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:33:45,349 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 15:33:45,349 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8259
+CMC curve: Rank-1: 0.9499, Rank-5: 0.9650, Rank-10: 0.9732
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8293
+CMC curve: Rank-1: 0.9580, Rank-5: 0.9679, Rank-10: 0.9714
+=> Improvement:
+mAP improvement: 0.0034 (+0.41%)
+Rank-1 improvement: 0.0082 (+0.86%)
+2025-05-30 15:36:25,308 DeMo.train INFO: Validation Results - Epoch: 10
+2025-05-30 15:36:25,309 DeMo.train INFO: mAP: 82.9%
+2025-05-30 15:36:25,309 DeMo.train INFO: CMC curve, Rank-1  :95.8%
+2025-05-30 15:36:25,309 DeMo.train INFO: CMC curve, Rank-5  :96.8%
+2025-05-30 15:36:25,309 DeMo.train INFO: CMC curve, Rank-10 :97.1%
+2025-05-30 15:36:25,309 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:36:26,151 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:36:26,151 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 15:36:26,152 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 15:36:26,152 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 15:36:26,152 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 15:36:26,152 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:36:38,726 DeMo.train INFO: Epoch[11] Iteration[10/65] Loss: 0.891, Acc: 0.998, Base Lr: 2.46e-04
+2025-05-30 15:36:48,319 DeMo.train INFO: Epoch[11] Iteration[20/65] Loss: 0.900, Acc: 0.999, Base Lr: 2.46e-04
+2025-05-30 15:36:57,919 DeMo.train INFO: Epoch[11] Iteration[30/65] Loss: 0.877, Acc: 0.999, Base Lr: 2.46e-04
+2025-05-30 15:37:07,521 DeMo.train INFO: Epoch[11] Iteration[40/65] Loss: 0.886, Acc: 0.999, Base Lr: 2.46e-04
+2025-05-30 15:37:17,154 DeMo.train INFO: Epoch[11] Iteration[50/65] Loss: 0.890, Acc: 0.999, Base Lr: 2.46e-04
+2025-05-30 15:37:26,843 DeMo.train INFO: Epoch[11] Iteration[60/65] Loss: 0.893, Acc: 0.998, Base Lr: 2.46e-04
+2025-05-30 15:37:29,884 DeMo.train INFO: Epoch 11 done. Time per batch: 1.012[s] Speed: 126.5[samples/s]
+2025-05-30 15:37:29,888 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:37:29,888 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 15:37:29,888 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8231
+CMC curve: Rank-1: 0.9510, Rank-5: 0.9598, Rank-10: 0.9650
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8268
+CMC curve: Rank-1: 0.9633, Rank-5: 0.9685, Rank-10: 0.9708
+=> Improvement:
+mAP improvement: 0.0037 (+0.45%)
+Rank-1 improvement: 0.0122 (+1.29%)
+2025-05-30 15:40:05,188 DeMo.train INFO: Validation Results - Epoch: 11
+2025-05-30 15:40:05,189 DeMo.train INFO: mAP: 82.7%
+2025-05-30 15:40:05,189 DeMo.train INFO: CMC curve, Rank-1  :96.3%
+2025-05-30 15:40:05,189 DeMo.train INFO: CMC curve, Rank-5  :96.9%
+2025-05-30 15:40:05,189 DeMo.train INFO: CMC curve, Rank-10 :97.1%
+2025-05-30 15:40:05,189 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:40:05,897 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:40:05,898 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 15:40:05,898 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7150
+CMC curve: Rank-1: 0.8816, Rank-5: 0.8950, Rank-10: 0.9044
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7261
+CMC curve: Rank-1: 0.8980, Rank-5: 0.9061, Rank-10: 0.9137
+=> Improvement:
+mAP improvement: 0.0111 (+1.55%)
+Rank-1 improvement: 0.0163 (+1.85%)
+2025-05-30 15:42:40,790 DeMo.train INFO: Validation Results - Epoch: 11
+2025-05-30 15:42:40,791 DeMo.train INFO: mAP: 72.6%
+2025-05-30 15:42:40,791 DeMo.train INFO: CMC curve, Rank-1  :89.8%
+2025-05-30 15:42:40,791 DeMo.train INFO: CMC curve, Rank-5  :90.6%
+2025-05-30 15:42:40,791 DeMo.train INFO: CMC curve, Rank-10 :91.4%
+2025-05-30 15:42:40,791 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:42:40,805 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:42:40,805 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 15:42:40,805 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8250
+CMC curve: Rank-1: 0.9510, Rank-5: 0.9615, Rank-10: 0.9673
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8286
+CMC curve: Rank-1: 0.9621, Rank-5: 0.9668, Rank-10: 0.9703
+=> Improvement:
+mAP improvement: 0.0035 (+0.43%)
+Rank-1 improvement: 0.0111 (+1.16%)
+2025-05-30 15:45:14,109 DeMo.train INFO: Validation Results - Epoch: 11
+2025-05-30 15:45:14,109 DeMo.train INFO: mAP: 82.9%
+2025-05-30 15:45:14,109 DeMo.train INFO: CMC curve, Rank-1  :96.2%
+2025-05-30 15:45:14,109 DeMo.train INFO: CMC curve, Rank-5  :96.7%
+2025-05-30 15:45:14,110 DeMo.train INFO: CMC curve, Rank-10 :97.0%
+2025-05-30 15:45:14,110 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:45:14,649 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:45:14,649 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 15:45:14,649 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 15:45:14,649 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 15:45:14,649 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 15:45:14,650 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:45:28,759 DeMo.train INFO: Epoch[12] Iteration[10/65] Loss: 0.897, Acc: 0.998, Base Lr: 2.29e-04
+2025-05-30 15:45:38,389 DeMo.train INFO: Epoch[12] Iteration[20/65] Loss: 0.877, Acc: 0.999, Base Lr: 2.29e-04
+2025-05-30 15:45:47,932 DeMo.train INFO: Epoch[12] Iteration[30/65] Loss: 0.875, Acc: 0.999, Base Lr: 2.29e-04
+2025-05-30 15:45:57,530 DeMo.train INFO: Epoch[12] Iteration[40/65] Loss: 0.869, Acc: 0.999, Base Lr: 2.29e-04
+2025-05-30 15:46:07,079 DeMo.train INFO: Epoch[12] Iteration[50/65] Loss: 0.867, Acc: 0.999, Base Lr: 2.29e-04
+2025-05-30 15:46:16,680 DeMo.train INFO: Epoch[12] Iteration[60/65] Loss: 0.861, Acc: 0.999, Base Lr: 2.29e-04
+2025-05-30 15:46:19,706 DeMo.train INFO: Epoch 12 done. Time per batch: 1.033[s] Speed: 124.0[samples/s]
+2025-05-30 15:46:19,713 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:46:19,713 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 15:46:19,713 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8252
+CMC curve: Rank-1: 0.9516, Rank-5: 0.9615, Rank-10: 0.9679
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8287
+CMC curve: Rank-1: 0.9656, Rank-5: 0.9720, Rank-10: 0.9743
+=> Improvement:
+mAP improvement: 0.0034 (+0.42%)
+Rank-1 improvement: 0.0140 (+1.47%)
+2025-05-30 15:48:51,930 DeMo.train INFO: Validation Results - Epoch: 12
+2025-05-30 15:48:51,931 DeMo.train INFO: mAP: 82.9%
+2025-05-30 15:48:51,931 DeMo.train INFO: CMC curve, Rank-1  :96.6%
+2025-05-30 15:48:51,931 DeMo.train INFO: CMC curve, Rank-5  :97.2%
+2025-05-30 15:48:51,931 DeMo.train INFO: CMC curve, Rank-10 :97.4%
+2025-05-30 15:48:51,931 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:48:52,125 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:48:52,125 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 15:48:52,125 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7186
+CMC curve: Rank-1: 0.8822, Rank-5: 0.8956, Rank-10: 0.9044
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7283
+CMC curve: Rank-1: 0.8997, Rank-5: 0.9038, Rank-10: 0.9055
+=> Improvement:
+mAP improvement: 0.0097 (+1.35%)
+Rank-1 improvement: 0.0175 (+1.98%)
+2025-05-30 15:51:26,807 DeMo.train INFO: Validation Results - Epoch: 12
+2025-05-30 15:51:26,808 DeMo.train INFO: mAP: 72.8%
+2025-05-30 15:51:26,808 DeMo.train INFO: CMC curve, Rank-1  :90.0%
+2025-05-30 15:51:26,808 DeMo.train INFO: CMC curve, Rank-5  :90.4%
+2025-05-30 15:51:26,808 DeMo.train INFO: CMC curve, Rank-10 :90.6%
+2025-05-30 15:51:26,808 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:51:27,289 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:51:27,289 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 15:51:27,290 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8259
+CMC curve: Rank-1: 0.9510, Rank-5: 0.9603, Rank-10: 0.9650
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8295
+CMC curve: Rank-1: 0.9615, Rank-5: 0.9679, Rank-10: 0.9714
+=> Improvement:
+mAP improvement: 0.0035 (+0.43%)
+Rank-1 improvement: 0.0105 (+1.10%)
+2025-05-30 15:54:00,518 DeMo.train INFO: Validation Results - Epoch: 12
+2025-05-30 15:54:00,518 DeMo.train INFO: mAP: 82.9%
+2025-05-30 15:54:00,519 DeMo.train INFO: CMC curve, Rank-1  :96.2%
+2025-05-30 15:54:00,519 DeMo.train INFO: CMC curve, Rank-5  :96.8%
+2025-05-30 15:54:00,519 DeMo.train INFO: CMC curve, Rank-10 :97.1%
+2025-05-30 15:54:00,519 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:54:00,539 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:54:00,539 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 15:54:00,540 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 15:54:00,540 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 15:54:00,540 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 15:54:00,540 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:54:15,070 DeMo.train INFO: Epoch[13] Iteration[10/65] Loss: 0.844, Acc: 0.998, Base Lr: 2.12e-04
+2025-05-30 15:54:24,631 DeMo.train INFO: Epoch[13] Iteration[20/65] Loss: 0.831, Acc: 0.999, Base Lr: 2.12e-04
+2025-05-30 15:54:34,171 DeMo.train INFO: Epoch[13] Iteration[30/65] Loss: 0.828, Acc: 0.999, Base Lr: 2.12e-04
+2025-05-30 15:54:43,799 DeMo.train INFO: Epoch[13] Iteration[40/65] Loss: 0.827, Acc: 1.000, Base Lr: 2.12e-04
+2025-05-30 15:54:53,349 DeMo.train INFO: Epoch[13] Iteration[50/65] Loss: 0.830, Acc: 1.000, Base Lr: 2.12e-04
+2025-05-30 15:55:02,886 DeMo.train INFO: Epoch[13] Iteration[60/65] Loss: 0.827, Acc: 1.000, Base Lr: 2.12e-04
+2025-05-30 15:55:04,971 DeMo.train INFO: Epoch 13 done. Time per batch: 1.039[s] Speed: 123.2[samples/s]
+2025-05-30 15:55:04,978 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:55:04,978 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 15:55:04,978 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8278
+CMC curve: Rank-1: 0.9580, Rank-5: 0.9668, Rank-10: 0.9708
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8310
+CMC curve: Rank-1: 0.9697, Rank-5: 0.9761, Rank-10: 0.9784
+=> Improvement:
+mAP improvement: 0.0032 (+0.39%)
+Rank-1 improvement: 0.0117 (+1.22%)
+2025-05-30 15:57:36,381 DeMo.train INFO: Validation Results - Epoch: 13
+2025-05-30 15:57:36,382 DeMo.train INFO: mAP: 83.1%
+2025-05-30 15:57:36,382 DeMo.train INFO: CMC curve, Rank-1  :97.0%
+2025-05-30 15:57:36,382 DeMo.train INFO: CMC curve, Rank-5  :97.6%
+2025-05-30 15:57:36,382 DeMo.train INFO: CMC curve, Rank-10 :97.8%
+2025-05-30 15:57:36,382 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:57:36,632 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 15:57:36,632 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 15:57:36,632 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7366
+CMC curve: Rank-1: 0.9015, Rank-5: 0.9201, Rank-10: 0.9254
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7448
+CMC curve: Rank-1: 0.9085, Rank-5: 0.9184, Rank-10: 0.9242
+=> Improvement:
+mAP improvement: 0.0082 (+1.11%)
+Rank-1 improvement: 0.0070 (+0.78%)
+2025-05-30 16:00:10,364 DeMo.train INFO: Validation Results - Epoch: 13
+2025-05-30 16:00:10,364 DeMo.train INFO: mAP: 74.5%
+2025-05-30 16:00:10,364 DeMo.train INFO: CMC curve, Rank-1  :90.8%
+2025-05-30 16:00:10,364 DeMo.train INFO: CMC curve, Rank-5  :91.8%
+2025-05-30 16:00:10,364 DeMo.train INFO: CMC curve, Rank-10 :92.4%
+2025-05-30 16:00:10,365 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:00:10,827 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:00:10,827 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 16:00:10,827 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8304
+CMC curve: Rank-1: 0.9574, Rank-5: 0.9638, Rank-10: 0.9668
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8343
+CMC curve: Rank-1: 0.9714, Rank-5: 0.9755, Rank-10: 0.9761
+=> Improvement:
+mAP improvement: 0.0039 (+0.47%)
+Rank-1 improvement: 0.0140 (+1.46%)
+2025-05-30 16:02:43,644 DeMo.train INFO: Validation Results - Epoch: 13
+2025-05-30 16:02:43,645 DeMo.train INFO: mAP: 83.4%
+2025-05-30 16:02:43,645 DeMo.train INFO: CMC curve, Rank-1  :97.1%
+2025-05-30 16:02:43,645 DeMo.train INFO: CMC curve, Rank-5  :97.6%
+2025-05-30 16:02:43,645 DeMo.train INFO: CMC curve, Rank-10 :97.6%
+2025-05-30 16:02:43,645 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:02:43,802 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:02:43,802 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 16:02:43,802 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 16:02:43,802 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 16:02:43,802 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 16:02:43,802 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:02:56,136 DeMo.train INFO: Epoch[14] Iteration[10/65] Loss: 0.827, Acc: 1.000, Base Lr: 1.93e-04
+2025-05-30 16:03:05,668 DeMo.train INFO: Epoch[14] Iteration[20/65] Loss: 0.826, Acc: 1.000, Base Lr: 1.93e-04
+2025-05-30 16:03:15,215 DeMo.train INFO: Epoch[14] Iteration[30/65] Loss: 0.820, Acc: 1.000, Base Lr: 1.93e-04
+2025-05-30 16:03:24,819 DeMo.train INFO: Epoch[14] Iteration[40/65] Loss: 0.827, Acc: 1.000, Base Lr: 1.93e-04
+2025-05-30 16:03:34,416 DeMo.train INFO: Epoch[14] Iteration[50/65] Loss: 0.829, Acc: 1.000, Base Lr: 1.93e-04
+2025-05-30 16:03:43,989 DeMo.train INFO: Epoch[14] Iteration[60/65] Loss: 0.827, Acc: 1.000, Base Lr: 1.93e-04
+2025-05-30 16:03:46,091 DeMo.train INFO: Epoch 14 done. Time per batch: 1.005[s] Speed: 127.4[samples/s]
+2025-05-30 16:03:46,099 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:03:46,099 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 16:03:46,099 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8294
+CMC curve: Rank-1: 0.9615, Rank-5: 0.9673, Rank-10: 0.9697
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8329
+CMC curve: Rank-1: 0.9738, Rank-5: 0.9761, Rank-10: 0.9761
+=> Improvement:
+mAP improvement: 0.0035 (+0.42%)
+Rank-1 improvement: 0.0122 (+1.27%)
+2025-05-30 16:06:19,264 DeMo.train INFO: Validation Results - Epoch: 14
+2025-05-30 16:06:19,265 DeMo.train INFO: mAP: 83.3%
+2025-05-30 16:06:19,265 DeMo.train INFO: CMC curve, Rank-1  :97.4%
+2025-05-30 16:06:19,265 DeMo.train INFO: CMC curve, Rank-5  :97.6%
+2025-05-30 16:06:19,265 DeMo.train INFO: CMC curve, Rank-10 :97.6%
+2025-05-30 16:06:19,265 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:06:19,698 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:06:19,698 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 16:06:19,698 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7359
+CMC curve: Rank-1: 0.9067, Rank-5: 0.9213, Rank-10: 0.9329
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7418
+CMC curve: Rank-1: 0.9207, Rank-5: 0.9283, Rank-10: 0.9359
+=> Improvement:
+mAP improvement: 0.0059 (+0.80%)
+Rank-1 improvement: 0.0140 (+1.54%)
+2025-05-30 16:08:54,050 DeMo.train INFO: Validation Results - Epoch: 14
+2025-05-30 16:08:54,051 DeMo.train INFO: mAP: 74.2%
+2025-05-30 16:08:54,051 DeMo.train INFO: CMC curve, Rank-1  :92.1%
+2025-05-30 16:08:54,051 DeMo.train INFO: CMC curve, Rank-5  :92.8%
+2025-05-30 16:08:54,051 DeMo.train INFO: CMC curve, Rank-10 :93.6%
+2025-05-30 16:08:54,051 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:08:54,070 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:08:54,070 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 16:08:54,070 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8317
+CMC curve: Rank-1: 0.9598, Rank-5: 0.9673, Rank-10: 0.9720
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8350
+CMC curve: Rank-1: 0.9720, Rank-5: 0.9743, Rank-10: 0.9773
+=> Improvement:
+mAP improvement: 0.0033 (+0.40%)
+Rank-1 improvement: 0.0122 (+1.28%)
+2025-05-30 16:11:29,077 DeMo.train INFO: Validation Results - Epoch: 14
+2025-05-30 16:11:29,078 DeMo.train INFO: mAP: 83.5%
+2025-05-30 16:11:29,078 DeMo.train INFO: CMC curve, Rank-1  :97.2%
+2025-05-30 16:11:29,078 DeMo.train INFO: CMC curve, Rank-5  :97.4%
+2025-05-30 16:11:29,078 DeMo.train INFO: CMC curve, Rank-10 :97.7%
+2025-05-30 16:11:29,079 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:11:30,176 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:11:30,176 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 16:11:30,176 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 16:11:30,176 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 16:11:30,176 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 16:11:30,176 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:11:42,799 DeMo.train INFO: Epoch[15] Iteration[10/65] Loss: 0.837, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-30 16:11:52,538 DeMo.train INFO: Epoch[15] Iteration[20/65] Loss: 0.823, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-30 16:12:02,056 DeMo.train INFO: Epoch[15] Iteration[30/65] Loss: 0.823, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-30 16:12:11,618 DeMo.train INFO: Epoch[15] Iteration[40/65] Loss: 0.822, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-30 16:12:21,162 DeMo.train INFO: Epoch[15] Iteration[50/65] Loss: 0.822, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-30 16:12:30,691 DeMo.train INFO: Epoch[15] Iteration[60/65] Loss: 0.821, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-30 16:12:32,767 DeMo.train INFO: Epoch 15 done. Time per batch: 1.010[s] Speed: 126.8[samples/s]
+2025-05-30 16:12:32,776 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:12:32,776 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 16:12:32,776 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8256
+CMC curve: Rank-1: 0.9539, Rank-5: 0.9621, Rank-10: 0.9668
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8292
+CMC curve: Rank-1: 0.9633, Rank-5: 0.9691, Rank-10: 0.9720
+=> Improvement:
+mAP improvement: 0.0035 (+0.43%)
+Rank-1 improvement: 0.0093 (+0.98%)
+2025-05-30 16:15:03,854 DeMo.train INFO: Validation Results - Epoch: 15
+2025-05-30 16:15:03,854 DeMo.train INFO: mAP: 82.9%
+2025-05-30 16:15:03,854 DeMo.train INFO: CMC curve, Rank-1  :96.3%
+2025-05-30 16:15:03,854 DeMo.train INFO: CMC curve, Rank-5  :96.9%
+2025-05-30 16:15:03,854 DeMo.train INFO: CMC curve, Rank-10 :97.2%
+2025-05-30 16:15:03,854 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:15:04,106 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:15:04,106 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 16:15:04,106 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7240
+CMC curve: Rank-1: 0.8945, Rank-5: 0.9120, Rank-10: 0.9230
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7282
+CMC curve: Rank-1: 0.8997, Rank-5: 0.9032, Rank-10: 0.9120
+=> Improvement:
+mAP improvement: 0.0042 (+0.58%)
+Rank-1 improvement: 0.0052 (+0.59%)
+2025-05-30 16:17:36,219 DeMo.train INFO: Validation Results - Epoch: 15
+2025-05-30 16:17:36,220 DeMo.train INFO: mAP: 72.8%
+2025-05-30 16:17:36,220 DeMo.train INFO: CMC curve, Rank-1  :90.0%
+2025-05-30 16:17:36,220 DeMo.train INFO: CMC curve, Rank-5  :90.3%
+2025-05-30 16:17:36,220 DeMo.train INFO: CMC curve, Rank-10 :91.2%
+2025-05-30 16:17:36,220 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:17:36,454 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:17:36,454 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 16:17:36,454 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8273
+CMC curve: Rank-1: 0.9539, Rank-5: 0.9609, Rank-10: 0.9668
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8298
+CMC curve: Rank-1: 0.9574, Rank-5: 0.9627, Rank-10: 0.9668
+=> Improvement:
+mAP improvement: 0.0025 (+0.30%)
+Rank-1 improvement: 0.0035 (+0.37%)
+2025-05-30 16:20:11,118 DeMo.train INFO: Validation Results - Epoch: 15
+2025-05-30 16:20:11,119 DeMo.train INFO: mAP: 83.0%
+2025-05-30 16:20:11,119 DeMo.train INFO: CMC curve, Rank-1  :95.7%
+2025-05-30 16:20:11,119 DeMo.train INFO: CMC curve, Rank-5  :96.3%
+2025-05-30 16:20:11,119 DeMo.train INFO: CMC curve, Rank-10 :96.7%
+2025-05-30 16:20:11,119 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:20:11,667 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:20:11,667 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 16:20:11,668 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 16:20:11,668 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 16:20:11,668 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 16:20:11,668 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:20:25,699 DeMo.train INFO: Epoch[16] Iteration[10/65] Loss: 0.821, Acc: 1.000, Base Lr: 1.57e-04
+2025-05-30 16:20:35,269 DeMo.train INFO: Epoch[16] Iteration[20/65] Loss: 0.819, Acc: 1.000, Base Lr: 1.57e-04
+2025-05-30 16:20:44,823 DeMo.train INFO: Epoch[16] Iteration[30/65] Loss: 0.821, Acc: 1.000, Base Lr: 1.57e-04
+2025-05-30 16:20:54,385 DeMo.train INFO: Epoch[16] Iteration[40/65] Loss: 0.820, Acc: 1.000, Base Lr: 1.57e-04
+2025-05-30 16:21:03,912 DeMo.train INFO: Epoch[16] Iteration[50/65] Loss: 0.815, Acc: 1.000, Base Lr: 1.57e-04
+2025-05-30 16:21:13,475 DeMo.train INFO: Epoch[16] Iteration[60/65] Loss: 0.816, Acc: 1.000, Base Lr: 1.57e-04
+2025-05-30 16:21:16,497 DeMo.train INFO: Epoch 16 done. Time per batch: 1.029[s] Speed: 124.4[samples/s]
+2025-05-30 16:21:16,506 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:21:16,506 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 16:21:16,506 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8321
+CMC curve: Rank-1: 0.9603, Rank-5: 0.9668, Rank-10: 0.9732
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8357
+CMC curve: Rank-1: 0.9714, Rank-5: 0.9743, Rank-10: 0.9773
+=> Improvement:
+mAP improvement: 0.0036 (+0.44%)
+Rank-1 improvement: 0.0111 (+1.15%)
+2025-05-30 16:23:47,033 DeMo.train INFO: Validation Results - Epoch: 16
+2025-05-30 16:23:47,033 DeMo.train INFO: mAP: 83.6%
+2025-05-30 16:23:47,033 DeMo.train INFO: CMC curve, Rank-1  :97.1%
+2025-05-30 16:23:47,033 DeMo.train INFO: CMC curve, Rank-5  :97.4%
+2025-05-30 16:23:47,033 DeMo.train INFO: CMC curve, Rank-10 :97.7%
+2025-05-30 16:23:47,033 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:23:47,459 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:23:47,459 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 16:23:47,460 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7106
+CMC curve: Rank-1: 0.8851, Rank-5: 0.9055, Rank-10: 0.9125
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7154
+CMC curve: Rank-1: 0.8834, Rank-5: 0.8904, Rank-10: 0.8968
+=> Improvement:
+mAP improvement: 0.0048 (+0.67%)
+Rank-1 improvement: -0.0017 (-0.20%)
+2025-05-30 16:26:19,357 DeMo.train INFO: Validation Results - Epoch: 16
+2025-05-30 16:26:19,358 DeMo.train INFO: mAP: 71.5%
+2025-05-30 16:26:19,358 DeMo.train INFO: CMC curve, Rank-1  :88.3%
+2025-05-30 16:26:19,358 DeMo.train INFO: CMC curve, Rank-5  :89.0%
+2025-05-30 16:26:19,358 DeMo.train INFO: CMC curve, Rank-10 :89.7%
+2025-05-30 16:26:19,358 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:26:20,353 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:26:20,354 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 16:26:20,354 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8338
+CMC curve: Rank-1: 0.9574, Rank-5: 0.9668, Rank-10: 0.9703
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8366
+CMC curve: Rank-1: 0.9644, Rank-5: 0.9703, Rank-10: 0.9720
+=> Improvement:
+mAP improvement: 0.0029 (+0.34%)
+Rank-1 improvement: 0.0070 (+0.73%)
+2025-05-30 16:28:52,852 DeMo.train INFO: Validation Results - Epoch: 16
+2025-05-30 16:28:52,852 DeMo.train INFO: mAP: 83.7%
+2025-05-30 16:28:52,853 DeMo.train INFO: CMC curve, Rank-1  :96.4%
+2025-05-30 16:28:52,853 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 16:28:52,853 DeMo.train INFO: CMC curve, Rank-10 :97.2%
+2025-05-30 16:28:52,853 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:28:52,867 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:28:52,867 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 16:28:52,867 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 16:28:52,868 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 16:28:52,868 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 16:28:52,868 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:29:05,808 DeMo.train INFO: Epoch[17] Iteration[10/65] Loss: 0.808, Acc: 1.000, Base Lr: 1.39e-04
+2025-05-30 16:29:15,319 DeMo.train INFO: Epoch[17] Iteration[20/65] Loss: 0.806, Acc: 1.000, Base Lr: 1.39e-04
+2025-05-30 16:29:24,863 DeMo.train INFO: Epoch[17] Iteration[30/65] Loss: 0.805, Acc: 1.000, Base Lr: 1.39e-04
+2025-05-30 16:29:34,386 DeMo.train INFO: Epoch[17] Iteration[40/65] Loss: 0.811, Acc: 1.000, Base Lr: 1.39e-04
+2025-05-30 16:29:43,881 DeMo.train INFO: Epoch[17] Iteration[50/65] Loss: 0.810, Acc: 1.000, Base Lr: 1.39e-04
+2025-05-30 16:29:53,344 DeMo.train INFO: Epoch[17] Iteration[60/65] Loss: 0.808, Acc: 1.000, Base Lr: 1.39e-04
+2025-05-30 16:29:55,338 DeMo.train INFO: Epoch 17 done. Time per batch: 1.008[s] Speed: 127.0[samples/s]
+2025-05-30 16:29:55,343 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:29:55,343 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 16:29:55,343 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8326
+CMC curve: Rank-1: 0.9638, Rank-5: 0.9703, Rank-10: 0.9738
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8354
+CMC curve: Rank-1: 0.9714, Rank-5: 0.9738, Rank-10: 0.9755
+=> Improvement:
+mAP improvement: 0.0028 (+0.34%)
+Rank-1 improvement: 0.0076 (+0.79%)
+2025-05-30 16:32:25,904 DeMo.train INFO: Validation Results - Epoch: 17
+2025-05-30 16:32:25,905 DeMo.train INFO: mAP: 83.5%
+2025-05-30 16:32:25,905 DeMo.train INFO: CMC curve, Rank-1  :97.1%
+2025-05-30 16:32:25,905 DeMo.train INFO: CMC curve, Rank-5  :97.4%
+2025-05-30 16:32:25,905 DeMo.train INFO: CMC curve, Rank-10 :97.6%
+2025-05-30 16:32:25,905 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:32:26,760 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:32:26,760 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 16:32:26,760 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7200
+CMC curve: Rank-1: 0.8898, Rank-5: 0.9061, Rank-10: 0.9143
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7279
+CMC curve: Rank-1: 0.8968, Rank-5: 0.9003, Rank-10: 0.9026
+=> Improvement:
+mAP improvement: 0.0079 (+1.10%)
+Rank-1 improvement: 0.0070 (+0.79%)
+2025-05-30 16:34:55,581 DeMo.train INFO: Validation Results - Epoch: 17
+2025-05-30 16:34:55,582 DeMo.train INFO: mAP: 72.8%
+2025-05-30 16:34:55,582 DeMo.train INFO: CMC curve, Rank-1  :89.7%
+2025-05-30 16:34:55,582 DeMo.train INFO: CMC curve, Rank-5  :90.0%
+2025-05-30 16:34:55,582 DeMo.train INFO: CMC curve, Rank-10 :90.3%
+2025-05-30 16:34:55,582 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:34:55,598 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:34:55,598 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 16:34:55,598 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8336
+CMC curve: Rank-1: 0.9621, Rank-5: 0.9685, Rank-10: 0.9714
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8361
+CMC curve: Rank-1: 0.9656, Rank-5: 0.9703, Rank-10: 0.9749
+=> Improvement:
+mAP improvement: 0.0025 (+0.30%)
+Rank-1 improvement: 0.0035 (+0.36%)
+2025-05-30 16:37:25,659 DeMo.train INFO: Validation Results - Epoch: 17
+2025-05-30 16:37:25,659 DeMo.train INFO: mAP: 83.6%
+2025-05-30 16:37:25,659 DeMo.train INFO: CMC curve, Rank-1  :96.6%
+2025-05-30 16:37:25,659 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 16:37:25,659 DeMo.train INFO: CMC curve, Rank-10 :97.5%
+2025-05-30 16:37:25,660 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:37:26,288 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:37:26,289 DeMo.train INFO: Best mAP: 83.8%
+2025-05-30 16:37:26,289 DeMo.train INFO: Best Rank-1: 96.4%
+2025-05-30 16:37:26,289 DeMo.train INFO: Best Rank-5: 96.7%
+2025-05-30 16:37:26,289 DeMo.train INFO: Best Rank-10: 96.7%
+2025-05-30 16:37:26,289 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:37:38,942 DeMo.train INFO: Epoch[18] Iteration[10/65] Loss: 0.829, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-30 16:37:48,418 DeMo.train INFO: Epoch[18] Iteration[20/65] Loss: 0.815, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-30 16:37:57,844 DeMo.train INFO: Epoch[18] Iteration[30/65] Loss: 0.816, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-30 16:38:07,281 DeMo.train INFO: Epoch[18] Iteration[40/65] Loss: 0.812, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-30 16:38:16,698 DeMo.train INFO: Epoch[18] Iteration[50/65] Loss: 0.808, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-30 16:38:26,090 DeMo.train INFO: Epoch[18] Iteration[60/65] Loss: 0.805, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-30 16:38:28,133 DeMo.train INFO: Epoch 18 done. Time per batch: 0.997[s] Speed: 128.3[samples/s]
+2025-05-30 16:38:28,137 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:38:28,138 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 16:38:28,138 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8336
+CMC curve: Rank-1: 0.9627, Rank-5: 0.9691, Rank-10: 0.9743
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8373
+CMC curve: Rank-1: 0.9720, Rank-5: 0.9749, Rank-10: 0.9778
+=> Improvement:
+mAP improvement: 0.0038 (+0.45%)
+Rank-1 improvement: 0.0093 (+0.97%)
+2025-05-30 16:40:56,813 DeMo.train INFO: Validation Results - Epoch: 18
+2025-05-30 16:40:56,813 DeMo.train INFO: mAP: 83.7%
+2025-05-30 16:40:56,813 DeMo.train INFO: CMC curve, Rank-1  :97.2%
+2025-05-30 16:40:56,814 DeMo.train INFO: CMC curve, Rank-5  :97.5%
+2025-05-30 16:40:56,814 DeMo.train INFO: CMC curve, Rank-10 :97.8%
+2025-05-30 16:40:56,814 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:40:57,018 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:40:57,019 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 16:40:57,019 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7159
+CMC curve: Rank-1: 0.8985, Rank-5: 0.9166, Rank-10: 0.9271
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7218
+CMC curve: Rank-1: 0.8985, Rank-5: 0.9044, Rank-10: 0.9125
+=> Improvement:
+mAP improvement: 0.0059 (+0.82%)
+Rank-1 improvement: 0.0000 (+0.00%)
+2025-05-30 16:43:27,003 DeMo.train INFO: Validation Results - Epoch: 18
+2025-05-30 16:43:27,003 DeMo.train INFO: mAP: 72.2%
+2025-05-30 16:43:27,004 DeMo.train INFO: CMC curve, Rank-1  :89.9%
+2025-05-30 16:43:27,004 DeMo.train INFO: CMC curve, Rank-5  :90.4%
+2025-05-30 16:43:27,004 DeMo.train INFO: CMC curve, Rank-10 :91.3%
+2025-05-30 16:43:27,004 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:43:27,588 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:43:27,589 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 16:43:27,589 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8357
+CMC curve: Rank-1: 0.9627, Rank-5: 0.9732, Rank-10: 0.9761
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8392
+CMC curve: Rank-1: 0.9708, Rank-5: 0.9738, Rank-10: 0.9749
+=> Improvement:
+mAP improvement: 0.0035 (+0.42%)
+Rank-1 improvement: 0.0082 (+0.85%)
+2025-05-30 16:45:56,925 DeMo.train INFO: Validation Results - Epoch: 18
+2025-05-30 16:45:56,925 DeMo.train INFO: mAP: 83.9%
+2025-05-30 16:45:56,925 DeMo.train INFO: CMC curve, Rank-1  :97.1%
+2025-05-30 16:45:56,926 DeMo.train INFO: CMC curve, Rank-5  :97.4%
+2025-05-30 16:45:56,926 DeMo.train INFO: CMC curve, Rank-10 :97.5%
+2025-05-30 16:45:56,926 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:46:03,214 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:46:03,214 DeMo.train INFO: Best mAP: 83.9%
+2025-05-30 16:46:03,214 DeMo.train INFO: Best Rank-1: 97.1%
+2025-05-30 16:46:03,214 DeMo.train INFO: Best Rank-5: 97.4%
+2025-05-30 16:46:03,214 DeMo.train INFO: Best Rank-10: 97.5%
+2025-05-30 16:46:03,214 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:46:15,141 DeMo.train INFO: Epoch[19] Iteration[10/65] Loss: 0.794, Acc: 1.000, Base Lr: 1.04e-04
+2025-05-30 16:46:24,572 DeMo.train INFO: Epoch[19] Iteration[20/65] Loss: 0.795, Acc: 1.000, Base Lr: 1.04e-04
+2025-05-30 16:46:33,986 DeMo.train INFO: Epoch[19] Iteration[30/65] Loss: 0.797, Acc: 1.000, Base Lr: 1.04e-04
+2025-05-30 16:46:43,409 DeMo.train INFO: Epoch[19] Iteration[40/65] Loss: 0.794, Acc: 1.000, Base Lr: 1.04e-04
+2025-05-30 16:46:52,820 DeMo.train INFO: Epoch[19] Iteration[50/65] Loss: 0.794, Acc: 1.000, Base Lr: 1.04e-04
+2025-05-30 16:47:02,208 DeMo.train INFO: Epoch[19] Iteration[60/65] Loss: 0.792, Acc: 1.000, Base Lr: 1.04e-04
+2025-05-30 16:47:05,193 DeMo.train INFO: Epoch 19 done. Time per batch: 0.984[s] Speed: 130.1[samples/s]
+2025-05-30 16:47:05,201 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:47:05,202 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 16:47:05,202 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8350
+CMC curve: Rank-1: 0.9638, Rank-5: 0.9679, Rank-10: 0.9761
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8384
+CMC curve: Rank-1: 0.9714, Rank-5: 0.9738, Rank-10: 0.9767
+=> Improvement:
+mAP improvement: 0.0034 (+0.41%)
+Rank-1 improvement: 0.0076 (+0.79%)
+2025-05-30 16:49:32,882 DeMo.train INFO: Validation Results - Epoch: 19
+2025-05-30 16:49:32,882 DeMo.train INFO: mAP: 83.8%
+2025-05-30 16:49:32,882 DeMo.train INFO: CMC curve, Rank-1  :97.1%
+2025-05-30 16:49:32,883 DeMo.train INFO: CMC curve, Rank-5  :97.4%
+2025-05-30 16:49:32,883 DeMo.train INFO: CMC curve, Rank-10 :97.7%
+2025-05-30 16:49:32,883 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:49:33,126 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:49:33,127 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 16:49:33,127 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6977
+CMC curve: Rank-1: 0.8828, Rank-5: 0.9009, Rank-10: 0.9096
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7049
+CMC curve: Rank-1: 0.8910, Rank-5: 0.9038, Rank-10: 0.9131
+=> Improvement:
+mAP improvement: 0.0071 (+1.02%)
+Rank-1 improvement: 0.0082 (+0.92%)
+2025-05-30 16:52:01,767 DeMo.train INFO: Validation Results - Epoch: 19
+2025-05-30 16:52:01,767 DeMo.train INFO: mAP: 70.5%
+2025-05-30 16:52:01,767 DeMo.train INFO: CMC curve, Rank-1  :89.1%
+2025-05-30 16:52:01,767 DeMo.train INFO: CMC curve, Rank-5  :90.4%
+2025-05-30 16:52:01,767 DeMo.train INFO: CMC curve, Rank-10 :91.3%
+2025-05-30 16:52:01,767 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:52:02,110 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:52:02,110 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 16:52:02,110 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8370
+CMC curve: Rank-1: 0.9633, Rank-5: 0.9743, Rank-10: 0.9761
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8403
+CMC curve: Rank-1: 0.9720, Rank-5: 0.9732, Rank-10: 0.9738
+=> Improvement:
+mAP improvement: 0.0033 (+0.40%)
+Rank-1 improvement: 0.0087 (+0.91%)
+2025-05-30 16:54:31,214 DeMo.train INFO: Validation Results - Epoch: 19
+2025-05-30 16:54:31,215 DeMo.train INFO: mAP: 84.0%
+2025-05-30 16:54:31,215 DeMo.train INFO: CMC curve, Rank-1  :97.2%
+2025-05-30 16:54:31,215 DeMo.train INFO: CMC curve, Rank-5  :97.3%
+2025-05-30 16:54:31,215 DeMo.train INFO: CMC curve, Rank-10 :97.4%
+2025-05-30 16:54:31,215 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:54:37,163 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:54:37,164 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 16:54:37,164 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 16:54:37,164 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 16:54:37,164 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 16:54:37,164 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:54:49,149 DeMo.train INFO: Epoch[20] Iteration[10/65] Loss: 0.807, Acc: 1.000, Base Lr: 8.78e-05
+2025-05-30 16:54:58,573 DeMo.train INFO: Epoch[20] Iteration[20/65] Loss: 0.802, Acc: 1.000, Base Lr: 8.78e-05
+2025-05-30 16:55:08,013 DeMo.train INFO: Epoch[20] Iteration[30/65] Loss: 0.801, Acc: 1.000, Base Lr: 8.78e-05
+2025-05-30 16:55:17,423 DeMo.train INFO: Epoch[20] Iteration[40/65] Loss: 0.801, Acc: 1.000, Base Lr: 8.78e-05
+2025-05-30 16:55:26,827 DeMo.train INFO: Epoch[20] Iteration[50/65] Loss: 0.798, Acc: 1.000, Base Lr: 8.78e-05
+2025-05-30 16:55:36,223 DeMo.train INFO: Epoch[20] Iteration[60/65] Loss: 0.797, Acc: 1.000, Base Lr: 8.78e-05
+2025-05-30 16:55:38,257 DeMo.train INFO: Epoch 20 done. Time per batch: 0.985[s] Speed: 129.9[samples/s]
+2025-05-30 16:55:38,262 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:55:38,262 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 16:55:38,262 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8342
+CMC curve: Rank-1: 0.9644, Rank-5: 0.9685, Rank-10: 0.9714
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8361
+CMC curve: Rank-1: 0.9685, Rank-5: 0.9697, Rank-10: 0.9714
+=> Improvement:
+mAP improvement: 0.0019 (+0.23%)
+Rank-1 improvement: 0.0041 (+0.42%)
+2025-05-30 16:58:06,229 DeMo.train INFO: Validation Results - Epoch: 20
+2025-05-30 16:58:06,229 DeMo.train INFO: mAP: 83.6%
+2025-05-30 16:58:06,229 DeMo.train INFO: CMC curve, Rank-1  :96.9%
+2025-05-30 16:58:06,229 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 16:58:06,229 DeMo.train INFO: CMC curve, Rank-10 :97.1%
+2025-05-30 16:58:06,229 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:58:07,213 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 16:58:07,213 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 16:58:07,213 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7015
+CMC curve: Rank-1: 0.8980, Rank-5: 0.9137, Rank-10: 0.9219
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7088
+CMC curve: Rank-1: 0.8962, Rank-5: 0.9079, Rank-10: 0.9143
+=> Improvement:
+mAP improvement: 0.0073 (+1.04%)
+Rank-1 improvement: -0.0017 (-0.19%)
+2025-05-30 17:00:35,468 DeMo.train INFO: Validation Results - Epoch: 20
+2025-05-30 17:00:35,468 DeMo.train INFO: mAP: 70.9%
+2025-05-30 17:00:35,468 DeMo.train INFO: CMC curve, Rank-1  :89.6%
+2025-05-30 17:00:35,469 DeMo.train INFO: CMC curve, Rank-5  :90.8%
+2025-05-30 17:00:35,469 DeMo.train INFO: CMC curve, Rank-10 :91.4%
+2025-05-30 17:00:35,469 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:00:35,482 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:00:35,483 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 17:00:35,483 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8356
+CMC curve: Rank-1: 0.9615, Rank-5: 0.9720, Rank-10: 0.9743
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8381
+CMC curve: Rank-1: 0.9673, Rank-5: 0.9703, Rank-10: 0.9726
+=> Improvement:
+mAP improvement: 0.0024 (+0.29%)
+Rank-1 improvement: 0.0058 (+0.61%)
+2025-05-30 17:03:04,400 DeMo.train INFO: Validation Results - Epoch: 20
+2025-05-30 17:03:04,400 DeMo.train INFO: mAP: 83.8%
+2025-05-30 17:03:04,400 DeMo.train INFO: CMC curve, Rank-1  :96.7%
+2025-05-30 17:03:04,400 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 17:03:04,400 DeMo.train INFO: CMC curve, Rank-10 :97.3%
+2025-05-30 17:03:04,400 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:03:04,420 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:03:04,420 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 17:03:04,420 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 17:03:04,420 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 17:03:04,420 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 17:03:04,421 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:03:16,800 DeMo.train INFO: Epoch[21] Iteration[10/65] Loss: 0.808, Acc: 1.000, Base Lr: 7.24e-05
+2025-05-30 17:03:26,235 DeMo.train INFO: Epoch[21] Iteration[20/65] Loss: 0.797, Acc: 1.000, Base Lr: 7.24e-05
+2025-05-30 17:03:35,667 DeMo.train INFO: Epoch[21] Iteration[30/65] Loss: 0.794, Acc: 1.000, Base Lr: 7.24e-05
+2025-05-30 17:03:45,466 DeMo.train INFO: Epoch[21] Iteration[40/65] Loss: 0.792, Acc: 1.000, Base Lr: 7.24e-05
+2025-05-30 17:03:54,865 DeMo.train INFO: Epoch[21] Iteration[50/65] Loss: 0.792, Acc: 1.000, Base Lr: 7.24e-05
+2025-05-30 17:04:04,501 DeMo.train INFO: Epoch[21] Iteration[60/65] Loss: 0.789, Acc: 1.000, Base Lr: 7.24e-05
+2025-05-30 17:04:07,453 DeMo.train INFO: Epoch 21 done. Time per batch: 1.001[s] Speed: 127.9[samples/s]
+2025-05-30 17:04:07,457 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:04:07,457 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 17:04:07,457 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8356
+CMC curve: Rank-1: 0.9644, Rank-5: 0.9697, Rank-10: 0.9726
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8380
+CMC curve: Rank-1: 0.9685, Rank-5: 0.9720, Rank-10: 0.9732
+=> Improvement:
+mAP improvement: 0.0024 (+0.28%)
+Rank-1 improvement: 0.0041 (+0.42%)
+2025-05-30 17:06:35,946 DeMo.train INFO: Validation Results - Epoch: 21
+2025-05-30 17:06:35,946 DeMo.train INFO: mAP: 83.8%
+2025-05-30 17:06:35,946 DeMo.train INFO: CMC curve, Rank-1  :96.9%
+2025-05-30 17:06:35,946 DeMo.train INFO: CMC curve, Rank-5  :97.2%
+2025-05-30 17:06:35,946 DeMo.train INFO: CMC curve, Rank-10 :97.3%
+2025-05-30 17:06:35,946 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:06:36,852 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:06:36,853 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 17:06:36,853 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7131
+CMC curve: Rank-1: 0.9026, Rank-5: 0.9149, Rank-10: 0.9242
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7194
+CMC curve: Rank-1: 0.8939, Rank-5: 0.9032, Rank-10: 0.9125
+=> Improvement:
+mAP improvement: 0.0063 (+0.88%)
+Rank-1 improvement: -0.0087 (-0.97%)
+2025-05-30 17:09:06,044 DeMo.train INFO: Validation Results - Epoch: 21
+2025-05-30 17:09:06,045 DeMo.train INFO: mAP: 71.9%
+2025-05-30 17:09:06,045 DeMo.train INFO: CMC curve, Rank-1  :89.4%
+2025-05-30 17:09:06,045 DeMo.train INFO: CMC curve, Rank-5  :90.3%
+2025-05-30 17:09:06,045 DeMo.train INFO: CMC curve, Rank-10 :91.3%
+2025-05-30 17:09:06,045 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:09:06,162 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:09:06,162 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 17:09:06,162 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8368
+CMC curve: Rank-1: 0.9574, Rank-5: 0.9679, Rank-10: 0.9732
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8393
+CMC curve: Rank-1: 0.9627, Rank-5: 0.9691, Rank-10: 0.9714
+=> Improvement:
+mAP improvement: 0.0024 (+0.29%)
+Rank-1 improvement: 0.0052 (+0.55%)
+2025-05-30 17:11:35,666 DeMo.train INFO: Validation Results - Epoch: 21
+2025-05-30 17:11:35,666 DeMo.train INFO: mAP: 83.9%
+2025-05-30 17:11:35,666 DeMo.train INFO: CMC curve, Rank-1  :96.3%
+2025-05-30 17:11:35,666 DeMo.train INFO: CMC curve, Rank-5  :96.9%
+2025-05-30 17:11:35,667 DeMo.train INFO: CMC curve, Rank-10 :97.1%
+2025-05-30 17:11:35,667 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:11:35,935 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:11:35,936 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 17:11:35,936 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 17:11:35,936 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 17:11:35,936 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 17:11:35,936 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:11:47,572 DeMo.train INFO: Epoch[22] Iteration[10/65] Loss: 0.796, Acc: 1.000, Base Lr: 5.82e-05
+2025-05-30 17:11:57,028 DeMo.train INFO: Epoch[22] Iteration[20/65] Loss: 0.791, Acc: 1.000, Base Lr: 5.82e-05
+2025-05-30 17:12:06,519 DeMo.train INFO: Epoch[22] Iteration[30/65] Loss: 0.793, Acc: 1.000, Base Lr: 5.82e-05
+2025-05-30 17:12:16,234 DeMo.train INFO: Epoch[22] Iteration[40/65] Loss: 0.794, Acc: 1.000, Base Lr: 5.82e-05
+2025-05-30 17:12:25,647 DeMo.train INFO: Epoch[22] Iteration[50/65] Loss: 0.792, Acc: 1.000, Base Lr: 5.82e-05
+2025-05-30 17:12:35,081 DeMo.train INFO: Epoch[22] Iteration[60/65] Loss: 0.790, Acc: 1.000, Base Lr: 5.82e-05
+2025-05-30 17:12:38,031 DeMo.train INFO: Epoch 22 done. Time per batch: 0.986[s] Speed: 129.9[samples/s]
+2025-05-30 17:12:38,038 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:12:38,038 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 17:12:38,038 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8339
+CMC curve: Rank-1: 0.9615, Rank-5: 0.9679, Rank-10: 0.9697
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8359
+CMC curve: Rank-1: 0.9650, Rank-5: 0.9703, Rank-10: 0.9738
+=> Improvement:
+mAP improvement: 0.0020 (+0.24%)
+Rank-1 improvement: 0.0035 (+0.36%)
+2025-05-30 17:15:05,907 DeMo.train INFO: Validation Results - Epoch: 22
+2025-05-30 17:15:05,907 DeMo.train INFO: mAP: 83.6%
+2025-05-30 17:15:05,907 DeMo.train INFO: CMC curve, Rank-1  :96.5%
+2025-05-30 17:15:05,908 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 17:15:05,908 DeMo.train INFO: CMC curve, Rank-10 :97.4%
+2025-05-30 17:15:05,908 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:15:06,902 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:15:06,902 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 17:15:06,902 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7021
+CMC curve: Rank-1: 0.9050, Rank-5: 0.9172, Rank-10: 0.9265
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7086
+CMC curve: Rank-1: 0.9102, Rank-5: 0.9195, Rank-10: 0.9265
+=> Improvement:
+mAP improvement: 0.0065 (+0.93%)
+Rank-1 improvement: 0.0052 (+0.58%)
+2025-05-30 17:17:34,997 DeMo.train INFO: Validation Results - Epoch: 22
+2025-05-30 17:17:34,998 DeMo.train INFO: mAP: 70.9%
+2025-05-30 17:17:34,998 DeMo.train INFO: CMC curve, Rank-1  :91.0%
+2025-05-30 17:17:34,998 DeMo.train INFO: CMC curve, Rank-5  :92.0%
+2025-05-30 17:17:34,998 DeMo.train INFO: CMC curve, Rank-10 :92.7%
+2025-05-30 17:17:34,998 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:17:35,056 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:17:35,056 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 17:17:35,056 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8360
+CMC curve: Rank-1: 0.9603, Rank-5: 0.9673, Rank-10: 0.9714
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8385
+CMC curve: Rank-1: 0.9679, Rank-5: 0.9714, Rank-10: 0.9726
+=> Improvement:
+mAP improvement: 0.0025 (+0.30%)
+Rank-1 improvement: 0.0076 (+0.79%)
+2025-05-30 17:20:04,504 DeMo.train INFO: Validation Results - Epoch: 22
+2025-05-30 17:20:04,505 DeMo.train INFO: mAP: 83.9%
+2025-05-30 17:20:04,505 DeMo.train INFO: CMC curve, Rank-1  :96.8%
+2025-05-30 17:20:04,505 DeMo.train INFO: CMC curve, Rank-5  :97.1%
+2025-05-30 17:20:04,505 DeMo.train INFO: CMC curve, Rank-10 :97.3%
+2025-05-30 17:20:04,505 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:20:05,160 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:20:05,160 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 17:20:05,160 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 17:20:05,160 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 17:20:05,161 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 17:20:05,161 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:20:17,798 DeMo.train INFO: Epoch[23] Iteration[10/65] Loss: 0.782, Acc: 1.000, Base Lr: 4.53e-05
+2025-05-30 17:20:27,226 DeMo.train INFO: Epoch[23] Iteration[20/65] Loss: 0.781, Acc: 1.000, Base Lr: 4.53e-05
+2025-05-30 17:20:36,688 DeMo.train INFO: Epoch[23] Iteration[30/65] Loss: 0.782, Acc: 1.000, Base Lr: 4.53e-05
+2025-05-30 17:20:46,087 DeMo.train INFO: Epoch[23] Iteration[40/65] Loss: 0.782, Acc: 1.000, Base Lr: 4.53e-05
+2025-05-30 17:20:55,468 DeMo.train INFO: Epoch[23] Iteration[50/65] Loss: 0.782, Acc: 1.000, Base Lr: 4.53e-05
+2025-05-30 17:21:04,860 DeMo.train INFO: Epoch[23] Iteration[60/65] Loss: 0.781, Acc: 1.000, Base Lr: 4.53e-05
+2025-05-30 17:21:06,882 DeMo.train INFO: Epoch 23 done. Time per batch: 0.995[s] Speed: 128.6[samples/s]
+2025-05-30 17:21:06,886 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:21:06,886 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 17:21:06,886 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8341
+CMC curve: Rank-1: 0.9615, Rank-5: 0.9679, Rank-10: 0.9726
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8372
+CMC curve: Rank-1: 0.9697, Rank-5: 0.9755, Rank-10: 0.9784
+=> Improvement:
+mAP improvement: 0.0031 (+0.37%)
+Rank-1 improvement: 0.0082 (+0.85%)
+2025-05-30 17:23:34,317 DeMo.train INFO: Validation Results - Epoch: 23
+2025-05-30 17:23:34,317 DeMo.train INFO: mAP: 83.7%
+2025-05-30 17:23:34,317 DeMo.train INFO: CMC curve, Rank-1  :97.0%
+2025-05-30 17:23:34,317 DeMo.train INFO: CMC curve, Rank-5  :97.6%
+2025-05-30 17:23:34,317 DeMo.train INFO: CMC curve, Rank-10 :97.8%
+2025-05-30 17:23:34,318 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:23:34,762 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:23:34,763 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 17:23:34,763 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7159
+CMC curve: Rank-1: 0.9114, Rank-5: 0.9201, Rank-10: 0.9259
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7231
+CMC curve: Rank-1: 0.9131, Rank-5: 0.9172, Rank-10: 0.9248
+=> Improvement:
+mAP improvement: 0.0071 (+0.99%)
+Rank-1 improvement: 0.0017 (+0.19%)
+2025-05-30 17:26:04,530 DeMo.train INFO: Validation Results - Epoch: 23
+2025-05-30 17:26:04,530 DeMo.train INFO: mAP: 72.3%
+2025-05-30 17:26:04,531 DeMo.train INFO: CMC curve, Rank-1  :91.3%
+2025-05-30 17:26:04,531 DeMo.train INFO: CMC curve, Rank-5  :91.7%
+2025-05-30 17:26:04,532 DeMo.train INFO: CMC curve, Rank-10 :92.5%
+2025-05-30 17:26:04,532 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:26:04,896 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:26:04,897 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 17:26:04,897 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8359
+CMC curve: Rank-1: 0.9592, Rank-5: 0.9662, Rank-10: 0.9697
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8393
+CMC curve: Rank-1: 0.9685, Rank-5: 0.9720, Rank-10: 0.9732
+=> Improvement:
+mAP improvement: 0.0034 (+0.40%)
+Rank-1 improvement: 0.0093 (+0.97%)
+2025-05-30 17:28:33,969 DeMo.train INFO: Validation Results - Epoch: 23
+2025-05-30 17:28:33,969 DeMo.train INFO: mAP: 83.9%
+2025-05-30 17:28:33,969 DeMo.train INFO: CMC curve, Rank-1  :96.9%
+2025-05-30 17:28:33,969 DeMo.train INFO: CMC curve, Rank-5  :97.2%
+2025-05-30 17:28:33,969 DeMo.train INFO: CMC curve, Rank-10 :97.3%
+2025-05-30 17:28:33,970 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:28:34,252 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:28:34,253 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 17:28:34,253 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 17:28:34,253 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 17:28:34,253 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 17:28:34,253 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:28:46,933 DeMo.train INFO: Epoch[24] Iteration[10/65] Loss: 0.776, Acc: 1.000, Base Lr: 3.37e-05
+2025-05-30 17:28:56,365 DeMo.train INFO: Epoch[24] Iteration[20/65] Loss: 0.782, Acc: 1.000, Base Lr: 3.37e-05
+2025-05-30 17:29:05,775 DeMo.train INFO: Epoch[24] Iteration[30/65] Loss: 0.788, Acc: 1.000, Base Lr: 3.37e-05
+2025-05-30 17:29:15,202 DeMo.train INFO: Epoch[24] Iteration[40/65] Loss: 0.785, Acc: 1.000, Base Lr: 3.37e-05
+2025-05-30 17:29:24,595 DeMo.train INFO: Epoch[24] Iteration[50/65] Loss: 0.784, Acc: 1.000, Base Lr: 3.37e-05
+2025-05-30 17:29:33,992 DeMo.train INFO: Epoch[24] Iteration[60/65] Loss: 0.783, Acc: 1.000, Base Lr: 3.37e-05
+2025-05-30 17:29:36,965 DeMo.train INFO: Epoch 24 done. Time per batch: 0.995[s] Speed: 128.6[samples/s]
+2025-05-30 17:29:36,970 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:29:36,970 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 17:29:36,970 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8348
+CMC curve: Rank-1: 0.9603, Rank-5: 0.9685, Rank-10: 0.9714
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8378
+CMC curve: Rank-1: 0.9673, Rank-5: 0.9743, Rank-10: 0.9761
+=> Improvement:
+mAP improvement: 0.0031 (+0.37%)
+Rank-1 improvement: 0.0070 (+0.73%)
+2025-05-30 17:32:05,275 DeMo.train INFO: Validation Results - Epoch: 24
+2025-05-30 17:32:05,275 DeMo.train INFO: mAP: 83.8%
+2025-05-30 17:32:05,275 DeMo.train INFO: CMC curve, Rank-1  :96.7%
+2025-05-30 17:32:05,276 DeMo.train INFO: CMC curve, Rank-5  :97.4%
+2025-05-30 17:32:05,276 DeMo.train INFO: CMC curve, Rank-10 :97.6%
+2025-05-30 17:32:05,276 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:32:06,097 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:32:06,098 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 17:32:06,098 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7048
+CMC curve: Rank-1: 0.9020, Rank-5: 0.9137, Rank-10: 0.9213
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7122
+CMC curve: Rank-1: 0.9102, Rank-5: 0.9137, Rank-10: 0.9178
+=> Improvement:
+mAP improvement: 0.0074 (+1.04%)
+Rank-1 improvement: 0.0082 (+0.90%)
+2025-05-30 17:34:34,936 DeMo.train INFO: Validation Results - Epoch: 24
+2025-05-30 17:34:34,937 DeMo.train INFO: mAP: 71.2%
+2025-05-30 17:34:34,937 DeMo.train INFO: CMC curve, Rank-1  :91.0%
+2025-05-30 17:34:34,937 DeMo.train INFO: CMC curve, Rank-5  :91.4%
+2025-05-30 17:34:34,937 DeMo.train INFO: CMC curve, Rank-10 :91.8%
+2025-05-30 17:34:34,937 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:34:35,251 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:34:35,252 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 17:34:35,252 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8361
+CMC curve: Rank-1: 0.9574, Rank-5: 0.9668, Rank-10: 0.9708
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8396
+CMC curve: Rank-1: 0.9650, Rank-5: 0.9708, Rank-10: 0.9720
+=> Improvement:
+mAP improvement: 0.0035 (+0.42%)
+Rank-1 improvement: 0.0076 (+0.79%)
+2025-05-30 17:37:06,218 DeMo.train INFO: Validation Results - Epoch: 24
+2025-05-30 17:37:06,218 DeMo.train INFO: mAP: 84.0%
+2025-05-30 17:37:06,219 DeMo.train INFO: CMC curve, Rank-1  :96.5%
+2025-05-30 17:37:06,219 DeMo.train INFO: CMC curve, Rank-5  :97.1%
+2025-05-30 17:37:06,219 DeMo.train INFO: CMC curve, Rank-10 :97.2%
+2025-05-30 17:37:06,219 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:37:06,233 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:37:06,233 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 17:37:06,233 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 17:37:06,233 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 17:37:06,233 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 17:37:06,234 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:37:18,957 DeMo.train INFO: Epoch[25] Iteration[10/65] Loss: 0.774, Acc: 1.000, Base Lr: 2.38e-05
+2025-05-30 17:37:28,419 DeMo.train INFO: Epoch[25] Iteration[20/65] Loss: 0.775, Acc: 1.000, Base Lr: 2.38e-05
+2025-05-30 17:37:37,830 DeMo.train INFO: Epoch[25] Iteration[30/65] Loss: 0.777, Acc: 1.000, Base Lr: 2.38e-05
+2025-05-30 17:37:47,260 DeMo.train INFO: Epoch[25] Iteration[40/65] Loss: 0.777, Acc: 1.000, Base Lr: 2.38e-05
+2025-05-30 17:37:56,658 DeMo.train INFO: Epoch[25] Iteration[50/65] Loss: 0.775, Acc: 1.000, Base Lr: 2.38e-05
+2025-05-30 17:38:06,070 DeMo.train INFO: Epoch[25] Iteration[60/65] Loss: 0.774, Acc: 1.000, Base Lr: 2.38e-05
+2025-05-30 17:38:09,039 DeMo.train INFO: Epoch 25 done. Time per batch: 0.997[s] Speed: 128.4[samples/s]
+2025-05-30 17:38:09,045 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:38:09,046 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 17:38:09,046 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8341
+CMC curve: Rank-1: 0.9598, Rank-5: 0.9673, Rank-10: 0.9708
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8370
+CMC curve: Rank-1: 0.9679, Rank-5: 0.9726, Rank-10: 0.9761
+=> Improvement:
+mAP improvement: 0.0029 (+0.34%)
+Rank-1 improvement: 0.0082 (+0.85%)
+2025-05-30 17:40:36,792 DeMo.train INFO: Validation Results - Epoch: 25
+2025-05-30 17:40:36,792 DeMo.train INFO: mAP: 83.7%
+2025-05-30 17:40:36,792 DeMo.train INFO: CMC curve, Rank-1  :96.8%
+2025-05-30 17:40:36,792 DeMo.train INFO: CMC curve, Rank-5  :97.3%
+2025-05-30 17:40:36,792 DeMo.train INFO: CMC curve, Rank-10 :97.6%
+2025-05-30 17:40:36,792 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:40:37,033 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:40:37,033 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 17:40:37,034 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7171
+CMC curve: Rank-1: 0.9044, Rank-5: 0.9149, Rank-10: 0.9224
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7225
+CMC curve: Rank-1: 0.9090, Rank-5: 0.9137, Rank-10: 0.9178
+=> Improvement:
+mAP improvement: 0.0055 (+0.76%)
+Rank-1 improvement: 0.0047 (+0.52%)
+2025-05-30 17:43:05,586 DeMo.train INFO: Validation Results - Epoch: 25
+2025-05-30 17:43:05,587 DeMo.train INFO: mAP: 72.3%
+2025-05-30 17:43:05,587 DeMo.train INFO: CMC curve, Rank-1  :90.9%
+2025-05-30 17:43:05,587 DeMo.train INFO: CMC curve, Rank-5  :91.4%
+2025-05-30 17:43:05,587 DeMo.train INFO: CMC curve, Rank-10 :91.8%
+2025-05-30 17:43:05,587 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:43:05,603 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:43:05,603 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 17:43:05,603 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8359
+CMC curve: Rank-1: 0.9586, Rank-5: 0.9644, Rank-10: 0.9685
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8392
+CMC curve: Rank-1: 0.9662, Rank-5: 0.9697, Rank-10: 0.9720
+=> Improvement:
+mAP improvement: 0.0033 (+0.39%)
+Rank-1 improvement: 0.0076 (+0.79%)
+2025-05-30 17:45:34,419 DeMo.train INFO: Validation Results - Epoch: 25
+2025-05-30 17:45:34,420 DeMo.train INFO: mAP: 83.9%
+2025-05-30 17:45:34,420 DeMo.train INFO: CMC curve, Rank-1  :96.6%
+2025-05-30 17:45:34,420 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 17:45:34,420 DeMo.train INFO: CMC curve, Rank-10 :97.2%
+2025-05-30 17:45:34,420 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:45:34,825 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:45:34,826 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 17:45:34,826 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 17:45:34,826 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 17:45:34,826 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 17:45:34,826 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:45:46,690 DeMo.train INFO: Epoch[26] Iteration[10/65] Loss: 0.781, Acc: 0.999, Base Lr: 1.55e-05
+2025-05-30 17:45:56,314 DeMo.train INFO: Epoch[26] Iteration[20/65] Loss: 0.775, Acc: 1.000, Base Lr: 1.55e-05
+2025-05-30 17:46:05,743 DeMo.train INFO: Epoch[26] Iteration[30/65] Loss: 0.780, Acc: 1.000, Base Lr: 1.55e-05
+2025-05-30 17:46:15,189 DeMo.train INFO: Epoch[26] Iteration[40/65] Loss: 0.778, Acc: 1.000, Base Lr: 1.55e-05
+2025-05-30 17:46:24,571 DeMo.train INFO: Epoch[26] Iteration[50/65] Loss: 0.778, Acc: 1.000, Base Lr: 1.55e-05
+2025-05-30 17:46:33,931 DeMo.train INFO: Epoch[26] Iteration[60/65] Loss: 0.777, Acc: 1.000, Base Lr: 1.55e-05
+2025-05-30 17:46:36,864 DeMo.train INFO: Epoch 26 done. Time per batch: 0.985[s] Speed: 130.0[samples/s]
+2025-05-30 17:46:36,868 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:46:36,868 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 17:46:36,868 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8348
+CMC curve: Rank-1: 0.9592, Rank-5: 0.9673, Rank-10: 0.9708
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8375
+CMC curve: Rank-1: 0.9638, Rank-5: 0.9703, Rank-10: 0.9720
+=> Improvement:
+mAP improvement: 0.0027 (+0.32%)
+Rank-1 improvement: 0.0047 (+0.49%)
+2025-05-30 17:49:04,217 DeMo.train INFO: Validation Results - Epoch: 26
+2025-05-30 17:49:04,217 DeMo.train INFO: mAP: 83.7%
+2025-05-30 17:49:04,217 DeMo.train INFO: CMC curve, Rank-1  :96.4%
+2025-05-30 17:49:04,217 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 17:49:04,218 DeMo.train INFO: CMC curve, Rank-10 :97.2%
+2025-05-30 17:49:04,218 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:49:04,408 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:49:04,408 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 17:49:04,408 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7154
+CMC curve: Rank-1: 0.9102, Rank-5: 0.9172, Rank-10: 0.9230
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7227
+CMC curve: Rank-1: 0.9114, Rank-5: 0.9149, Rank-10: 0.9207
+=> Improvement:
+mAP improvement: 0.0073 (+1.02%)
+Rank-1 improvement: 0.0012 (+0.13%)
+2025-05-30 17:51:33,668 DeMo.train INFO: Validation Results - Epoch: 26
+2025-05-30 17:51:33,669 DeMo.train INFO: mAP: 72.3%
+2025-05-30 17:51:33,669 DeMo.train INFO: CMC curve, Rank-1  :91.1%
+2025-05-30 17:51:33,669 DeMo.train INFO: CMC curve, Rank-5  :91.5%
+2025-05-30 17:51:33,669 DeMo.train INFO: CMC curve, Rank-10 :92.1%
+2025-05-30 17:51:33,669 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:51:34,225 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:51:34,225 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 17:51:34,225 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8366
+CMC curve: Rank-1: 0.9592, Rank-5: 0.9673, Rank-10: 0.9708
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8396
+CMC curve: Rank-1: 0.9662, Rank-5: 0.9703, Rank-10: 0.9720
+=> Improvement:
+mAP improvement: 0.0030 (+0.35%)
+Rank-1 improvement: 0.0070 (+0.73%)
+2025-05-30 17:54:03,544 DeMo.train INFO: Validation Results - Epoch: 26
+2025-05-30 17:54:03,544 DeMo.train INFO: mAP: 84.0%
+2025-05-30 17:54:03,545 DeMo.train INFO: CMC curve, Rank-1  :96.6%
+2025-05-30 17:54:03,545 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 17:54:03,545 DeMo.train INFO: CMC curve, Rank-10 :97.2%
+2025-05-30 17:54:03,545 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:54:04,172 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:54:04,173 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 17:54:04,173 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 17:54:04,173 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 17:54:04,173 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 17:54:04,173 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:54:17,256 DeMo.train INFO: Epoch[27] Iteration[10/65] Loss: 0.777, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-30 17:54:26,649 DeMo.train INFO: Epoch[27] Iteration[20/65] Loss: 0.775, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-30 17:54:36,058 DeMo.train INFO: Epoch[27] Iteration[30/65] Loss: 0.778, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-30 17:54:45,528 DeMo.train INFO: Epoch[27] Iteration[40/65] Loss: 0.776, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-30 17:54:54,889 DeMo.train INFO: Epoch[27] Iteration[50/65] Loss: 0.776, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-30 17:55:04,259 DeMo.train INFO: Epoch[27] Iteration[60/65] Loss: 0.774, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-30 17:55:07,219 DeMo.train INFO: Epoch 27 done. Time per batch: 1.001[s] Speed: 127.9[samples/s]
+2025-05-30 17:55:07,224 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:55:07,224 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 17:55:07,224 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8350
+CMC curve: Rank-1: 0.9598, Rank-5: 0.9679, Rank-10: 0.9714
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8379
+CMC curve: Rank-1: 0.9685, Rank-5: 0.9726, Rank-10: 0.9755
+=> Improvement:
+mAP improvement: 0.0029 (+0.35%)
+Rank-1 improvement: 0.0087 (+0.91%)
+2025-05-30 17:57:34,536 DeMo.train INFO: Validation Results - Epoch: 27
+2025-05-30 17:57:34,536 DeMo.train INFO: mAP: 83.8%
+2025-05-30 17:57:34,536 DeMo.train INFO: CMC curve, Rank-1  :96.9%
+2025-05-30 17:57:34,537 DeMo.train INFO: CMC curve, Rank-5  :97.3%
+2025-05-30 17:57:34,537 DeMo.train INFO: CMC curve, Rank-10 :97.6%
+2025-05-30 17:57:34,537 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:57:34,856 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 17:57:34,857 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 17:57:34,857 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7131
+CMC curve: Rank-1: 0.9061, Rank-5: 0.9149, Rank-10: 0.9219
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7195
+CMC curve: Rank-1: 0.9015, Rank-5: 0.9073, Rank-10: 0.9137
+=> Improvement:
+mAP improvement: 0.0064 (+0.89%)
+Rank-1 improvement: -0.0047 (-0.51%)
+2025-05-30 18:00:02,824 DeMo.train INFO: Validation Results - Epoch: 27
+2025-05-30 18:00:02,825 DeMo.train INFO: mAP: 71.9%
+2025-05-30 18:00:02,825 DeMo.train INFO: CMC curve, Rank-1  :90.1%
+2025-05-30 18:00:02,825 DeMo.train INFO: CMC curve, Rank-5  :90.7%
+2025-05-30 18:00:02,825 DeMo.train INFO: CMC curve, Rank-10 :91.4%
+2025-05-30 18:00:02,825 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:00:02,842 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:00:02,842 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 18:00:02,842 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8368
+CMC curve: Rank-1: 0.9580, Rank-5: 0.9673, Rank-10: 0.9703
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8399
+CMC curve: Rank-1: 0.9650, Rank-5: 0.9697, Rank-10: 0.9708
+=> Improvement:
+mAP improvement: 0.0031 (+0.37%)
+Rank-1 improvement: 0.0070 (+0.73%)
+2025-05-30 18:02:33,516 DeMo.train INFO: Validation Results - Epoch: 27
+2025-05-30 18:02:33,516 DeMo.train INFO: mAP: 84.0%
+2025-05-30 18:02:33,517 DeMo.train INFO: CMC curve, Rank-1  :96.5%
+2025-05-30 18:02:33,517 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 18:02:33,517 DeMo.train INFO: CMC curve, Rank-10 :97.1%
+2025-05-30 18:02:33,517 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:02:33,755 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:02:33,756 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 18:02:33,756 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 18:02:33,756 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 18:02:33,756 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 18:02:33,756 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:02:46,355 DeMo.train INFO: Epoch[28] Iteration[10/65] Loss: 0.779, Acc: 1.000, Base Lr: 4.17e-06
+2025-05-30 18:02:55,736 DeMo.train INFO: Epoch[28] Iteration[20/65] Loss: 0.781, Acc: 1.000, Base Lr: 4.17e-06
+2025-05-30 18:03:05,125 DeMo.train INFO: Epoch[28] Iteration[30/65] Loss: 0.780, Acc: 1.000, Base Lr: 4.17e-06
+2025-05-30 18:03:14,490 DeMo.train INFO: Epoch[28] Iteration[40/65] Loss: 0.778, Acc: 1.000, Base Lr: 4.17e-06
+2025-05-30 18:03:23,855 DeMo.train INFO: Epoch[28] Iteration[50/65] Loss: 0.775, Acc: 1.000, Base Lr: 4.17e-06
+2025-05-30 18:03:33,206 DeMo.train INFO: Epoch[28] Iteration[60/65] Loss: 0.775, Acc: 1.000, Base Lr: 4.17e-06
+2025-05-30 18:03:36,166 DeMo.train INFO: Epoch 28 done. Time per batch: 0.991[s] Speed: 129.2[samples/s]
+2025-05-30 18:03:36,176 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:03:36,176 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 18:03:36,176 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8349
+CMC curve: Rank-1: 0.9598, Rank-5: 0.9673, Rank-10: 0.9714
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8377
+CMC curve: Rank-1: 0.9679, Rank-5: 0.9726, Rank-10: 0.9755
+=> Improvement:
+mAP improvement: 0.0027 (+0.33%)
+Rank-1 improvement: 0.0082 (+0.85%)
+2025-05-30 18:06:03,955 DeMo.train INFO: Validation Results - Epoch: 28
+2025-05-30 18:06:03,955 DeMo.train INFO: mAP: 83.8%
+2025-05-30 18:06:03,955 DeMo.train INFO: CMC curve, Rank-1  :96.8%
+2025-05-30 18:06:03,955 DeMo.train INFO: CMC curve, Rank-5  :97.3%
+2025-05-30 18:06:03,956 DeMo.train INFO: CMC curve, Rank-10 :97.6%
+2025-05-30 18:06:03,956 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:06:04,153 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:06:04,153 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 18:06:04,154 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7063
+CMC curve: Rank-1: 0.9032, Rank-5: 0.9137, Rank-10: 0.9213
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7144
+CMC curve: Rank-1: 0.9015, Rank-5: 0.9079, Rank-10: 0.9201
+=> Improvement:
+mAP improvement: 0.0081 (+1.15%)
+Rank-1 improvement: -0.0017 (-0.19%)
+2025-05-30 18:08:31,610 DeMo.train INFO: Validation Results - Epoch: 28
+2025-05-30 18:08:31,610 DeMo.train INFO: mAP: 71.4%
+2025-05-30 18:08:31,610 DeMo.train INFO: CMC curve, Rank-1  :90.1%
+2025-05-30 18:08:31,610 DeMo.train INFO: CMC curve, Rank-5  :90.8%
+2025-05-30 18:08:31,610 DeMo.train INFO: CMC curve, Rank-10 :92.0%
+2025-05-30 18:08:31,610 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:08:32,117 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:08:32,117 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 18:08:32,117 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8370
+CMC curve: Rank-1: 0.9586, Rank-5: 0.9662, Rank-10: 0.9703
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8400
+CMC curve: Rank-1: 0.9662, Rank-5: 0.9697, Rank-10: 0.9726
+=> Improvement:
+mAP improvement: 0.0030 (+0.36%)
+Rank-1 improvement: 0.0076 (+0.79%)
+2025-05-30 18:11:02,081 DeMo.train INFO: Validation Results - Epoch: 28
+2025-05-30 18:11:02,081 DeMo.train INFO: mAP: 84.0%
+2025-05-30 18:11:02,081 DeMo.train INFO: CMC curve, Rank-1  :96.6%
+2025-05-30 18:11:02,082 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 18:11:02,082 DeMo.train INFO: CMC curve, Rank-10 :97.3%
+2025-05-30 18:11:02,082 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:11:02,095 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:11:02,096 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 18:11:02,096 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 18:11:02,096 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 18:11:02,096 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 18:11:02,096 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:11:14,600 DeMo.train INFO: Epoch[29] Iteration[10/65] Loss: 0.784, Acc: 1.000, Base Lr: 1.31e-06
+2025-05-30 18:11:23,996 DeMo.train INFO: Epoch[29] Iteration[20/65] Loss: 0.779, Acc: 1.000, Base Lr: 1.31e-06
+2025-05-30 18:11:33,383 DeMo.train INFO: Epoch[29] Iteration[30/65] Loss: 0.777, Acc: 1.000, Base Lr: 1.31e-06
+2025-05-30 18:11:42,747 DeMo.train INFO: Epoch[29] Iteration[40/65] Loss: 0.777, Acc: 1.000, Base Lr: 1.31e-06
+2025-05-30 18:11:52,080 DeMo.train INFO: Epoch[29] Iteration[50/65] Loss: 0.777, Acc: 1.000, Base Lr: 1.31e-06
+2025-05-30 18:12:01,417 DeMo.train INFO: Epoch[29] Iteration[60/65] Loss: 0.776, Acc: 1.000, Base Lr: 1.31e-06
+2025-05-30 18:12:04,333 DeMo.train INFO: Epoch 29 done. Time per batch: 0.988[s] Speed: 129.6[samples/s]
+2025-05-30 18:12:04,338 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:12:04,338 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 18:12:04,338 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8336
+CMC curve: Rank-1: 0.9574, Rank-5: 0.9668, Rank-10: 0.9703
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8367
+CMC curve: Rank-1: 0.9650, Rank-5: 0.9703, Rank-10: 0.9732
+=> Improvement:
+mAP improvement: 0.0031 (+0.37%)
+Rank-1 improvement: 0.0076 (+0.79%)
+2025-05-30 18:14:31,343 DeMo.train INFO: Validation Results - Epoch: 29
+2025-05-30 18:14:31,343 DeMo.train INFO: mAP: 83.7%
+2025-05-30 18:14:31,343 DeMo.train INFO: CMC curve, Rank-1  :96.5%
+2025-05-30 18:14:31,343 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 18:14:31,343 DeMo.train INFO: CMC curve, Rank-10 :97.3%
+2025-05-30 18:14:31,344 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:14:32,058 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:14:32,058 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 18:14:32,059 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7152
+CMC curve: Rank-1: 0.9032, Rank-5: 0.9155, Rank-10: 0.9201
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7221
+CMC curve: Rank-1: 0.9038, Rank-5: 0.9125, Rank-10: 0.9190
+=> Improvement:
+mAP improvement: 0.0070 (+0.97%)
+Rank-1 improvement: 0.0006 (+0.06%)
+2025-05-30 18:16:59,820 DeMo.train INFO: Validation Results - Epoch: 29
+2025-05-30 18:16:59,820 DeMo.train INFO: mAP: 72.2%
+2025-05-30 18:16:59,821 DeMo.train INFO: CMC curve, Rank-1  :90.4%
+2025-05-30 18:16:59,821 DeMo.train INFO: CMC curve, Rank-5  :91.3%
+2025-05-30 18:16:59,821 DeMo.train INFO: CMC curve, Rank-10 :91.9%
+2025-05-30 18:16:59,821 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:17:00,702 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:17:00,702 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 18:17:00,703 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8356
+CMC curve: Rank-1: 0.9569, Rank-5: 0.9668, Rank-10: 0.9703
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8390
+CMC curve: Rank-1: 0.9644, Rank-5: 0.9691, Rank-10: 0.9691
+=> Improvement:
+mAP improvement: 0.0034 (+0.40%)
+Rank-1 improvement: 0.0076 (+0.79%)
+2025-05-30 18:19:29,463 DeMo.train INFO: Validation Results - Epoch: 29
+2025-05-30 18:19:29,464 DeMo.train INFO: mAP: 83.9%
+2025-05-30 18:19:29,464 DeMo.train INFO: CMC curve, Rank-1  :96.4%
+2025-05-30 18:19:29,464 DeMo.train INFO: CMC curve, Rank-5  :96.9%
+2025-05-30 18:19:29,465 DeMo.train INFO: CMC curve, Rank-10 :96.9%
+2025-05-30 18:19:29,465 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:19:29,622 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:19:29,622 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 18:19:29,622 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 18:19:29,622 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 18:19:29,622 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 18:19:29,622 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:19:42,227 DeMo.train INFO: Epoch[30] Iteration[10/65] Loss: 0.773, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-30 18:19:51,663 DeMo.train INFO: Epoch[30] Iteration[20/65] Loss: 0.776, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-30 18:20:01,039 DeMo.train INFO: Epoch[30] Iteration[30/65] Loss: 0.774, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-30 18:20:10,414 DeMo.train INFO: Epoch[30] Iteration[40/65] Loss: 0.776, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-30 18:20:19,784 DeMo.train INFO: Epoch[30] Iteration[50/65] Loss: 0.777, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-30 18:20:29,122 DeMo.train INFO: Epoch[30] Iteration[60/65] Loss: 0.777, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-30 18:20:32,077 DeMo.train INFO: Epoch 30 done. Time per batch: 0.991[s] Speed: 129.1[samples/s]
+2025-05-30 18:20:32,085 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:20:32,085 DeMo.train INFO: Current is the ori feature testing!
+2025-05-30 18:20:32,085 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8344
+CMC curve: Rank-1: 0.9603, Rank-5: 0.9668, Rank-10: 0.9714
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8374
+CMC curve: Rank-1: 0.9673, Rank-5: 0.9726, Rank-10: 0.9749
+=> Improvement:
+mAP improvement: 0.0030 (+0.36%)
+Rank-1 improvement: 0.0070 (+0.73%)
+2025-05-30 18:22:59,207 DeMo.train INFO: Validation Results - Epoch: 30
+2025-05-30 18:22:59,208 DeMo.train INFO: mAP: 83.7%
+2025-05-30 18:22:59,208 DeMo.train INFO: CMC curve, Rank-1  :96.7%
+2025-05-30 18:22:59,208 DeMo.train INFO: CMC curve, Rank-5  :97.3%
+2025-05-30 18:22:59,208 DeMo.train INFO: CMC curve, Rank-10 :97.5%
+2025-05-30 18:22:59,208 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:23:00,016 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:23:00,016 DeMo.train INFO: Current is the moe feature testing!
+2025-05-30 18:23:00,016 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7181
+CMC curve: Rank-1: 0.9085, Rank-5: 0.9160, Rank-10: 0.9254
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7253
+CMC curve: Rank-1: 0.9120, Rank-5: 0.9166, Rank-10: 0.9219
+=> Improvement:
+mAP improvement: 0.0072 (+1.01%)
+Rank-1 improvement: 0.0035 (+0.39%)
+2025-05-30 18:25:29,905 DeMo.train INFO: Validation Results - Epoch: 30
+2025-05-30 18:25:29,906 DeMo.train INFO: mAP: 72.5%
+2025-05-30 18:25:29,906 DeMo.train INFO: CMC curve, Rank-1  :91.2%
+2025-05-30 18:25:29,906 DeMo.train INFO: CMC curve, Rank-5  :91.7%
+2025-05-30 18:25:29,906 DeMo.train INFO: CMC curve, Rank-10 :92.2%
+2025-05-30 18:25:29,906 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:25:30,508 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:25:30,509 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-30 18:25:30,509 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.8360
+CMC curve: Rank-1: 0.9574, Rank-5: 0.9656, Rank-10: 0.9691
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.8391
+CMC curve: Rank-1: 0.9656, Rank-5: 0.9703, Rank-10: 0.9720
+=> Improvement:
+mAP improvement: 0.0031 (+0.37%)
+Rank-1 improvement: 0.0082 (+0.85%)
+2025-05-30 18:28:00,579 DeMo.train INFO: Validation Results - Epoch: 30
+2025-05-30 18:28:00,580 DeMo.train INFO: mAP: 83.9%
+2025-05-30 18:28:00,580 DeMo.train INFO: CMC curve, Rank-1  :96.6%
+2025-05-30 18:28:00,580 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-05-30 18:28:00,580 DeMo.train INFO: CMC curve, Rank-10 :97.2%
+2025-05-30 18:28:00,580 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:28:01,030 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-30 18:28:01,030 DeMo.train INFO: Best mAP: 84.0%
+2025-05-30 18:28:01,030 DeMo.train INFO: Best Rank-1: 97.2%
+2025-05-30 18:28:01,030 DeMo.train INFO: Best Rank-5: 97.3%
+2025-05-30 18:28:01,030 DeMo.train INFO: Best Rank-10: 97.4%
+2025-05-30 18:28:01,031 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

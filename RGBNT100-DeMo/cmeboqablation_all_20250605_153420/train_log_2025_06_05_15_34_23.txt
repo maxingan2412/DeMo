@@ -1,0 +1,1636 @@
+2025-06-05 15:34:23,590 DeMo INFO: Saving model in the path :./RGBNT100-DeMo/cmeboqablation_all_20250605_153420
+2025-06-05 15:34:23,590 DeMo INFO: Namespace(config_file='configs/RGBNT100/DeMo.yml', fea_cft=0, local_rank=0, opts=['OUTPUT_DIR', './RGBNT100-DeMo/cmeboqablation_all_20250605_153420'])
+2025-06-05 15:34:23,591 DeMo INFO: Loaded configuration file configs/RGBNT100/DeMo.yml
+2025-06-05 15:34:23,591 DeMo INFO: 
+MODEL:
+  TRANSFORMER_TYPE: 'ViT-B-16'
+  STRIDE_SIZE: [ 16, 16 ]
+  SIE_CAMERA: True
+  DIRECT: 0
+  SIE_COE: 1.0
+  ID_LOSS_WEIGHT: 0.25
+  TRIPLET_LOSS_WEIGHT: 1.0
+  GLOBAL_LOCAL: True
+  HDM: True
+  ATM: False
+  HEAD: 8
+  FROZEN: False
+  CENGJIFUSION: False
+  NEWDEFORM: True
+
+INPUT:
+  SIZE_TRAIN: [ 128, 256 ]
+  SIZE_TEST: [ 128, 256 ]
+  PROB: 0.5 # random horizontal flip
+  RE_PROB: 0.5 # random erasing
+  PADDING: 10
+
+DATALOADER:
+  SAMPLER: 'softmax_triplet'
+  NUM_INSTANCE: 16
+  NUM_WORKERS: 14
+
+DATASETS:
+  NAMES: ('RGBNT100')
+  ROOT_DIR: '..'
+
+SOLVER:
+  BASE_LR: 0.00035
+  WARMUP_ITERS: 5
+  MAX_EPOCHS: 30
+  OPTIMIZER_NAME: 'Adam'
+  GAMMA: 0.1
+  IMS_PER_BATCH: 128
+  EVAL_PERIOD: 1
+  SEED: 1111
+
+TEST:
+  IMS_PER_BATCH: 128
+  RE_RANKING: 'no'
+  WEIGHT: ''
+  NECK_FEAT: 'before'
+  FEAT_NORM: 'yes'
+  MISS: "nothing"
+
+OUTPUT_DIR: '..'
+
+
+
+
+2025-06-05 15:34:23,592 DeMo INFO: Running with config:
+DATALOADER:
+  NUM_INSTANCE: 16
+  NUM_WORKERS: 14
+  SAMPLER: softmax_triplet
+DATASETS:
+  NAMES: RGBNT100
+  ROOT_DIR: ..
+INPUT:
+  PADDING: 10
+  PIXEL_MEAN: [0.5, 0.5, 0.5]
+  PIXEL_STD: [0.5, 0.5, 0.5]
+  PROB: 0.5
+  RE_PROB: 0.5
+  SIZE_TEST: [128, 256]
+  SIZE_TRAIN: [128, 256]
+MODEL:
+  ADAPTER: False
+  ATM: False
+  ATT_DROP_RATE: 0.0
+  CENGJIFUSION: False
+  DEVICE: cuda
+  DEVICE_ID: 0
+  DIRECT: 0
+  DIST_TRAIN: False
+  DROP_OUT: 0.0
+  DROP_PATH: 0.1
+  FROZEN: False
+  GLOBAL_LOCAL: True
+  HDM: True
+  HEAD: 8
+  ID_LOSS_TYPE: softmax
+  ID_LOSS_WEIGHT: 0.25
+  IF_LABELSMOOTH: on
+  IF_WITH_CENTER: no
+  METRIC_LOSS_TYPE: triplet
+  NAME: DeMo
+  NECK: bnneck
+  NEWDEFORM: True
+  NO_MARGIN: True
+  PRETRAIN_PATH_T: /path/to/your/vitb_16_224_21k.pth
+  PROMPT: False
+  SIE_CAMERA: True
+  SIE_COE: 1.0
+  SIE_VIEW: False
+  STRIDE_SIZE: [16, 16]
+  TRANSFORMER_TYPE: ViT-B-16
+  TRIPLET_LOSS_WEIGHT: 1.0
+OUTPUT_DIR: ./RGBNT100-DeMo/cmeboqablation_all_20250605_153420
+SOLVER:
+  BASE_LR: 0.00035
+  BIAS_LR_FACTOR: 2
+  CENTER_LOSS_WEIGHT: 0.0005
+  CENTER_LR: 0.5
+  CHECKPOINT_PERIOD: 60
+  CLUSTER_MARGIN: 0.3
+  COSINE_MARGIN: 0.5
+  COSINE_SCALE: 30
+  EVAL_PERIOD: 1
+  GAMMA: 0.1
+  IMS_PER_BATCH: 128
+  LARGE_FC_LR: False
+  LOG_PERIOD: 10
+  MARGIN: 0.3
+  MAX_EPOCHS: 30
+  MOMENTUM: 0.9
+  OPTIMIZER_NAME: Adam
+  RANGE_ALPHA: 0
+  RANGE_BETA: 1
+  RANGE_K: 2
+  RANGE_LOSS_WEIGHT: 1
+  RANGE_MARGIN: 0.3
+  SEED: 1111
+  STEPS: (40, 70)
+  WARMUP_FACTOR: 0.01
+  WARMUP_ITERS: 5
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY_BIAS: 0.0001
+TEST:
+  FEAT: 0
+  FEAT_NORM: yes
+  IMS_PER_BATCH: 128
+  MISS: nothing
+  NECK_FEAT: before
+  RE_RANKING: no
+  WEIGHT: 
+2025-06-05 15:34:29,817 DeMo INFO: combineway: cmeboqablation
+2025-06-05 15:34:30,943 DeMo INFO: DeMo(
+  (BACKBONE): build_transformer(
+    (base): VisionTransformer(
+      (conv1): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16), bias=False)
+      (ln_pre): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (transformer): Transformer(
+        (resblocks): Sequential(
+          (0): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (1): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (2): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (3): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (4): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (5): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (6): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (7): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (8): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (9): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (10): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (11): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+      )
+      (ln_post): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+  (pool): AdaptiveAvgPool1d(output_size=1)
+  (rgb_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (nir_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (tir_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (generalFusion): GeneralFusion(
+    (cmqe_system): CMQEModalitySystem(
+      (boq_modules): ModuleDict(
+        (RGB): CMQEAdaptiveBoQ(
+          (norm_input): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (pos_encoding): CMQEPositionalEncoding()
+          (boqs): ModuleList(
+            (0): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (1): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=64, out_features=57, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (2): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=57, out_features=51, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (3): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=51, out_features=44, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+          )
+          (adaptive_fusion): CMQEAdaptiveFusion(
+            (attention_net): Sequential(
+              (0): Linear(in_features=512, out_features=128, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=128, out_features=1, bias=True)
+            )
+            (final_proj): Linear(in_features=216, out_features=1, bias=True)
+          )
+        )
+        (NI): CMQEAdaptiveBoQ(
+          (norm_input): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (pos_encoding): CMQEPositionalEncoding()
+          (boqs): ModuleList(
+            (0): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (1): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=64, out_features=57, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (2): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=57, out_features=51, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (3): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=51, out_features=44, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+          )
+          (adaptive_fusion): CMQEAdaptiveFusion(
+            (attention_net): Sequential(
+              (0): Linear(in_features=512, out_features=128, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=128, out_features=1, bias=True)
+            )
+            (final_proj): Linear(in_features=216, out_features=1, bias=True)
+          )
+        )
+        (TI): CMQEAdaptiveBoQ(
+          (norm_input): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (pos_encoding): CMQEPositionalEncoding()
+          (boqs): ModuleList(
+            (0): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (1): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=64, out_features=57, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (2): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=57, out_features=51, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (3): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=51, out_features=44, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+          )
+          (adaptive_fusion): CMQEAdaptiveFusion(
+            (attention_net): Sequential(
+              (0): Linear(in_features=512, out_features=128, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=128, out_features=1, bias=True)
+            )
+            (final_proj): Linear(in_features=216, out_features=1, bias=True)
+          )
+        )
+        (RGB_NI): CMQEAdaptiveBoQ(
+          (norm_input): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (pos_encoding): CMQEPositionalEncoding()
+          (boqs): ModuleList(
+            (0): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (1): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=76, out_features=68, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (2): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=68, out_features=60, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (3): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=60, out_features=53, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+          )
+          (adaptive_fusion): CMQEAdaptiveFusion(
+            (attention_net): Sequential(
+              (0): Linear(in_features=512, out_features=128, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=128, out_features=1, bias=True)
+            )
+            (final_proj): Linear(in_features=257, out_features=1, bias=True)
+          )
+        )
+        (RGB_TI): CMQEAdaptiveBoQ(
+          (norm_input): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (pos_encoding): CMQEPositionalEncoding()
+          (boqs): ModuleList(
+            (0): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (1): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=76, out_features=68, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (2): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=68, out_features=60, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (3): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=60, out_features=53, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+          )
+          (adaptive_fusion): CMQEAdaptiveFusion(
+            (attention_net): Sequential(
+              (0): Linear(in_features=512, out_features=128, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=128, out_features=1, bias=True)
+            )
+            (final_proj): Linear(in_features=257, out_features=1, bias=True)
+          )
+        )
+        (NI_TI): CMQEAdaptiveBoQ(
+          (norm_input): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (pos_encoding): CMQEPositionalEncoding()
+          (boqs): ModuleList(
+            (0): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (1): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=76, out_features=68, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (2): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=68, out_features=60, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (3): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=60, out_features=53, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+          )
+          (adaptive_fusion): CMQEAdaptiveFusion(
+            (attention_net): Sequential(
+              (0): Linear(in_features=512, out_features=128, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=128, out_features=1, bias=True)
+            )
+            (final_proj): Linear(in_features=257, out_features=1, bias=True)
+          )
+        )
+        (RGB_NI_TI): CMQEAdaptiveBoQ(
+          (norm_input): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (pos_encoding): CMQEPositionalEncoding()
+          (boqs): ModuleList(
+            (0): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (1): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=96, out_features=86, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (2): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=86, out_features=76, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+            (3): CMQEBoQBlock(
+              (encoder): TransformerEncoderLayer(
+                (self_attn): MultiheadAttention(
+                  (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+                )
+                (linear1): Linear(in_features=512, out_features=2048, bias=True)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (linear2): Linear(in_features=2048, out_features=512, bias=True)
+                (norm1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (norm2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+                (dropout1): Dropout(p=0.0, inplace=False)
+                (dropout2): Dropout(p=0.0, inplace=False)
+              )
+              (query_projection): Linear(in_features=512, out_features=512, bias=True)
+              (query_adapter): Linear(in_features=76, out_features=67, bias=True)
+              (self_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_q): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (cross_attn): MultiheadAttention(
+                (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+              )
+              (norm_out): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            )
+          )
+          (adaptive_fusion): CMQEAdaptiveFusion(
+            (attention_net): Sequential(
+              (0): Linear(in_features=512, out_features=128, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=128, out_features=1, bias=True)
+            )
+            (final_proj): Linear(in_features=325, out_features=1, bias=True)
+          )
+        )
+      )
+      (cmqe_module): CrossModalQueryExchange(
+        (cross_modal_attn): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+        )
+        (query_fusion): Sequential(
+          (0): Linear(in_features=1024, out_features=512, bias=True)
+          (1): ReLU()
+          (2): Dropout(p=0.1, inplace=False)
+          (3): Linear(in_features=512, out_features=512, bias=True)
+        )
+        (query_adapters): ModuleDict()
+      )
+    )
+    (deformselectablation): DAttentionEnhancedAblation(
+      (modal_gate): Sequential(
+        (0): Conv2d(1536, 128, kernel_size=(1, 1), stride=(1, 1))
+        (1): ReLU(inplace=True)
+        (2): Conv2d(128, 3, kernel_size=(1, 1), stride=(1, 1))
+        (3): Sigmoid()
+      )
+      (conv_offset): Sequential(
+        (0): Conv2d(1536, 512, kernel_size=(1, 1), stride=(1, 1))
+        (1): GELU(approximate='none')
+        (2): Conv2d(512, 512, kernel_size=(4, 4), stride=(2, 2), groups=512)
+        (3): GELU(approximate='none')
+        (4): Conv2d(512, 2, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      )
+      (conv_offset_coarse): Sequential(
+        (0): Conv2d(1536, 512, kernel_size=(1, 1), stride=(1, 1))
+        (1): GELU(approximate='none')
+        (2): Conv2d(512, 512, kernel_size=(6, 6), stride=(2, 2), padding=(1, 1), groups=512)
+        (3): GELU(approximate='none')
+        (4): Conv2d(512, 2, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      )
+      (conv_offset_fine): Sequential(
+        (0): Conv2d(1536, 512, kernel_size=(1, 1), stride=(1, 1))
+        (1): GELU(approximate='none')
+        (2): Conv2d(512, 512, kernel_size=(2, 2), stride=(2, 2), groups=512)
+        (3): GELU(approximate='none')
+        (4): Conv2d(512, 2, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      )
+      (proj_q): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_k): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_v): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_out): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_drop): Dropout(p=0.0, inplace=False)
+      (attn_drop): Dropout(p=0.0, inplace=False)
+    )
+  )
+  (classifier_moe): Linear(in_features=3584, out_features=50, bias=False)
+  (bottleneck_moe): BatchNorm1d(3584, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier_r): Linear(in_features=512, out_features=50, bias=False)
+  (bottleneck_r): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier_n): Linear(in_features=512, out_features=50, bias=False)
+  (bottleneck_n): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier_t): Linear(in_features=512, out_features=50, bias=False)
+  (bottleneck_t): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+2025-06-05 15:34:30,946 DeMo INFO: number of parameters:249.428855
+2025-06-05 15:34:31,175 DeMo.train INFO: start training
+2025-06-05 15:34:55,055 DeMo.train INFO: Epoch[1] Iteration[10/65] Loss: 9.767, Acc: 0.129, Base Lr: 9.80e-05
+2025-06-05 15:35:03,475 DeMo.train INFO: Epoch[1] Iteration[20/65] Loss: 8.444, Acc: 0.201, Base Lr: 9.80e-05
+2025-06-05 15:35:11,835 DeMo.train INFO: Epoch[1] Iteration[30/65] Loss: 7.921, Acc: 0.255, Base Lr: 9.80e-05
+2025-06-05 15:35:20,197 DeMo.train INFO: Epoch[1] Iteration[40/65] Loss: 7.625, Acc: 0.304, Base Lr: 9.80e-05
+2025-06-05 15:35:28,578 DeMo.train INFO: Epoch[1] Iteration[50/65] Loss: 7.429, Acc: 0.358, Base Lr: 9.80e-05
+2025-06-05 15:35:37,067 DeMo.train INFO: Epoch[1] Iteration[60/65] Loss: 7.282, Acc: 0.398, Base Lr: 9.80e-05
+2025-06-05 15:35:39,722 DeMo.train INFO: Epoch 1 done. Time per batch: 1.086[s] Speed: 117.8[samples/s]
+2025-06-05 15:35:39,727 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:35:39,728 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 15:35:39,728 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:37:58,519 DeMo.train INFO: Validation Results - Epoch: 1
+2025-06-05 15:37:58,519 DeMo.train INFO: mAP: 57.1%
+2025-06-05 15:37:58,519 DeMo.train INFO: CMC curve, Rank-1  :85.1%
+2025-06-05 15:37:58,520 DeMo.train INFO: CMC curve, Rank-5  :86.5%
+2025-06-05 15:37:58,520 DeMo.train INFO: CMC curve, Rank-10 :87.1%
+2025-06-05 15:37:58,520 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:37:58,678 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:37:58,679 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 15:37:58,679 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:40:14,991 DeMo.train INFO: Validation Results - Epoch: 1
+2025-06-05 15:40:14,991 DeMo.train INFO: mAP: 54.1%
+2025-06-05 15:40:14,991 DeMo.train INFO: CMC curve, Rank-1  :79.3%
+2025-06-05 15:40:14,991 DeMo.train INFO: CMC curve, Rank-5  :80.9%
+2025-06-05 15:40:14,991 DeMo.train INFO: CMC curve, Rank-10 :82.0%
+2025-06-05 15:40:14,992 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:40:15,013 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:40:15,014 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 15:40:15,014 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:42:34,330 DeMo.train INFO: Validation Results - Epoch: 1
+2025-06-05 15:42:34,331 DeMo.train INFO: mAP: 58.4%
+2025-06-05 15:42:34,331 DeMo.train INFO: CMC curve, Rank-1  :85.6%
+2025-06-05 15:42:34,331 DeMo.train INFO: CMC curve, Rank-5  :86.5%
+2025-06-05 15:42:34,331 DeMo.train INFO: CMC curve, Rank-10 :87.6%
+2025-06-05 15:42:34,331 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:42:43,672 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:42:43,673 DeMo.train INFO: Best mAP: 58.4%
+2025-06-05 15:42:43,673 DeMo.train INFO: Best Rank-1: 85.6%
+2025-06-05 15:42:43,673 DeMo.train INFO: Best Rank-5: 86.5%
+2025-06-05 15:42:43,673 DeMo.train INFO: Best Rank-10: 87.6%
+2025-06-05 15:42:43,673 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:42:56,199 DeMo.train INFO: Epoch[2] Iteration[10/65] Loss: 6.320, Acc: 0.498, Base Lr: 1.61e-04
+2025-06-05 15:43:04,602 DeMo.train INFO: Epoch[2] Iteration[20/65] Loss: 6.162, Acc: 0.557, Base Lr: 1.61e-04
+2025-06-05 15:43:12,896 DeMo.train INFO: Epoch[2] Iteration[30/65] Loss: 6.021, Acc: 0.580, Base Lr: 1.61e-04
+2025-06-05 15:43:21,291 DeMo.train INFO: Epoch[2] Iteration[40/65] Loss: 5.905, Acc: 0.630, Base Lr: 1.61e-04
+2025-06-05 15:43:29,554 DeMo.train INFO: Epoch[2] Iteration[50/65] Loss: 5.784, Acc: 0.673, Base Lr: 1.61e-04
+2025-06-05 15:43:37,821 DeMo.train INFO: Epoch[2] Iteration[60/65] Loss: 5.635, Acc: 0.706, Base Lr: 1.61e-04
+2025-06-05 15:43:39,660 DeMo.train INFO: Epoch 2 done. Time per batch: 0.903[s] Speed: 141.7[samples/s]
+2025-06-05 15:43:39,674 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:43:39,674 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 15:43:39,674 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:45:55,658 DeMo.train INFO: Validation Results - Epoch: 2
+2025-06-05 15:45:55,658 DeMo.train INFO: mAP: 63.3%
+2025-06-05 15:45:55,658 DeMo.train INFO: CMC curve, Rank-1  :82.0%
+2025-06-05 15:45:55,659 DeMo.train INFO: CMC curve, Rank-5  :83.3%
+2025-06-05 15:45:55,659 DeMo.train INFO: CMC curve, Rank-10 :84.0%
+2025-06-05 15:45:55,659 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:45:56,216 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:45:56,217 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 15:45:56,217 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:48:13,977 DeMo.train INFO: Validation Results - Epoch: 2
+2025-06-05 15:48:13,977 DeMo.train INFO: mAP: 64.7%
+2025-06-05 15:48:13,977 DeMo.train INFO: CMC curve, Rank-1  :81.6%
+2025-06-05 15:48:13,977 DeMo.train INFO: CMC curve, Rank-5  :82.1%
+2025-06-05 15:48:13,977 DeMo.train INFO: CMC curve, Rank-10 :83.0%
+2025-06-05 15:48:13,978 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:48:14,468 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:48:14,468 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 15:48:14,468 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:50:29,502 DeMo.train INFO: Validation Results - Epoch: 2
+2025-06-05 15:50:29,503 DeMo.train INFO: mAP: 64.0%
+2025-06-05 15:50:29,503 DeMo.train INFO: CMC curve, Rank-1  :83.4%
+2025-06-05 15:50:29,503 DeMo.train INFO: CMC curve, Rank-5  :84.5%
+2025-06-05 15:50:29,503 DeMo.train INFO: CMC curve, Rank-10 :85.1%
+2025-06-05 15:50:29,503 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:50:39,969 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:50:39,970 DeMo.train INFO: Best mAP: 64.0%
+2025-06-05 15:50:39,970 DeMo.train INFO: Best Rank-1: 83.4%
+2025-06-05 15:50:39,970 DeMo.train INFO: Best Rank-5: 84.5%
+2025-06-05 15:50:39,970 DeMo.train INFO: Best Rank-10: 85.1%
+2025-06-05 15:50:39,970 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:50:51,385 DeMo.train INFO: Epoch[3] Iteration[10/65] Loss: 4.638, Acc: 0.759, Base Lr: 2.24e-04
+2025-06-05 15:50:59,715 DeMo.train INFO: Epoch[3] Iteration[20/65] Loss: 4.574, Acc: 0.805, Base Lr: 2.24e-04
+2025-06-05 15:51:08,035 DeMo.train INFO: Epoch[3] Iteration[30/65] Loss: 4.390, Acc: 0.830, Base Lr: 2.24e-04
+2025-06-05 15:51:16,338 DeMo.train INFO: Epoch[3] Iteration[40/65] Loss: 4.211, Acc: 0.863, Base Lr: 2.24e-04
+2025-06-05 15:51:24,826 DeMo.train INFO: Epoch[3] Iteration[50/65] Loss: 4.052, Acc: 0.877, Base Lr: 2.24e-04
+2025-06-05 15:51:33,171 DeMo.train INFO: Epoch[3] Iteration[60/65] Loss: 3.903, Acc: 0.888, Base Lr: 2.24e-04
+2025-06-05 15:51:35,867 DeMo.train INFO: Epoch 3 done. Time per batch: 0.887[s] Speed: 144.3[samples/s]
+2025-06-05 15:51:35,878 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:51:35,878 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 15:51:35,878 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:53:50,142 DeMo.train INFO: Validation Results - Epoch: 3
+2025-06-05 15:53:50,143 DeMo.train INFO: mAP: 70.3%
+2025-06-05 15:53:50,143 DeMo.train INFO: CMC curve, Rank-1  :87.9%
+2025-06-05 15:53:50,143 DeMo.train INFO: CMC curve, Rank-5  :89.0%
+2025-06-05 15:53:50,143 DeMo.train INFO: CMC curve, Rank-10 :89.8%
+2025-06-05 15:53:50,143 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:53:50,984 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:53:50,985 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 15:53:50,986 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:56:06,667 DeMo.train INFO: Validation Results - Epoch: 3
+2025-06-05 15:56:06,667 DeMo.train INFO: mAP: 67.9%
+2025-06-05 15:56:06,667 DeMo.train INFO: CMC curve, Rank-1  :85.9%
+2025-06-05 15:56:06,667 DeMo.train INFO: CMC curve, Rank-5  :86.8%
+2025-06-05 15:56:06,667 DeMo.train INFO: CMC curve, Rank-10 :87.8%
+2025-06-05 15:56:06,667 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:56:07,431 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:56:07,432 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 15:56:07,432 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:58:22,530 DeMo.train INFO: Validation Results - Epoch: 3
+2025-06-05 15:58:22,530 DeMo.train INFO: mAP: 70.6%
+2025-06-05 15:58:22,530 DeMo.train INFO: CMC curve, Rank-1  :88.1%
+2025-06-05 15:58:22,530 DeMo.train INFO: CMC curve, Rank-5  :89.2%
+2025-06-05 15:58:22,530 DeMo.train INFO: CMC curve, Rank-10 :89.9%
+2025-06-05 15:58:22,531 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:58:33,113 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:58:33,114 DeMo.train INFO: Best mAP: 70.6%
+2025-06-05 15:58:33,114 DeMo.train INFO: Best Rank-1: 88.1%
+2025-06-05 15:58:33,114 DeMo.train INFO: Best Rank-5: 89.2%
+2025-06-05 15:58:33,114 DeMo.train INFO: Best Rank-10: 89.9%
+2025-06-05 15:58:33,114 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:58:44,768 DeMo.train INFO: Epoch[4] Iteration[10/65] Loss: 2.985, Acc: 0.866, Base Lr: 2.87e-04
+2025-06-05 15:58:53,093 DeMo.train INFO: Epoch[4] Iteration[20/65] Loss: 2.695, Acc: 0.906, Base Lr: 2.87e-04
+2025-06-05 15:59:01,369 DeMo.train INFO: Epoch[4] Iteration[30/65] Loss: 2.593, Acc: 0.930, Base Lr: 2.87e-04
+2025-06-05 15:59:09,634 DeMo.train INFO: Epoch[4] Iteration[40/65] Loss: 2.510, Acc: 0.947, Base Lr: 2.87e-04
+2025-06-05 15:59:17,924 DeMo.train INFO: Epoch[4] Iteration[50/65] Loss: 2.393, Acc: 0.957, Base Lr: 2.87e-04
+2025-06-05 15:59:26,172 DeMo.train INFO: Epoch[4] Iteration[60/65] Loss: 2.310, Acc: 0.964, Base Lr: 2.87e-04
+2025-06-05 15:59:27,982 DeMo.train INFO: Epoch 4 done. Time per batch: 0.885[s] Speed: 144.6[samples/s]
+2025-06-05 15:59:27,995 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 15:59:27,995 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 15:59:27,995 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:01:43,145 DeMo.train INFO: Validation Results - Epoch: 4
+2025-06-05 16:01:43,145 DeMo.train INFO: mAP: 80.3%
+2025-06-05 16:01:43,145 DeMo.train INFO: CMC curve, Rank-1  :93.8%
+2025-06-05 16:01:43,145 DeMo.train INFO: CMC curve, Rank-5  :94.6%
+2025-06-05 16:01:43,145 DeMo.train INFO: CMC curve, Rank-10 :95.0%
+2025-06-05 16:01:43,146 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:01:43,546 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:01:43,547 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 16:01:43,547 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:03:58,626 DeMo.train INFO: Validation Results - Epoch: 4
+2025-06-05 16:03:58,626 DeMo.train INFO: mAP: 73.4%
+2025-06-05 16:03:58,627 DeMo.train INFO: CMC curve, Rank-1  :87.5%
+2025-06-05 16:03:58,627 DeMo.train INFO: CMC curve, Rank-5  :88.1%
+2025-06-05 16:03:58,627 DeMo.train INFO: CMC curve, Rank-10 :89.0%
+2025-06-05 16:03:58,627 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:03:59,567 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:03:59,567 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 16:03:59,567 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:06:14,942 DeMo.train INFO: Validation Results - Epoch: 4
+2025-06-05 16:06:14,942 DeMo.train INFO: mAP: 80.3%
+2025-06-05 16:06:14,942 DeMo.train INFO: CMC curve, Rank-1  :93.8%
+2025-06-05 16:06:14,942 DeMo.train INFO: CMC curve, Rank-5  :94.7%
+2025-06-05 16:06:14,942 DeMo.train INFO: CMC curve, Rank-10 :95.0%
+2025-06-05 16:06:14,942 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:06:24,873 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:06:24,873 DeMo.train INFO: Best mAP: 80.3%
+2025-06-05 16:06:24,873 DeMo.train INFO: Best Rank-1: 93.8%
+2025-06-05 16:06:24,873 DeMo.train INFO: Best Rank-5: 94.7%
+2025-06-05 16:06:24,873 DeMo.train INFO: Best Rank-10: 95.0%
+2025-06-05 16:06:24,873 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:06:36,872 DeMo.train INFO: Epoch[5] Iteration[10/65] Loss: 1.863, Acc: 0.980, Base Lr: 3.27e-04
+2025-06-05 16:06:45,174 DeMo.train INFO: Epoch[5] Iteration[20/65] Loss: 1.742, Acc: 0.981, Base Lr: 3.27e-04
+2025-06-05 16:06:53,396 DeMo.train INFO: Epoch[5] Iteration[30/65] Loss: 1.670, Acc: 0.978, Base Lr: 3.27e-04
+2025-06-05 16:07:01,625 DeMo.train INFO: Epoch[5] Iteration[40/65] Loss: 1.585, Acc: 0.979, Base Lr: 3.27e-04
+2025-06-05 16:07:09,729 DeMo.train INFO: Epoch[5] Iteration[50/65] Loss: 1.541, Acc: 0.980, Base Lr: 3.27e-04
+2025-06-05 16:07:17,956 DeMo.train INFO: Epoch[5] Iteration[60/65] Loss: 1.498, Acc: 0.982, Base Lr: 3.27e-04
+2025-06-05 16:07:20,581 DeMo.train INFO: Epoch 5 done. Time per batch: 0.884[s] Speed: 144.8[samples/s]
+2025-06-05 16:07:20,595 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:07:20,595 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 16:07:20,595 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:09:34,743 DeMo.train INFO: Validation Results - Epoch: 5
+2025-06-05 16:09:34,743 DeMo.train INFO: mAP: 82.1%
+2025-06-05 16:09:34,743 DeMo.train INFO: CMC curve, Rank-1  :94.5%
+2025-06-05 16:09:34,743 DeMo.train INFO: CMC curve, Rank-5  :94.9%
+2025-06-05 16:09:34,743 DeMo.train INFO: CMC curve, Rank-10 :95.0%
+2025-06-05 16:09:34,743 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:09:36,018 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:09:36,019 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 16:09:36,019 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:11:50,942 DeMo.train INFO: Validation Results - Epoch: 5
+2025-06-05 16:11:50,942 DeMo.train INFO: mAP: 67.4%
+2025-06-05 16:11:50,942 DeMo.train INFO: CMC curve, Rank-1  :85.2%
+2025-06-05 16:11:50,942 DeMo.train INFO: CMC curve, Rank-5  :86.2%
+2025-06-05 16:11:50,942 DeMo.train INFO: CMC curve, Rank-10 :86.6%
+2025-06-05 16:11:50,942 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:11:51,875 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:11:51,875 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 16:11:51,875 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:14:06,413 DeMo.train INFO: Validation Results - Epoch: 5
+2025-06-05 16:14:06,414 DeMo.train INFO: mAP: 82.0%
+2025-06-05 16:14:06,414 DeMo.train INFO: CMC curve, Rank-1  :94.4%
+2025-06-05 16:14:06,414 DeMo.train INFO: CMC curve, Rank-5  :94.9%
+2025-06-05 16:14:06,414 DeMo.train INFO: CMC curve, Rank-10 :95.1%
+2025-06-05 16:14:06,414 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:14:16,168 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:14:16,168 DeMo.train INFO: Best mAP: 82.0%
+2025-06-05 16:14:16,168 DeMo.train INFO: Best Rank-1: 94.4%
+2025-06-05 16:14:16,168 DeMo.train INFO: Best Rank-5: 94.9%
+2025-06-05 16:14:16,168 DeMo.train INFO: Best Rank-10: 95.1%
+2025-06-05 16:14:16,168 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:14:28,578 DeMo.train INFO: Epoch[6] Iteration[10/65] Loss: 1.265, Acc: 0.973, Base Lr: 3.17e-04
+2025-06-05 16:14:36,849 DeMo.train INFO: Epoch[6] Iteration[20/65] Loss: 1.213, Acc: 0.982, Base Lr: 3.17e-04
+2025-06-05 16:14:45,136 DeMo.train INFO: Epoch[6] Iteration[30/65] Loss: 1.190, Acc: 0.984, Base Lr: 3.17e-04
+2025-06-05 16:14:53,337 DeMo.train INFO: Epoch[6] Iteration[40/65] Loss: 1.170, Acc: 0.986, Base Lr: 3.17e-04
+2025-06-05 16:15:01,615 DeMo.train INFO: Epoch[6] Iteration[50/65] Loss: 1.142, Acc: 0.988, Base Lr: 3.17e-04
+2025-06-05 16:15:09,872 DeMo.train INFO: Epoch[6] Iteration[60/65] Loss: 1.117, Acc: 0.990, Base Lr: 3.17e-04
+2025-06-05 16:15:12,502 DeMo.train INFO: Epoch 6 done. Time per batch: 0.894[s] Speed: 143.1[samples/s]
+2025-06-05 16:15:12,515 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:15:12,515 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 16:15:12,515 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:17:26,347 DeMo.train INFO: Validation Results - Epoch: 6
+2025-06-05 16:17:26,347 DeMo.train INFO: mAP: 81.6%
+2025-06-05 16:17:26,348 DeMo.train INFO: CMC curve, Rank-1  :95.7%
+2025-06-05 16:17:26,348 DeMo.train INFO: CMC curve, Rank-5  :96.2%
+2025-06-05 16:17:26,348 DeMo.train INFO: CMC curve, Rank-10 :96.4%
+2025-06-05 16:17:26,348 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:17:26,509 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:17:26,509 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 16:17:26,510 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:19:42,080 DeMo.train INFO: Validation Results - Epoch: 6
+2025-06-05 16:19:42,081 DeMo.train INFO: mAP: 71.4%
+2025-06-05 16:19:42,081 DeMo.train INFO: CMC curve, Rank-1  :89.2%
+2025-06-05 16:19:42,081 DeMo.train INFO: CMC curve, Rank-5  :90.3%
+2025-06-05 16:19:42,081 DeMo.train INFO: CMC curve, Rank-10 :91.1%
+2025-06-05 16:19:42,081 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:19:42,479 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:19:42,480 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 16:19:42,480 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:21:56,923 DeMo.train INFO: Validation Results - Epoch: 6
+2025-06-05 16:21:56,923 DeMo.train INFO: mAP: 81.6%
+2025-06-05 16:21:56,923 DeMo.train INFO: CMC curve, Rank-1  :95.7%
+2025-06-05 16:21:56,923 DeMo.train INFO: CMC curve, Rank-5  :96.2%
+2025-06-05 16:21:56,923 DeMo.train INFO: CMC curve, Rank-10 :96.4%
+2025-06-05 16:21:56,924 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:21:57,255 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:21:57,256 DeMo.train INFO: Best mAP: 82.0%
+2025-06-05 16:21:57,256 DeMo.train INFO: Best Rank-1: 94.4%
+2025-06-05 16:21:57,257 DeMo.train INFO: Best Rank-5: 94.9%
+2025-06-05 16:21:57,257 DeMo.train INFO: Best Rank-10: 95.1%
+2025-06-05 16:21:57,257 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:22:09,626 DeMo.train INFO: Epoch[7] Iteration[10/65] Loss: 0.990, Acc: 0.994, Base Lr: 3.05e-04
+2025-06-05 16:22:18,251 DeMo.train INFO: Epoch[7] Iteration[20/65] Loss: 0.999, Acc: 0.997, Base Lr: 3.05e-04
+2025-06-05 16:22:26,514 DeMo.train INFO: Epoch[7] Iteration[30/65] Loss: 1.000, Acc: 0.996, Base Lr: 3.05e-04
+2025-06-05 16:22:34,766 DeMo.train INFO: Epoch[7] Iteration[40/65] Loss: 0.983, Acc: 0.997, Base Lr: 3.05e-04
+2025-06-05 16:22:43,008 DeMo.train INFO: Epoch[7] Iteration[50/65] Loss: 0.972, Acc: 0.998, Base Lr: 3.05e-04
+2025-06-05 16:22:51,264 DeMo.train INFO: Epoch[7] Iteration[60/65] Loss: 0.963, Acc: 0.998, Base Lr: 3.05e-04
+2025-06-05 16:22:53,932 DeMo.train INFO: Epoch 7 done. Time per batch: 0.900[s] Speed: 142.3[samples/s]
+2025-06-05 16:22:53,946 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:22:53,946 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 16:22:53,946 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:25:08,086 DeMo.train INFO: Validation Results - Epoch: 7
+2025-06-05 16:25:08,087 DeMo.train INFO: mAP: 83.6%
+2025-06-05 16:25:08,087 DeMo.train INFO: CMC curve, Rank-1  :96.8%
+2025-06-05 16:25:08,087 DeMo.train INFO: CMC curve, Rank-5  :97.1%
+2025-06-05 16:25:08,087 DeMo.train INFO: CMC curve, Rank-10 :97.3%
+2025-06-05 16:25:08,087 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:25:08,258 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:25:08,259 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 16:25:08,259 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:27:23,775 DeMo.train INFO: Validation Results - Epoch: 7
+2025-06-05 16:27:23,776 DeMo.train INFO: mAP: 71.9%
+2025-06-05 16:27:23,777 DeMo.train INFO: CMC curve, Rank-1  :88.4%
+2025-06-05 16:27:23,777 DeMo.train INFO: CMC curve, Rank-5  :89.1%
+2025-06-05 16:27:23,778 DeMo.train INFO: CMC curve, Rank-10 :89.3%
+2025-06-05 16:27:23,778 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:27:24,704 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:27:24,705 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 16:27:24,705 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:29:38,930 DeMo.train INFO: Validation Results - Epoch: 7
+2025-06-05 16:29:38,930 DeMo.train INFO: mAP: 83.6%
+2025-06-05 16:29:38,930 DeMo.train INFO: CMC curve, Rank-1  :96.7%
+2025-06-05 16:29:38,930 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-06-05 16:29:38,930 DeMo.train INFO: CMC curve, Rank-10 :97.3%
+2025-06-05 16:29:38,931 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:29:49,300 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:29:49,300 DeMo.train INFO: Best mAP: 83.6%
+2025-06-05 16:29:49,300 DeMo.train INFO: Best Rank-1: 96.7%
+2025-06-05 16:29:49,301 DeMo.train INFO: Best Rank-5: 97.0%
+2025-06-05 16:29:49,301 DeMo.train INFO: Best Rank-10: 97.3%
+2025-06-05 16:29:49,301 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:30:01,150 DeMo.train INFO: Epoch[8] Iteration[10/65] Loss: 0.954, Acc: 0.997, Base Lr: 2.92e-04
+2025-06-05 16:30:09,463 DeMo.train INFO: Epoch[8] Iteration[20/65] Loss: 0.937, Acc: 0.998, Base Lr: 2.92e-04
+2025-06-05 16:30:17,742 DeMo.train INFO: Epoch[8] Iteration[30/65] Loss: 0.941, Acc: 0.999, Base Lr: 2.92e-04
+2025-06-05 16:30:26,004 DeMo.train INFO: Epoch[8] Iteration[40/65] Loss: 0.936, Acc: 0.999, Base Lr: 2.92e-04
+2025-06-05 16:30:34,252 DeMo.train INFO: Epoch[8] Iteration[50/65] Loss: 0.933, Acc: 0.999, Base Lr: 2.92e-04
+2025-06-05 16:30:42,525 DeMo.train INFO: Epoch[8] Iteration[60/65] Loss: 0.928, Acc: 0.999, Base Lr: 2.92e-04
+2025-06-05 16:30:45,190 DeMo.train INFO: Epoch 8 done. Time per batch: 0.887[s] Speed: 144.3[samples/s]
+2025-06-05 16:30:45,201 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:30:45,201 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 16:30:45,202 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:33:00,378 DeMo.train INFO: Validation Results - Epoch: 8
+2025-06-05 16:33:00,379 DeMo.train INFO: mAP: 83.9%
+2025-06-05 16:33:00,379 DeMo.train INFO: CMC curve, Rank-1  :96.0%
+2025-06-05 16:33:00,379 DeMo.train INFO: CMC curve, Rank-5  :96.3%
+2025-06-05 16:33:00,379 DeMo.train INFO: CMC curve, Rank-10 :96.6%
+2025-06-05 16:33:00,379 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:33:01,285 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:33:01,286 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 16:33:01,286 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:35:16,070 DeMo.train INFO: Validation Results - Epoch: 8
+2025-06-05 16:35:16,070 DeMo.train INFO: mAP: 71.4%
+2025-06-05 16:35:16,071 DeMo.train INFO: CMC curve, Rank-1  :88.5%
+2025-06-05 16:35:16,071 DeMo.train INFO: CMC curve, Rank-5  :89.6%
+2025-06-05 16:35:16,071 DeMo.train INFO: CMC curve, Rank-10 :90.4%
+2025-06-05 16:35:16,071 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:35:16,087 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:35:16,087 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 16:35:16,088 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:37:29,826 DeMo.train INFO: Validation Results - Epoch: 8
+2025-06-05 16:37:29,827 DeMo.train INFO: mAP: 83.9%
+2025-06-05 16:37:29,827 DeMo.train INFO: CMC curve, Rank-1  :96.0%
+2025-06-05 16:37:29,827 DeMo.train INFO: CMC curve, Rank-5  :96.3%
+2025-06-05 16:37:29,827 DeMo.train INFO: CMC curve, Rank-10 :96.6%
+2025-06-05 16:37:29,827 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:37:39,974 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:37:39,974 DeMo.train INFO: Best mAP: 83.9%
+2025-06-05 16:37:39,974 DeMo.train INFO: Best Rank-1: 96.0%
+2025-06-05 16:37:39,974 DeMo.train INFO: Best Rank-5: 96.3%
+2025-06-05 16:37:39,974 DeMo.train INFO: Best Rank-10: 96.6%
+2025-06-05 16:37:39,974 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:37:51,565 DeMo.train INFO: Epoch[9] Iteration[10/65] Loss: 1.139, Acc: 1.000, Base Lr: 2.78e-04
+2025-06-05 16:38:00,082 DeMo.train INFO: Epoch[9] Iteration[20/65] Loss: 1.050, Acc: 1.000, Base Lr: 2.78e-04
+2025-06-05 16:38:08,343 DeMo.train INFO: Epoch[9] Iteration[30/65] Loss: 1.012, Acc: 1.000, Base Lr: 2.78e-04
+2025-06-05 16:38:16,591 DeMo.train INFO: Epoch[9] Iteration[40/65] Loss: 0.992, Acc: 1.000, Base Lr: 2.78e-04
+2025-06-05 16:38:24,865 DeMo.train INFO: Epoch[9] Iteration[50/65] Loss: 0.973, Acc: 1.000, Base Lr: 2.78e-04
+2025-06-05 16:38:33,088 DeMo.train INFO: Epoch[9] Iteration[60/65] Loss: 0.963, Acc: 1.000, Base Lr: 2.78e-04
+2025-06-05 16:38:35,728 DeMo.train INFO: Epoch 9 done. Time per batch: 0.885[s] Speed: 144.6[samples/s]
+2025-06-05 16:38:35,741 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:38:35,741 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 16:38:35,741 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:40:48,985 DeMo.train INFO: Validation Results - Epoch: 9
+2025-06-05 16:40:48,986 DeMo.train INFO: mAP: 81.8%
+2025-06-05 16:40:48,986 DeMo.train INFO: CMC curve, Rank-1  :94.9%
+2025-06-05 16:40:48,986 DeMo.train INFO: CMC curve, Rank-5  :95.0%
+2025-06-05 16:40:48,986 DeMo.train INFO: CMC curve, Rank-10 :95.3%
+2025-06-05 16:40:48,986 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:40:49,505 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:40:49,505 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 16:40:49,505 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:43:02,760 DeMo.train INFO: Validation Results - Epoch: 9
+2025-06-05 16:43:02,760 DeMo.train INFO: mAP: 67.2%
+2025-06-05 16:43:02,760 DeMo.train INFO: CMC curve, Rank-1  :85.5%
+2025-06-05 16:43:02,761 DeMo.train INFO: CMC curve, Rank-5  :86.2%
+2025-06-05 16:43:02,761 DeMo.train INFO: CMC curve, Rank-10 :87.2%
+2025-06-05 16:43:02,761 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:43:03,636 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:43:03,637 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 16:43:03,637 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:45:18,389 DeMo.train INFO: Validation Results - Epoch: 9
+2025-06-05 16:45:18,389 DeMo.train INFO: mAP: 81.8%
+2025-06-05 16:45:18,390 DeMo.train INFO: CMC curve, Rank-1  :94.8%
+2025-06-05 16:45:18,390 DeMo.train INFO: CMC curve, Rank-5  :95.0%
+2025-06-05 16:45:18,390 DeMo.train INFO: CMC curve, Rank-10 :95.3%
+2025-06-05 16:45:18,390 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:45:19,041 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:45:19,041 DeMo.train INFO: Best mAP: 83.9%
+2025-06-05 16:45:19,041 DeMo.train INFO: Best Rank-1: 96.0%
+2025-06-05 16:45:19,041 DeMo.train INFO: Best Rank-5: 96.3%
+2025-06-05 16:45:19,041 DeMo.train INFO: Best Rank-10: 96.6%
+2025-06-05 16:45:19,041 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:45:30,979 DeMo.train INFO: Epoch[10] Iteration[10/65] Loss: 0.892, Acc: 1.000, Base Lr: 2.63e-04
+2025-06-05 16:45:39,214 DeMo.train INFO: Epoch[10] Iteration[20/65] Loss: 0.879, Acc: 1.000, Base Lr: 2.63e-04
+2025-06-05 16:45:47,727 DeMo.train INFO: Epoch[10] Iteration[30/65] Loss: 0.874, Acc: 1.000, Base Lr: 2.63e-04
+2025-06-05 16:45:55,970 DeMo.train INFO: Epoch[10] Iteration[40/65] Loss: 0.869, Acc: 1.000, Base Lr: 2.63e-04
+2025-06-05 16:46:04,212 DeMo.train INFO: Epoch[10] Iteration[50/65] Loss: 0.864, Acc: 1.000, Base Lr: 2.63e-04
+2025-06-05 16:46:12,441 DeMo.train INFO: Epoch[10] Iteration[60/65] Loss: 0.860, Acc: 1.000, Base Lr: 2.63e-04
+2025-06-05 16:46:15,068 DeMo.train INFO: Epoch 10 done. Time per batch: 0.889[s] Speed: 143.9[samples/s]
+2025-06-05 16:46:15,081 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:46:15,081 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 16:46:15,081 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:48:28,895 DeMo.train INFO: Validation Results - Epoch: 10
+2025-06-05 16:48:28,895 DeMo.train INFO: mAP: 83.4%
+2025-06-05 16:48:28,895 DeMo.train INFO: CMC curve, Rank-1  :96.2%
+2025-06-05 16:48:28,895 DeMo.train INFO: CMC curve, Rank-5  :97.0%
+2025-06-05 16:48:28,896 DeMo.train INFO: CMC curve, Rank-10 :97.3%
+2025-06-05 16:48:28,896 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:48:29,279 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:48:29,280 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 16:48:29,280 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:50:44,473 DeMo.train INFO: Validation Results - Epoch: 10
+2025-06-05 16:50:44,474 DeMo.train INFO: mAP: 72.4%
+2025-06-05 16:50:44,474 DeMo.train INFO: CMC curve, Rank-1  :88.5%
+2025-06-05 16:50:44,474 DeMo.train INFO: CMC curve, Rank-5  :89.3%
+2025-06-05 16:50:44,474 DeMo.train INFO: CMC curve, Rank-10 :90.1%
+2025-06-05 16:50:44,475 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:50:45,160 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:50:45,160 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 16:50:45,161 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:52:58,189 DeMo.train INFO: Validation Results - Epoch: 10
+2025-06-05 16:52:58,189 DeMo.train INFO: mAP: 83.3%
+2025-06-05 16:52:58,190 DeMo.train INFO: CMC curve, Rank-1  :96.0%
+2025-06-05 16:52:58,190 DeMo.train INFO: CMC curve, Rank-5  :96.6%
+2025-06-05 16:52:58,190 DeMo.train INFO: CMC curve, Rank-10 :97.2%
+2025-06-05 16:52:58,190 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:52:58,300 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:52:58,300 DeMo.train INFO: Best mAP: 83.9%
+2025-06-05 16:52:58,300 DeMo.train INFO: Best Rank-1: 96.0%
+2025-06-05 16:52:58,301 DeMo.train INFO: Best Rank-5: 96.3%
+2025-06-05 16:52:58,301 DeMo.train INFO: Best Rank-10: 96.6%
+2025-06-05 16:52:58,301 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:53:09,940 DeMo.train INFO: Epoch[11] Iteration[10/65] Loss: 0.844, Acc: 1.000, Base Lr: 2.46e-04
+2025-06-05 16:53:18,119 DeMo.train INFO: Epoch[11] Iteration[20/65] Loss: 0.851, Acc: 1.000, Base Lr: 2.46e-04
+2025-06-05 16:53:26,384 DeMo.train INFO: Epoch[11] Iteration[30/65] Loss: 0.846, Acc: 1.000, Base Lr: 2.46e-04
+2025-06-05 16:53:34,538 DeMo.train INFO: Epoch[11] Iteration[40/65] Loss: 0.845, Acc: 1.000, Base Lr: 2.46e-04
+2025-06-05 16:53:42,707 DeMo.train INFO: Epoch[11] Iteration[50/65] Loss: 0.842, Acc: 1.000, Base Lr: 2.46e-04
+2025-06-05 16:53:50,887 DeMo.train INFO: Epoch[11] Iteration[60/65] Loss: 0.839, Acc: 1.000, Base Lr: 2.46e-04
+2025-06-05 16:53:53,495 DeMo.train INFO: Epoch 11 done. Time per batch: 0.876[s] Speed: 146.1[samples/s]
+2025-06-05 16:53:53,508 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:53:53,508 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 16:53:53,508 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:56:05,920 DeMo.train INFO: Validation Results - Epoch: 11
+2025-06-05 16:56:05,920 DeMo.train INFO: mAP: 83.4%
+2025-06-05 16:56:05,920 DeMo.train INFO: CMC curve, Rank-1  :96.2%
+2025-06-05 16:56:05,920 DeMo.train INFO: CMC curve, Rank-5  :96.3%
+2025-06-05 16:56:05,920 DeMo.train INFO: CMC curve, Rank-10 :96.6%
+2025-06-05 16:56:05,920 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:56:06,081 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:56:06,081 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 16:56:06,082 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:58:19,144 DeMo.train INFO: Validation Results - Epoch: 11
+2025-06-05 16:58:19,144 DeMo.train INFO: mAP: 72.6%
+2025-06-05 16:58:19,144 DeMo.train INFO: CMC curve, Rank-1  :86.8%
+2025-06-05 16:58:19,145 DeMo.train INFO: CMC curve, Rank-5  :87.9%
+2025-06-05 16:58:19,145 DeMo.train INFO: CMC curve, Rank-10 :89.3%
+2025-06-05 16:58:19,145 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:58:19,761 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 16:58:19,761 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 16:58:19,761 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:00:33,079 DeMo.train INFO: Validation Results - Epoch: 11
+2025-06-05 17:00:33,079 DeMo.train INFO: mAP: 83.5%
+2025-06-05 17:00:33,080 DeMo.train INFO: CMC curve, Rank-1  :96.1%
+2025-06-05 17:00:33,080 DeMo.train INFO: CMC curve, Rank-5  :96.3%
+2025-06-05 17:00:33,080 DeMo.train INFO: CMC curve, Rank-10 :96.6%
+2025-06-05 17:00:33,080 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:00:33,991 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:00:33,991 DeMo.train INFO: Best mAP: 83.9%
+2025-06-05 17:00:33,991 DeMo.train INFO: Best Rank-1: 96.0%
+2025-06-05 17:00:33,991 DeMo.train INFO: Best Rank-5: 96.3%
+2025-06-05 17:00:33,991 DeMo.train INFO: Best Rank-10: 96.6%
+2025-06-05 17:00:33,992 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:00:45,597 DeMo.train INFO: Epoch[12] Iteration[10/65] Loss: 0.841, Acc: 1.000, Base Lr: 2.29e-04
+2025-06-05 17:00:53,819 DeMo.train INFO: Epoch[12] Iteration[20/65] Loss: 0.836, Acc: 1.000, Base Lr: 2.29e-04
+2025-06-05 17:01:02,049 DeMo.train INFO: Epoch[12] Iteration[30/65] Loss: 0.831, Acc: 1.000, Base Lr: 2.29e-04
+2025-06-05 17:01:10,186 DeMo.train INFO: Epoch[12] Iteration[40/65] Loss: 0.827, Acc: 1.000, Base Lr: 2.29e-04
+2025-06-05 17:01:18,286 DeMo.train INFO: Epoch[12] Iteration[50/65] Loss: 0.825, Acc: 1.000, Base Lr: 2.29e-04
+2025-06-05 17:01:26,396 DeMo.train INFO: Epoch[12] Iteration[60/65] Loss: 0.824, Acc: 1.000, Base Lr: 2.29e-04
+2025-06-05 17:01:28,964 DeMo.train INFO: Epoch 12 done. Time per batch: 0.873[s] Speed: 146.7[samples/s]
+2025-06-05 17:01:28,977 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:01:28,977 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 17:01:28,977 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:03:40,185 DeMo.train INFO: Validation Results - Epoch: 12
+2025-06-05 17:03:40,185 DeMo.train INFO: mAP: 83.5%
+2025-06-05 17:03:40,185 DeMo.train INFO: CMC curve, Rank-1  :96.0%
+2025-06-05 17:03:40,185 DeMo.train INFO: CMC curve, Rank-5  :96.3%
+2025-06-05 17:03:40,186 DeMo.train INFO: CMC curve, Rank-10 :96.5%
+2025-06-05 17:03:40,186 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:03:40,677 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:03:40,678 DeMo.train INFO: Current is the moe feature testing!
+2025-06-05 17:03:40,678 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:05:52,561 DeMo.train INFO: Validation Results - Epoch: 12
+2025-06-05 17:05:52,561 DeMo.train INFO: mAP: 71.1%
+2025-06-05 17:05:52,562 DeMo.train INFO: CMC curve, Rank-1  :87.0%
+2025-06-05 17:05:52,562 DeMo.train INFO: CMC curve, Rank-5  :87.5%
+2025-06-05 17:05:52,562 DeMo.train INFO: CMC curve, Rank-10 :88.3%
+2025-06-05 17:05:52,562 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:05:52,914 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:05:52,914 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-05 17:05:52,914 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:08:07,018 DeMo.train INFO: Validation Results - Epoch: 12
+2025-06-05 17:08:07,018 DeMo.train INFO: mAP: 83.5%
+2025-06-05 17:08:07,019 DeMo.train INFO: CMC curve, Rank-1  :95.9%
+2025-06-05 17:08:07,019 DeMo.train INFO: CMC curve, Rank-5  :96.3%
+2025-06-05 17:08:07,019 DeMo.train INFO: CMC curve, Rank-10 :96.4%
+2025-06-05 17:08:07,019 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:08:07,869 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:08:07,870 DeMo.train INFO: Best mAP: 83.9%
+2025-06-05 17:08:07,870 DeMo.train INFO: Best Rank-1: 96.0%
+2025-06-05 17:08:07,870 DeMo.train INFO: Best Rank-5: 96.3%
+2025-06-05 17:08:07,870 DeMo.train INFO: Best Rank-10: 96.6%
+2025-06-05 17:08:07,870 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:08:19,469 DeMo.train INFO: Epoch[13] Iteration[10/65] Loss: 0.830, Acc: 1.000, Base Lr: 2.12e-04
+2025-06-05 17:08:27,738 DeMo.train INFO: Epoch[13] Iteration[20/65] Loss: 0.829, Acc: 1.000, Base Lr: 2.12e-04
+2025-06-05 17:08:35,949 DeMo.train INFO: Epoch[13] Iteration[30/65] Loss: 0.825, Acc: 1.000, Base Lr: 2.12e-04
+2025-06-05 17:08:44,145 DeMo.train INFO: Epoch[13] Iteration[40/65] Loss: 0.822, Acc: 1.000, Base Lr: 2.12e-04
+2025-06-05 17:08:52,312 DeMo.train INFO: Epoch[13] Iteration[50/65] Loss: 0.820, Acc: 1.000, Base Lr: 2.12e-04
+2025-06-05 17:09:00,557 DeMo.train INFO: Epoch[13] Iteration[60/65] Loss: 0.819, Acc: 1.000, Base Lr: 2.12e-04
+2025-06-05 17:09:02,371 DeMo.train INFO: Epoch 13 done. Time per batch: 0.879[s] Speed: 145.6[samples/s]
+2025-06-05 17:09:02,384 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-05 17:09:02,384 DeMo.train INFO: Current is the ori feature testing!
+2025-06-05 17:09:02,384 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

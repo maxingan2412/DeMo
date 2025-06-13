@@ -1,0 +1,1018 @@
+2025-06-02 21:46:07,028 DeMo INFO: Saving model in the path :./RGBNT201-DeMo/aboqnewdeform_onlynewboq_20250602_214604
+2025-06-02 21:46:07,028 DeMo INFO: Namespace(config_file='configs/RGBNT201/DeMo.yml', fea_cft=0, local_rank=0, opts=['OUTPUT_DIR', './RGBNT201-DeMo/aboqnewdeform_onlynewboq_20250602_214604'])
+2025-06-02 21:46:07,029 DeMo INFO: Loaded configuration file configs/RGBNT201/DeMo.yml
+2025-06-02 21:46:07,029 DeMo INFO: 
+MODEL:
+  TRANSFORMER_TYPE: 'ViT-B-16'
+  STRIDE_SIZE: [ 16, 16 ]
+  SIE_CAMERA: True
+  DIRECT: 1
+  SIE_COE: 1.0
+  ID_LOSS_WEIGHT: 0.25
+  TRIPLET_LOSS_WEIGHT: 1.0
+  GLOBAL_LOCAL: True
+  HDM: True
+  ATM: False
+  HEAD: 4 # orginal 4
+  FROZEN: False
+  CENGJIFUSION: False
+  NEWDEFORM: True
+
+INPUT:
+  SIZE_TRAIN: [ 256, 128 ]
+  SIZE_TEST: [ 256, 128 ]
+  PROB: 0.5 # random horizontal flip
+  RE_PROB: 0.5 # random erasing
+  PADDING: 10
+
+DATALOADER:
+  SAMPLER: 'softmax_triplet'
+  NUM_INSTANCE: 8
+  NUM_WORKERS: 14
+
+DATASETS:
+  NAMES: ('RGBNT201')
+  ROOT_DIR: '..'
+
+SOLVER:
+  BASE_LR: 0.00035
+  WARMUP_ITERS: 10
+  MAX_EPOCHS: 50
+  OPTIMIZER_NAME: 'Adam'
+  IMS_PER_BATCH: 64 # orginal 64
+  EVAL_PERIOD: 1
+  SEED: 1111
+
+TEST:
+  IMS_PER_BATCH: 128
+  RE_RANKING: 'yes'
+  WEIGHT: ''
+  NECK_FEAT: 'before'
+  FEAT_NORM: 'yes'
+  MISS: "nothing"
+
+OUTPUT_DIR: '..'
+
+
+
+2025-06-02 21:46:07,029 DeMo INFO: Running with config:
+DATALOADER:
+  NUM_INSTANCE: 8
+  NUM_WORKERS: 14
+  SAMPLER: softmax_triplet
+DATASETS:
+  NAMES: RGBNT201
+  ROOT_DIR: ..
+INPUT:
+  PADDING: 10
+  PIXEL_MEAN: [0.5, 0.5, 0.5]
+  PIXEL_STD: [0.5, 0.5, 0.5]
+  PROB: 0.5
+  RE_PROB: 0.5
+  SIZE_TEST: [256, 128]
+  SIZE_TRAIN: [256, 128]
+MODEL:
+  ADAPTER: False
+  ATM: False
+  ATT_DROP_RATE: 0.0
+  CENGJIFUSION: False
+  DEVICE: cuda
+  DEVICE_ID: 0
+  DIRECT: 1
+  DIST_TRAIN: False
+  DROP_OUT: 0.0
+  DROP_PATH: 0.1
+  FROZEN: False
+  GLOBAL_LOCAL: True
+  HDM: True
+  HEAD: 4
+  ID_LOSS_TYPE: softmax
+  ID_LOSS_WEIGHT: 0.25
+  IF_LABELSMOOTH: on
+  IF_WITH_CENTER: no
+  METRIC_LOSS_TYPE: triplet
+  NAME: DeMo
+  NECK: bnneck
+  NEWDEFORM: True
+  NO_MARGIN: True
+  PRETRAIN_PATH_T: /path/to/your/vitb_16_224_21k.pth
+  PROMPT: False
+  SIE_CAMERA: True
+  SIE_COE: 1.0
+  SIE_VIEW: False
+  STRIDE_SIZE: [16, 16]
+  TRANSFORMER_TYPE: ViT-B-16
+  TRIPLET_LOSS_WEIGHT: 1.0
+OUTPUT_DIR: ./RGBNT201-DeMo/aboqnewdeform_onlynewboq_20250602_214604
+SOLVER:
+  BASE_LR: 0.00035
+  BIAS_LR_FACTOR: 2
+  CENTER_LOSS_WEIGHT: 0.0005
+  CENTER_LR: 0.5
+  CHECKPOINT_PERIOD: 60
+  CLUSTER_MARGIN: 0.3
+  COSINE_MARGIN: 0.5
+  COSINE_SCALE: 30
+  EVAL_PERIOD: 1
+  GAMMA: 0.1
+  IMS_PER_BATCH: 64
+  LARGE_FC_LR: False
+  LOG_PERIOD: 10
+  MARGIN: 0.3
+  MAX_EPOCHS: 50
+  MOMENTUM: 0.9
+  OPTIMIZER_NAME: Adam
+  RANGE_ALPHA: 0
+  RANGE_BETA: 1
+  RANGE_K: 2
+  RANGE_LOSS_WEIGHT: 1
+  RANGE_MARGIN: 0.3
+  SEED: 1111
+  STEPS: (40, 70)
+  WARMUP_FACTOR: 0.01
+  WARMUP_ITERS: 10
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY_BIAS: 0.0001
+TEST:
+  FEAT: 0
+  FEAT_NORM: yes
+  IMS_PER_BATCH: 128
+  MISS: nothing
+  NECK_FEAT: before
+  RE_RANKING: yes
+  WEIGHT: 
+=> RGBNT201 loaded
+Dataset statistics:
+  ----------------------------------------
+  subset   | # ids | # images | # cameras
+  ----------------------------------------
+  train    |   171 |     3951 |         4
+  query    |    30 |      836 |         2
+  gallery  |    30 |      836 |         2
+  ----------------------------------------
+data is ready
+cengjifusion: False mxa
+rwkvbackbone: False mxa
+using Transformer_type: ViT-B-16 as a backbone
+Resized position embedding: %s to %s torch.Size([197, 768]) torch.Size([129, 768])
+Position embedding resize to height:16 width: 8
+Successfully load ckpt!
+<All keys matched successfully>
+Loading pretrained model from CLIP
+camera number is : 4
+combineway: newablation mxa
+2025-06-02 21:46:13,323 DeMo INFO: combineway: newablation
+newdeform: True mxa
+UsingDiversity: False mxa
+============================================================
+Testing Simplified EDA Module
+============================================================
+[Simplified EDA] Configuration: MSOF_CMA_SAL
+[Simplified EDA] ✓ MSOF enabled
+[Simplified EDA] ✓ CMA enabled
+[Simplified EDA] ✓ SAL enabled
+=== Simplified EDA Configuration ===
+Configuration: MSOF_CMA_SAL
+Enabled: MSOF (Multi-Scale Offset Fusion), CMA (Channel-wise Modal Attention), SAL (Spatial-aware Adaptive Learning)
+Disabled: None
+================================
+
+============================================================
+Testing Simplified HAQN Module
+============================================================
+[Simplified HAQN] Configuration: HQ_AF_QRM
+[Simplified HAQN] ✓ HQ enabled: [64, 32, 16]
+[Simplified HAQN] ✓ AF enabled
+[Simplified HAQN] ✓ QRM enabled
+[Simplified HAQN] ✓ Created modules for all modality combinations
+=== Simplified HAQN Configuration ===
+Configuration: HQ_AF_QRM
+Layer Queries: [64, 32, 16]
+Enabled: HQ (Hierarchical Queries), AF (Adaptive Fusion), QRM (Query Refinement Mechanism)
+Disabled: None
+==================================
+
+✅ Simplified ablation modules ready!
+📋 Recommended experiment plan:
+   1. Test EDA components: MSOF vs CMA vs SAL
+   2. Test HAQN components: HQ vs AF vs QRM
+   3. Test key combinations for synergy effects
+   4. Compare with original baseline (87.3/86.8)
+===========Building DeMo===========
+2025-06-02 21:46:13,633 DeMo INFO: DeMo(
+  (BACKBONE): build_transformer(
+    (base): VisionTransformer(
+      (conv1): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16), bias=False)
+      (ln_pre): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (transformer): Transformer(
+        (resblocks): Sequential(
+          (0): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (1): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (2): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (3): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (4): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (5): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (6): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (7): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (8): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (9): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (10): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (11): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+      )
+      (ln_post): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+  (pool): AdaptiveAvgPool1d(output_size=1)
+  (rgb_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (nir_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (tir_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (generalFusion): GeneralFusion(
+    (eda_model): SimplifiedEDA(
+      (conv_offset_main): Sequential(
+        (0): Conv2d(1536, 512, kernel_size=(1, 1), stride=(1, 1))
+        (1): GELU(approximate='none')
+        (2): Conv2d(512, 512, kernel_size=(4, 4), stride=(2, 2), groups=512)
+        (3): GELU(approximate='none')
+        (4): Conv2d(512, 2, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      )
+      (conv_offset_coarse): Sequential(
+        (0): Conv2d(1536, 512, kernel_size=(1, 1), stride=(1, 1))
+        (1): GELU(approximate='none')
+        (2): Conv2d(512, 512, kernel_size=(6, 6), stride=(2, 2), padding=(1, 1), groups=512)
+        (3): GELU(approximate='none')
+        (4): Conv2d(512, 2, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      )
+      (conv_offset_fine): Sequential(
+        (0): Conv2d(1536, 512, kernel_size=(1, 1), stride=(1, 1))
+        (1): GELU(approximate='none')
+        (2): Conv2d(512, 512, kernel_size=(2, 2), stride=(2, 2), groups=512)
+        (3): GELU(approximate='none')
+        (4): Conv2d(512, 2, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      )
+      (channel_attention): Sequential(
+        (0): AdaptiveAvgPool2d(output_size=1)
+        (1): Conv2d(1536, 128, kernel_size=(1, 1), stride=(1, 1))
+        (2): ReLU(inplace=True)
+        (3): Conv2d(128, 1536, kernel_size=(1, 1), stride=(1, 1))
+        (4): Sigmoid()
+      )
+      (spatial_adapter): Conv2d(2, 2, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (proj_q): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_k): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_v): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_out): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_drop): Dropout(p=0.0, inplace=False)
+      (attn_drop): Dropout(p=0.0, inplace=False)
+    )
+    (haqn_model): SimplifiedHAQN(
+      (modality_modules): ModuleDict(
+        (RGB): ModuleDict(
+          (queries): ParameterList(
+              (0): Parameter containing: [torch.float32 of size 1x64x512]
+              (1): Parameter containing: [torch.float32 of size 1x32x512]
+              (2): Parameter containing: [torch.float32 of size 1x16x512]
+          )
+          (self_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (cross_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (norms1): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (norms2): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (query_refinement): ModuleList(
+            (0): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (1): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (2): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (3): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+          )
+          (final_proj): Linear(in_features=112, out_features=1, bias=True)
+        )
+        (NI): ModuleDict(
+          (queries): ParameterList(
+              (0): Parameter containing: [torch.float32 of size 1x64x512]
+              (1): Parameter containing: [torch.float32 of size 1x32x512]
+              (2): Parameter containing: [torch.float32 of size 1x16x512]
+          )
+          (self_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (cross_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (norms1): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (norms2): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (query_refinement): ModuleList(
+            (0): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (1): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (2): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (3): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+          )
+          (final_proj): Linear(in_features=112, out_features=1, bias=True)
+        )
+        (TI): ModuleDict(
+          (queries): ParameterList(
+              (0): Parameter containing: [torch.float32 of size 1x64x512]
+              (1): Parameter containing: [torch.float32 of size 1x32x512]
+              (2): Parameter containing: [torch.float32 of size 1x16x512]
+          )
+          (self_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (cross_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (norms1): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (norms2): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (query_refinement): ModuleList(
+            (0): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (1): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (2): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (3): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+          )
+          (final_proj): Linear(in_features=112, out_features=1, bias=True)
+        )
+        (RGB_NI): ModuleDict(
+          (queries): ParameterList(
+              (0): Parameter containing: [torch.float32 of size 1x64x512]
+              (1): Parameter containing: [torch.float32 of size 1x32x512]
+              (2): Parameter containing: [torch.float32 of size 1x16x512]
+          )
+          (self_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (cross_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (norms1): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (norms2): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (query_refinement): ModuleList(
+            (0): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (1): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (2): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (3): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+          )
+          (final_proj): Linear(in_features=112, out_features=1, bias=True)
+        )
+        (RGB_TI): ModuleDict(
+          (queries): ParameterList(
+              (0): Parameter containing: [torch.float32 of size 1x64x512]
+              (1): Parameter containing: [torch.float32 of size 1x32x512]
+              (2): Parameter containing: [torch.float32 of size 1x16x512]
+          )
+          (self_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (cross_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (norms1): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (norms2): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (query_refinement): ModuleList(
+            (0): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (1): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (2): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (3): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+          )
+          (final_proj): Linear(in_features=112, out_features=1, bias=True)
+        )
+        (NI_TI): ModuleDict(
+          (queries): ParameterList(
+              (0): Parameter containing: [torch.float32 of size 1x64x512]
+              (1): Parameter containing: [torch.float32 of size 1x32x512]
+              (2): Parameter containing: [torch.float32 of size 1x16x512]
+          )
+          (self_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (cross_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (norms1): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (norms2): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (query_refinement): ModuleList(
+            (0): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (1): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (2): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (3): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+          )
+          (final_proj): Linear(in_features=112, out_features=1, bias=True)
+        )
+        (RGB_NI_TI): ModuleDict(
+          (queries): ParameterList(
+              (0): Parameter containing: [torch.float32 of size 1x64x512]
+              (1): Parameter containing: [torch.float32 of size 1x32x512]
+              (2): Parameter containing: [torch.float32 of size 1x16x512]
+          )
+          (self_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (cross_attns): ModuleList(
+            (0): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (1): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (2): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+          )
+          (norms1): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (norms2): ModuleList(
+            (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          )
+          (query_refinement): ModuleList(
+            (0): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (1): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (2): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+            (3): Sequential(
+              (0): Linear(in_features=512, out_features=256, bias=True)
+              (1): ReLU()
+              (2): Linear(in_features=256, out_features=512, bias=True)
+              (3): Dropout(p=0.1, inplace=False)
+            )
+          )
+          (final_proj): Linear(in_features=112, out_features=1, bias=True)
+        )
+      )
+      (layer_weights): ParameterDict(
+          (NI): Parameter containing: [torch.FloatTensor of size 4]
+          (NI_TI): Parameter containing: [torch.FloatTensor of size 4]
+          (RGB): Parameter containing: [torch.FloatTensor of size 4]
+          (RGB_NI): Parameter containing: [torch.FloatTensor of size 4]
+          (RGB_NI_TI): Parameter containing: [torch.FloatTensor of size 4]
+          (RGB_TI): Parameter containing: [torch.FloatTensor of size 4]
+          (TI): Parameter containing: [torch.FloatTensor of size 4]
+      )
+    )
+  )
+  (classifier_moe): Linear(in_features=3584, out_features=171, bias=False)
+  (bottleneck_moe): BatchNorm1d(3584, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier): Linear(in_features=1536, out_features=171, bias=False)
+  (bottleneck): BatchNorm1d(1536, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+2025-06-02 21:46:13,635 DeMo INFO: number of parameters:144.377309
+using soft triplet loss for training
+label smooth on, numclasses: 171
+2025-06-02 21:46:13,709 DeMo.train INFO: start training
+diversityweight: 0 mxa
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/helpers.py:7: FutureWarning: Importing from timm.models.helpers is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/registry.py:4: FutureWarning: Importing from timm.models.registry is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/home/ma1/work/demorelated/DeMo/modeling/clip/clip.py:23: UserWarning: PyTorch version 1.7.1 or higher is recommended
+  warnings.warn("PyTorch version 1.7.1 or higher is recommended")
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/torchvision/transforms/transforms.py:329: UserWarning: Argument 'interpolation' of type int is deprecated since 0.13 and will be removed in 0.15. Please use InterpolationMode enum.
+  warnings.warn(
+2025-06-02 21:46:27,046 DeMo.train INFO: Epoch[1] Iteration[10/54] Loss: 4.673, Acc: 0.011, Base Lr: 6.65e-05
+2025-06-02 21:46:30,801 DeMo.train INFO: Epoch[1] Iteration[20/54] Loss: 4.353, Acc: 0.013, Base Lr: 6.65e-05
+2025-06-02 21:46:34,495 DeMo.train INFO: Epoch[1] Iteration[30/54] Loss: 4.224, Acc: 0.017, Base Lr: 6.65e-05
+2025-06-02 21:46:38,191 DeMo.train INFO: Epoch[1] Iteration[40/54] Loss: 4.147, Acc: 0.018, Base Lr: 6.65e-05
+2025-06-02 21:46:41,909 DeMo.train INFO: Epoch[1] Iteration[50/54] Loss: 4.092, Acc: 0.020, Base Lr: 6.65e-05
+2025-06-02 21:46:43,097 DeMo.train INFO: Epoch 1 done. Time per batch: 0.540[s] Speed: 118.4[samples/s]
+2025-06-02 21:46:43,100 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-02 21:46:43,100 DeMo.train INFO: Current is the ori feature testing!
+2025-06-02 21:46:43,100 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.2629
+CMC curve: Rank-1: 0.2476, Rank-5: 0.3780, Rank-10: 0.4665
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.3643
+CMC curve: Rank-1: 0.3014, Rank-5: 0.3266, Rank-10: 0.3589
+=> Improvement:
+mAP improvement: 0.1014 (+38.56%)
+Rank-1 improvement: 0.0538 (+21.74%)
+Available PIDs: [258, 260, 269, 270, 271, 272, 273, 274, 275, 276]...
+PID 258: 60 samples
+PID 260: 60 samples
+PID 269: 50 samples
+PID 270: 34 samples
+PID 271: 52 samples
+
+🎯 Generating t-SNE for PID 258
+Draw points of features to ./tsne_output/258.pdf
+Found 25 samples for PID 258
+Using perplexity=24 for 25 samples
+✅ File saved to: /home/ma1/work/demorelated/DeMo/tsne_output/258.pdf
+✅ File confirmed to exist!
+
+🎯 Generating t-SNE for PID 260
+Draw points of features to ./tsne_output/260.pdf
+Found 25 samples for PID 260
+Using perplexity=24 for 25 samples
+✅ File saved to: /home/ma1/work/demorelated/DeMo/tsne_output/260.pdf
+✅ File confirmed to exist!
+
+🎯 Generating t-SNE for PID 269
+Draw points of features to ./tsne_output/269.pdf
+Found 25 samples for PID 269
+Using perplexity=24 for 25 samples
+✅ File saved to: /home/ma1/work/demorelated/DeMo/tsne_output/269.pdf
+✅ File confirmed to exist!
+2025-06-02 21:47:06,396 DeMo.train INFO: Validation Results - Epoch: 1
+2025-06-02 21:47:06,396 DeMo.train INFO: mAP: 36.4%
+2025-06-02 21:47:06,396 DeMo.train INFO: CMC curve, Rank-1  :30.1%
+2025-06-02 21:47:06,397 DeMo.train INFO: CMC curve, Rank-5  :32.7%
+2025-06-02 21:47:06,397 DeMo.train INFO: CMC curve, Rank-10 :35.9%
+2025-06-02 21:47:06,397 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-02 21:47:06,889 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-02 21:47:06,889 DeMo.train INFO: Current is the moe feature testing!
+2025-06-02 21:47:06,890 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ma1/work/demorelated/DeMo/utils/reranking.py:40: UserWarning: This overload of addmm_ is deprecated:
+	addmm_(Number beta, Number alpha, Tensor mat1, Tensor mat2)
+Consider using one of the following signatures instead:
+	addmm_(Tensor mat1, Tensor mat2, *, Number beta, Number alpha) (Triggered internally at ../torch/csrc/utils/python_arg_parser.cpp:1420.)
+  distmat.addmm_(1, -2, feat, feat.t())
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.2463
+CMC curve: Rank-1: 0.2596, Rank-5: 0.4043, Rank-10: 0.5072
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.3915
+CMC curve: Rank-1: 0.3636, Rank-5: 0.3947, Rank-10: 0.4234
+=> Improvement:
+mAP improvement: 0.1453 (+58.99%)
+Rank-1 improvement: 0.1041 (+40.09%)
+Available PIDs: [258, 260, 269, 270, 271, 272, 273, 274, 275, 276]...
+PID 258: 60 samples
+PID 260: 60 samples
+PID 269: 50 samples
+PID 270: 34 samples
+PID 271: 52 samples
+
+🎯 Generating t-SNE for PID 258
+Draw points of features to ./tsne_output/258.pdf
+Found 25 samples for PID 258
+Using perplexity=24 for 25 samples
+✅ File saved to: /home/ma1/work/demorelated/DeMo/tsne_output/258.pdf
+✅ File confirmed to exist!
+
+🎯 Generating t-SNE for PID 260
+Draw points of features to ./tsne_output/260.pdf
+Found 25 samples for PID 260
+Using perplexity=24 for 25 samples
+✅ File saved to: /home/ma1/work/demorelated/DeMo/tsne_output/260.pdf
+✅ File confirmed to exist!
+
+🎯 Generating t-SNE for PID 269
+Draw points of features to ./tsne_output/269.pdf
+Found 25 samples for PID 269
+Using perplexity=24 for 25 samples
+✅ File saved to: /home/ma1/work/demorelated/DeMo/tsne_output/269.pdf
+✅ File confirmed to exist!
+2025-06-02 21:48:14,249 DeMo.train INFO: Validation Results - Epoch: 1
+2025-06-02 21:48:14,250 DeMo.train INFO: mAP: 39.2%
+2025-06-02 21:48:14,250 DeMo.train INFO: CMC curve, Rank-1  :36.4%
+2025-06-02 21:48:14,250 DeMo.train INFO: CMC curve, Rank-5  :39.5%
+2025-06-02 21:48:14,250 DeMo.train INFO: CMC curve, Rank-10 :42.3%
+2025-06-02 21:48:14,251 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-02 21:48:14,261 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-06-02 21:48:14,261 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-06-02 21:48:14,261 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,0 +1,1869 @@
+2025-05-27 15:06:56,543 DeMo INFO: Saving model in the path :./RGBNT100-DeMo/multimodelse_diversity_20250527_150652
+2025-05-27 15:06:56,543 DeMo INFO: Namespace(config_file='configs/RGBNT100/DeMo.yml', fea_cft=0, local_rank=0, opts=['OUTPUT_DIR', './RGBNT100-DeMo/multimodelse_diversity_20250527_150652'])
+2025-05-27 15:06:56,543 DeMo INFO: Loaded configuration file configs/RGBNT100/DeMo.yml
+2025-05-27 15:06:56,544 DeMo INFO: 
+MODEL:
+  TRANSFORMER_TYPE: 'ViT-B-16'
+  STRIDE_SIZE: [ 16, 16 ]
+  SIE_CAMERA: True
+  DIRECT: 0
+  SIE_COE: 1.0
+  ID_LOSS_WEIGHT: 0.25
+  TRIPLET_LOSS_WEIGHT: 1.0
+  GLOBAL_LOCAL: True
+  HDM: True
+  ATM: True
+  HEAD: 8
+  CENGJIFUSION: True
+
+INPUT:
+  SIZE_TRAIN: [ 128, 256 ]
+  SIZE_TEST: [ 128, 256 ]
+  PROB: 0.5 # random horizontal flip
+  RE_PROB: 0.5 # random erasing
+  PADDING: 10
+
+DATALOADER:
+  SAMPLER: 'softmax_triplet'
+  NUM_INSTANCE: 16
+  NUM_WORKERS: 14
+
+DATASETS:
+  NAMES: ('RGBNT100')
+  ROOT_DIR: '..'
+
+SOLVER:
+  BASE_LR: 0.00035
+  WARMUP_ITERS: 5
+  MAX_EPOCHS: 30
+  OPTIMIZER_NAME: 'Adam'
+  GAMMA: 0.1
+  IMS_PER_BATCH: 128
+  EVAL_PERIOD: 1
+  SEED: 1111
+
+TEST:
+  IMS_PER_BATCH: 128
+  RE_RANKING: 'no'
+  WEIGHT: ''
+  NECK_FEAT: 'before'
+  FEAT_NORM: 'yes'
+  MISS: "nothing"
+
+OUTPUT_DIR: '..'
+
+
+
+
+2025-05-27 15:06:56,544 DeMo INFO: Running with config:
+DATALOADER:
+  NUM_INSTANCE: 16
+  NUM_WORKERS: 14
+  SAMPLER: softmax_triplet
+DATASETS:
+  NAMES: RGBNT100
+  ROOT_DIR: ..
+INPUT:
+  PADDING: 10
+  PIXEL_MEAN: [0.5, 0.5, 0.5]
+  PIXEL_STD: [0.5, 0.5, 0.5]
+  PROB: 0.5
+  RE_PROB: 0.5
+  SIZE_TEST: [128, 256]
+  SIZE_TRAIN: [128, 256]
+MODEL:
+  ADAPTER: False
+  ATM: True
+  ATT_DROP_RATE: 0.0
+  CENGJIFUSION: True
+  DEVICE: cuda
+  DEVICE_ID: 0
+  DIRECT: 0
+  DIST_TRAIN: False
+  DROP_OUT: 0.0
+  DROP_PATH: 0.1
+  FROZEN: False
+  GLOBAL_LOCAL: True
+  HDM: True
+  HEAD: 8
+  ID_LOSS_TYPE: softmax
+  ID_LOSS_WEIGHT: 0.25
+  IF_LABELSMOOTH: on
+  IF_WITH_CENTER: no
+  METRIC_LOSS_TYPE: triplet
+  NAME: DeMo
+  NECK: bnneck
+  NO_MARGIN: True
+  PRETRAIN_PATH_T: /path/to/your/vitb_16_224_21k.pth
+  PROMPT: False
+  SIE_CAMERA: True
+  SIE_COE: 1.0
+  SIE_VIEW: False
+  STRIDE_SIZE: [16, 16]
+  TRANSFORMER_TYPE: ViT-B-16
+  TRIPLET_LOSS_WEIGHT: 1.0
+OUTPUT_DIR: ./RGBNT100-DeMo/multimodelse_diversity_20250527_150652
+SOLVER:
+  BASE_LR: 0.00035
+  BIAS_LR_FACTOR: 2
+  CENTER_LOSS_WEIGHT: 0.0005
+  CENTER_LR: 0.5
+  CHECKPOINT_PERIOD: 60
+  CLUSTER_MARGIN: 0.3
+  COSINE_MARGIN: 0.5
+  COSINE_SCALE: 30
+  EVAL_PERIOD: 1
+  GAMMA: 0.1
+  IMS_PER_BATCH: 128
+  LARGE_FC_LR: False
+  LOG_PERIOD: 10
+  MARGIN: 0.3
+  MAX_EPOCHS: 30
+  MOMENTUM: 0.9
+  OPTIMIZER_NAME: Adam
+  RANGE_ALPHA: 0
+  RANGE_BETA: 1
+  RANGE_K: 2
+  RANGE_LOSS_WEIGHT: 1
+  RANGE_MARGIN: 0.3
+  SEED: 1111
+  STEPS: (40, 70)
+  WARMUP_FACTOR: 0.01
+  WARMUP_ITERS: 5
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY_BIAS: 0.0001
+TEST:
+  FEAT: 0
+  FEAT_NORM: yes
+  IMS_PER_BATCH: 128
+  MISS: nothing
+  NECK_FEAT: before
+  RE_RANKING: no
+  WEIGHT: 
+=> RGB_IR loaded
+Dataset statistics:
+  ----------------------------------------
+  subset   | # ids | # images | # cameras
+  ----------------------------------------
+  train    |    50 |     8675 |         8
+  query    |    50 |     1715 |         8
+  gallery  |    50 |     8575 |         8
+  ----------------------------------------
+data is ready
+cengjifusion: True
+rwkvbackbone: False
+using Transformer_type: ViT-B-16 as a backbone
+Resized position embedding: %s to %s torch.Size([197, 768]) torch.Size([129, 768])
+Position embedding resize to height:8 width: 16
+Successfully load ckpt!
+_IncompatibleKeys(missing_keys=['visual.triple_dff.fc_atten1.0.weight', 'visual.triple_dff.fc_atten1.1.weight', 'visual.triple_dff.fc_atten1.1.bias', 'visual.triple_dff.fc_atten2.0.weight', 'visual.triple_dff.fc_atten2.1.weight', 'visual.triple_dff.fc_atten2.1.bias', 'visual.triple_dff.fc_atten4.0.weight', 'visual.triple_dff.fc_atten4.1.weight', 'visual.triple_dff.fc_atten4.1.bias', 'visual.triple_dff.input_weight_net.0.weight', 'visual.triple_dff.input_weight_net.0.bias', 'visual.triple_dff.input_weight_net.2.weight', 'visual.triple_dff.input_weight_net.2.bias', 'visual.triple_dff.gate_fc.0.weight', 'visual.triple_dff.gate_enhancement.0.weight', 'visual.triple_dff.gate_enhancement.0.bias', 'visual.triple_dff.fc_redu.0.weight', 'visual.triple_dff.fc_redu.1.weight', 'visual.triple_dff.fc_redu.1.bias', 'visual.triple_dff.residual_fc1.0.weight', 'visual.triple_dff.residual_fc1.1.weight', 'visual.triple_dff.residual_fc1.1.bias', 'visual.triple_dff.residual_fc2.0.weight', 'visual.triple_dff.residual_fc2.1.weight', 'visual.triple_dff.residual_fc2.1.bias', 'visual.triple_dff.residual_fc3.0.weight', 'visual.triple_dff.residual_fc3.1.weight', 'visual.triple_dff.residual_fc3.1.bias', 'visual.triple_dff.residual_fusion.0.weight', 'visual.triple_dff.residual_fusion.1.weight', 'visual.triple_dff.residual_fusion.1.bias', 'visual.triple_dff.fc1.weight', 'visual.triple_dff.fc1.bias', 'visual.triple_dff.fc2.weight', 'visual.triple_dff.fc2.bias', 'visual.triple_dff.fc3.weight', 'visual.triple_dff.fc3.bias', 'visual.triple_dff.attention_fusion.0.weight', 'visual.triple_dff.attention_fusion.0.bias', 'visual.quad_dffs.stage1_triple_dff.fc_atten1.0.weight', 'visual.quad_dffs.stage1_triple_dff.fc_atten1.1.weight', 'visual.quad_dffs.stage1_triple_dff.fc_atten1.1.bias', 'visual.quad_dffs.stage1_triple_dff.fc_atten2.0.weight', 'visual.quad_dffs.stage1_triple_dff.fc_atten2.1.weight', 'visual.quad_dffs.stage1_triple_dff.fc_atten2.1.bias', 'visual.quad_dffs.stage1_triple_dff.fc_atten4.0.weight', 'visual.quad_dffs.stage1_triple_dff.fc_atten4.1.weight', 'visual.quad_dffs.stage1_triple_dff.fc_atten4.1.bias', 'visual.quad_dffs.stage1_triple_dff.input_weight_net.0.weight', 'visual.quad_dffs.stage1_triple_dff.input_weight_net.0.bias', 'visual.quad_dffs.stage1_triple_dff.input_weight_net.2.weight', 'visual.quad_dffs.stage1_triple_dff.input_weight_net.2.bias', 'visual.quad_dffs.stage1_triple_dff.gate_fc.0.weight', 'visual.quad_dffs.stage1_triple_dff.gate_enhancement.0.weight', 'visual.quad_dffs.stage1_triple_dff.gate_enhancement.0.bias', 'visual.quad_dffs.stage1_triple_dff.fc_redu.0.weight', 'visual.quad_dffs.stage1_triple_dff.fc_redu.1.weight', 'visual.quad_dffs.stage1_triple_dff.fc_redu.1.bias', 'visual.quad_dffs.stage1_triple_dff.residual_fc1.0.weight', 'visual.quad_dffs.stage1_triple_dff.residual_fc1.1.weight', 'visual.quad_dffs.stage1_triple_dff.residual_fc1.1.bias', 'visual.quad_dffs.stage1_triple_dff.residual_fc2.0.weight', 'visual.quad_dffs.stage1_triple_dff.residual_fc2.1.weight', 'visual.quad_dffs.stage1_triple_dff.residual_fc2.1.bias', 'visual.quad_dffs.stage1_triple_dff.residual_fc3.0.weight', 'visual.quad_dffs.stage1_triple_dff.residual_fc3.1.weight', 'visual.quad_dffs.stage1_triple_dff.residual_fc3.1.bias', 'visual.quad_dffs.stage1_triple_dff.residual_fusion.0.weight', 'visual.quad_dffs.stage1_triple_dff.residual_fusion.1.weight', 'visual.quad_dffs.stage1_triple_dff.residual_fusion.1.bias', 'visual.quad_dffs.stage1_triple_dff.fc1.weight', 'visual.quad_dffs.stage1_triple_dff.fc1.bias', 'visual.quad_dffs.stage1_triple_dff.fc2.weight', 'visual.quad_dffs.stage1_triple_dff.fc2.bias', 'visual.quad_dffs.stage1_triple_dff.fc3.weight', 'visual.quad_dffs.stage1_triple_dff.fc3.bias', 'visual.quad_dffs.stage1_triple_dff.attention_fusion.0.weight', 'visual.quad_dffs.stage1_triple_dff.attention_fusion.0.bias', 'visual.quad_dffs.stage1_enhancement.0.weight', 'visual.quad_dffs.stage1_enhancement.0.bias', 'visual.quad_dffs.stage1_enhancement.1.weight', 'visual.quad_dffs.stage1_enhancement.1.bias', 'visual.quad_dffs.stage1_enhancement.3.weight', 'visual.quad_dffs.stage1_enhancement.3.bias', 'visual.quad_dffs.stage1_enhancement.5.weight', 'visual.quad_dffs.stage1_enhancement.5.bias', 'visual.quad_dffs.input4_preprocessing.0.weight', 'visual.quad_dffs.input4_preprocessing.0.bias', 'visual.quad_dffs.input4_preprocessing.1.weight', 'visual.quad_dffs.input4_preprocessing.1.bias', 'visual.quad_dffs.input4_preprocessing.3.weight', 'visual.quad_dffs.input4_preprocessing.3.bias', 'visual.quad_dffs.input4_preprocessing.4.weight', 'visual.quad_dffs.input4_preprocessing.4.bias', 'visual.quad_dffs.cross_stage_attention.0.weight', 'visual.quad_dffs.cross_stage_attention.0.bias', 'visual.quad_dffs.cross_stage_attention.2.weight', 'visual.quad_dffs.cross_stage_attention.2.bias', 'visual.quad_dffs.adaptive_fusion_weight.0.weight', 'visual.quad_dffs.adaptive_fusion_weight.0.bias', 'visual.quad_dffs.adaptive_fusion_weight.2.weight', 'visual.quad_dffs.adaptive_fusion_weight.2.bias', 'visual.quad_dffs.stage2_dff.fc_atten1.0.weight', 'visual.quad_dffs.stage2_dff.fc_atten2.0.weight', 'visual.quad_dffs.stage2_dff.fc_atten3.0.weight', 'visual.quad_dffs.stage2_dff.gate_fc.0.weight', 'visual.quad_dffs.stage2_dff.fc_redu.weight', 'visual.quad_dffs.stage2_dff.residual_fc.weight', 'visual.quad_dffs.stage2_dff.fc1.weight', 'visual.quad_dffs.stage2_dff.fc1.bias', 'visual.quad_dffs.stage2_dff.fc2.weight', 'visual.quad_dffs.stage2_dff.fc2.bias', 'visual.quad_dffs.memory_input1.weight', 'visual.quad_dffs.memory_input4.weight', 'visual.quad_dffs.memory_fusion.0.weight', 'visual.quad_dffs.memory_fusion.1.weight', 'visual.quad_dffs.memory_fusion.1.bias', 'visual.quad_dffs.global_context.0.weight', 'visual.quad_dffs.global_context.0.bias', 'visual.quad_dffs.global_context.2.weight', 'visual.quad_dffs.global_context.2.bias', 'visual.quad_dffs.final_refinement.0.weight', 'visual.quad_dffs.final_refinement.0.bias', 'visual.quad_dffs.final_refinement.1.weight', 'visual.quad_dffs.final_refinement.1.bias', 'visual.quad_dffs.final_refinement.3.weight', 'visual.quad_dffs.final_refinement.3.bias', 'visual.quad_dffs.final_refinement.4.weight', 'visual.quad_dffs.final_refinement.4.bias', 'visual.gated_enhancement.rgb_gating.residual_weight', 'visual.gated_enhancement.rgb_gating.cross_modal_attention.q_proj.weight', 'visual.gated_enhancement.rgb_gating.cross_modal_attention.k_proj.weight', 'visual.gated_enhancement.rgb_gating.cross_modal_attention.v_proj.weight', 'visual.gated_enhancement.rgb_gating.cross_modal_attention.out_proj.weight', 'visual.gated_enhancement.rgb_gating.cross_modal_attention.out_proj.bias', 'visual.gated_enhancement.rgb_gating.channel_gate.0.weight', 'visual.gated_enhancement.rgb_gating.channel_gate.0.bias', 'visual.gated_enhancement.rgb_gating.channel_gate.2.weight', 'visual.gated_enhancement.rgb_gating.channel_gate.2.bias', 'visual.gated_enhancement.rgb_gating.spatial_gate.0.weight', 'visual.gated_enhancement.rgb_gating.spatial_gate.0.bias', 'visual.gated_enhancement.rgb_gating.spatial_gate.2.weight', 'visual.gated_enhancement.rgb_gating.spatial_gate.2.bias', 'visual.gated_enhancement.rgb_gating.feature_fusion.0.weight', 'visual.gated_enhancement.rgb_gating.feature_fusion.0.bias', 'visual.gated_enhancement.rgb_gating.feature_fusion.1.weight', 'visual.gated_enhancement.rgb_gating.feature_fusion.1.bias', 'visual.gated_enhancement.rgb_gating.feature_fusion.3.weight', 'visual.gated_enhancement.rgb_gating.feature_fusion.3.bias', 'visual.gated_enhancement.rgb_gating.feature_fusion.4.weight', 'visual.gated_enhancement.rgb_gating.feature_fusion.4.bias', 'visual.gated_enhancement.rgb_gating.adaptive_weight.0.weight', 'visual.gated_enhancement.rgb_gating.adaptive_weight.0.bias', 'visual.gated_enhancement.rgb_gating.adaptive_weight.2.weight', 'visual.gated_enhancement.rgb_gating.adaptive_weight.2.bias', 'visual.gated_enhancement.nir_gating.residual_weight', 'visual.gated_enhancement.nir_gating.cross_modal_attention.q_proj.weight', 'visual.gated_enhancement.nir_gating.cross_modal_attention.k_proj.weight', 'visual.gated_enhancement.nir_gating.cross_modal_attention.v_proj.weight', 'visual.gated_enhancement.nir_gating.cross_modal_attention.out_proj.weight', 'visual.gated_enhancement.nir_gating.cross_modal_attention.out_proj.bias', 'visual.gated_enhancement.nir_gating.channel_gate.0.weight', 'visual.gated_enhancement.nir_gating.channel_gate.0.bias', 'visual.gated_enhancement.nir_gating.channel_gate.2.weight', 'visual.gated_enhancement.nir_gating.channel_gate.2.bias', 'visual.gated_enhancement.nir_gating.spatial_gate.0.weight', 'visual.gated_enhancement.nir_gating.spatial_gate.0.bias', 'visual.gated_enhancement.nir_gating.spatial_gate.2.weight', 'visual.gated_enhancement.nir_gating.spatial_gate.2.bias', 'visual.gated_enhancement.nir_gating.feature_fusion.0.weight', 'visual.gated_enhancement.nir_gating.feature_fusion.0.bias', 'visual.gated_enhancement.nir_gating.feature_fusion.1.weight', 'visual.gated_enhancement.nir_gating.feature_fusion.1.bias', 'visual.gated_enhancement.nir_gating.feature_fusion.3.weight', 'visual.gated_enhancement.nir_gating.feature_fusion.3.bias', 'visual.gated_enhancement.nir_gating.feature_fusion.4.weight', 'visual.gated_enhancement.nir_gating.feature_fusion.4.bias', 'visual.gated_enhancement.nir_gating.adaptive_weight.0.weight', 'visual.gated_enhancement.nir_gating.adaptive_weight.0.bias', 'visual.gated_enhancement.nir_gating.adaptive_weight.2.weight', 'visual.gated_enhancement.nir_gating.adaptive_weight.2.bias', 'visual.gated_enhancement.tir_gating.residual_weight', 'visual.gated_enhancement.tir_gating.cross_modal_attention.q_proj.weight', 'visual.gated_enhancement.tir_gating.cross_modal_attention.k_proj.weight', 'visual.gated_enhancement.tir_gating.cross_modal_attention.v_proj.weight', 'visual.gated_enhancement.tir_gating.cross_modal_attention.out_proj.weight', 'visual.gated_enhancement.tir_gating.cross_modal_attention.out_proj.bias', 'visual.gated_enhancement.tir_gating.channel_gate.0.weight', 'visual.gated_enhancement.tir_gating.channel_gate.0.bias', 'visual.gated_enhancement.tir_gating.channel_gate.2.weight', 'visual.gated_enhancement.tir_gating.channel_gate.2.bias', 'visual.gated_enhancement.tir_gating.spatial_gate.0.weight', 'visual.gated_enhancement.tir_gating.spatial_gate.0.bias', 'visual.gated_enhancement.tir_gating.spatial_gate.2.weight', 'visual.gated_enhancement.tir_gating.spatial_gate.2.bias', 'visual.gated_enhancement.tir_gating.feature_fusion.0.weight', 'visual.gated_enhancement.tir_gating.feature_fusion.0.bias', 'visual.gated_enhancement.tir_gating.feature_fusion.1.weight', 'visual.gated_enhancement.tir_gating.feature_fusion.1.bias', 'visual.gated_enhancement.tir_gating.feature_fusion.3.weight', 'visual.gated_enhancement.tir_gating.feature_fusion.3.bias', 'visual.gated_enhancement.tir_gating.feature_fusion.4.weight', 'visual.gated_enhancement.tir_gating.feature_fusion.4.bias', 'visual.gated_enhancement.tir_gating.adaptive_weight.0.weight', 'visual.gated_enhancement.tir_gating.adaptive_weight.0.bias', 'visual.gated_enhancement.tir_gating.adaptive_weight.2.weight', 'visual.gated_enhancement.tir_gating.adaptive_weight.2.bias', 'visual.gated_enhancement.global_coordination.interaction_net.0.weight', 'visual.gated_enhancement.global_coordination.interaction_net.0.bias', 'visual.gated_enhancement.global_coordination.interaction_net.1.weight', 'visual.gated_enhancement.global_coordination.interaction_net.1.bias', 'visual.gated_enhancement.global_coordination.interaction_net.3.weight', 'visual.gated_enhancement.global_coordination.interaction_net.3.bias', 'visual.gated_enhancement.global_coordination.interaction_net.4.weight', 'visual.gated_enhancement.global_coordination.interaction_net.4.bias', 'visual.gated_enhancement.global_coordination.balance_net.0.weight', 'visual.gated_enhancement.global_coordination.balance_net.0.bias', 'visual.gated_enhancement.global_coordination.balance_net.2.weight', 'visual.gated_enhancement.global_coordination.balance_net.2.bias', 'visual.gated_enhancement.global_coordination.global_gate.0.weight', 'visual.gated_enhancement.global_coordination.global_gate.0.bias', 'visual.gated_enhancement.global_coordination.global_gate.2.weight', 'visual.gated_enhancement.global_coordination.global_gate.2.bias'], unexpected_keys=[])
+Loading pretrained model from CLIP
+camera number is : 8
+combineway: multimodelse
+2025-05-27 15:07:06,223 DeMo INFO: combineway: multimodelse
+UsingDiversity: True
+===========Building DeMo===========
+2025-05-27 15:07:06,252 DeMo INFO: DeMo(
+  (BACKBONE): build_transformer_new(
+    (base): VisionTransformer(
+      (conv1): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16), bias=False)
+      (ln_pre): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (transformer): Transformer(
+        (resblocks): Sequential(
+          (0): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (1): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (2): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (3): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (4): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (5): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (6): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (7): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (8): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (9): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (10): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (11): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+      )
+      (ln_post): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (triple_dff): TripleInputDirectDFF(
+        (avg_pool1): AdaptiveAvgPool1d(output_size=1)
+        (avg_pool2): AdaptiveAvgPool1d(output_size=2)
+        (avg_pool4): AdaptiveAvgPool1d(output_size=4)
+        (fc_atten1): Sequential(
+          (0): Linear(in_features=2304, out_features=2304, bias=False)
+          (1): LayerNorm((2304,), eps=1e-05, elementwise_affine=True)
+          (2): Sigmoid()
+        )
+        (fc_atten2): Sequential(
+          (0): Linear(in_features=2304, out_features=2304, bias=False)
+          (1): LayerNorm((2304,), eps=1e-05, elementwise_affine=True)
+          (2): Sigmoid()
+        )
+        (fc_atten4): Sequential(
+          (0): Linear(in_features=2304, out_features=2304, bias=False)
+          (1): LayerNorm((2304,), eps=1e-05, elementwise_affine=True)
+          (2): Sigmoid()
+        )
+        (input_weight_net): Sequential(
+          (0): Linear(in_features=2304, out_features=768, bias=True)
+          (1): ReLU(inplace=True)
+          (2): Linear(in_features=768, out_features=3, bias=True)
+          (3): Softmax(dim=-1)
+        )
+        (gate_fc): Sequential(
+          (0): Linear(in_features=2304, out_features=2304, bias=False)
+          (1): Sigmoid()
+        )
+        (gate_enhancement): Sequential(
+          (0): Linear(in_features=2304, out_features=2304, bias=True)
+          (1): Tanh()
+        )
+        (fc_redu): Sequential(
+          (0): Linear(in_features=2304, out_features=768, bias=False)
+          (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU(inplace=True)
+        )
+        (residual_fc1): Sequential(
+          (0): Linear(in_features=768, out_features=768, bias=False)
+          (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        )
+        (residual_fc2): Sequential(
+          (0): Linear(in_features=768, out_features=768, bias=False)
+          (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        )
+        (residual_fc3): Sequential(
+          (0): Linear(in_features=768, out_features=768, bias=False)
+          (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        )
+        (residual_fusion): Sequential(
+          (0): Linear(in_features=2304, out_features=768, bias=False)
+          (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        )
+        (fc1): Linear(in_features=768, out_features=1, bias=True)
+        (fc2): Linear(in_features=768, out_features=1, bias=True)
+        (fc3): Linear(in_features=768, out_features=1, bias=True)
+        (attention_fusion): Sequential(
+          (0): Linear(in_features=3, out_features=1, bias=True)
+          (1): Sigmoid()
+        )
+      )
+      (quad_dffs): QuadInputHierarchicalDFF(
+        (stage1_triple_dff): TripleInputDirectDFF(
+          (avg_pool1): AdaptiveAvgPool1d(output_size=1)
+          (avg_pool2): AdaptiveAvgPool1d(output_size=2)
+          (avg_pool4): AdaptiveAvgPool1d(output_size=4)
+          (fc_atten1): Sequential(
+            (0): Linear(in_features=2304, out_features=2304, bias=False)
+            (1): LayerNorm((2304,), eps=1e-05, elementwise_affine=True)
+            (2): Sigmoid()
+          )
+          (fc_atten2): Sequential(
+            (0): Linear(in_features=2304, out_features=2304, bias=False)
+            (1): LayerNorm((2304,), eps=1e-05, elementwise_affine=True)
+            (2): Sigmoid()
+          )
+          (fc_atten4): Sequential(
+            (0): Linear(in_features=2304, out_features=2304, bias=False)
+            (1): LayerNorm((2304,), eps=1e-05, elementwise_affine=True)
+            (2): Sigmoid()
+          )
+          (input_weight_net): Sequential(
+            (0): Linear(in_features=2304, out_features=768, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=768, out_features=3, bias=True)
+            (3): Softmax(dim=-1)
+          )
+          (gate_fc): Sequential(
+            (0): Linear(in_features=2304, out_features=2304, bias=False)
+            (1): Sigmoid()
+          )
+          (gate_enhancement): Sequential(
+            (0): Linear(in_features=2304, out_features=2304, bias=True)
+            (1): Tanh()
+          )
+          (fc_redu): Sequential(
+            (0): Linear(in_features=2304, out_features=768, bias=False)
+            (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (2): ReLU(inplace=True)
+          )
+          (residual_fc1): Sequential(
+            (0): Linear(in_features=768, out_features=768, bias=False)
+            (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (residual_fc2): Sequential(
+            (0): Linear(in_features=768, out_features=768, bias=False)
+            (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (residual_fc3): Sequential(
+            (0): Linear(in_features=768, out_features=768, bias=False)
+            (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (residual_fusion): Sequential(
+            (0): Linear(in_features=2304, out_features=768, bias=False)
+            (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (fc1): Linear(in_features=768, out_features=1, bias=True)
+          (fc2): Linear(in_features=768, out_features=1, bias=True)
+          (fc3): Linear(in_features=768, out_features=1, bias=True)
+          (attention_fusion): Sequential(
+            (0): Linear(in_features=3, out_features=1, bias=True)
+            (1): Sigmoid()
+          )
+        )
+        (stage1_enhancement): Sequential(
+          (0): Linear(in_features=768, out_features=768, bias=True)
+          (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU(inplace=True)
+          (3): Linear(in_features=768, out_features=192, bias=True)
+          (4): ReLU(inplace=True)
+          (5): Linear(in_features=192, out_features=768, bias=True)
+          (6): Sigmoid()
+        )
+        (input4_preprocessing): Sequential(
+          (0): Linear(in_features=768, out_features=768, bias=True)
+          (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU(inplace=True)
+          (3): Linear(in_features=768, out_features=768, bias=True)
+          (4): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        )
+        (cross_stage_attention): Sequential(
+          (0): Linear(in_features=768, out_features=96, bias=True)
+          (1): ReLU(inplace=True)
+          (2): Linear(in_features=96, out_features=768, bias=True)
+          (3): Sigmoid()
+        )
+        (adaptive_fusion_weight): Sequential(
+          (0): Linear(in_features=1536, out_features=192, bias=True)
+          (1): ReLU(inplace=True)
+          (2): Linear(in_features=192, out_features=2, bias=True)
+          (3): Softmax(dim=-1)
+        )
+        (stage2_dff): InnovativeDFF(
+          (avg_pool1): AdaptiveAvgPool1d(output_size=1)
+          (avg_pool2): AdaptiveAvgPool1d(output_size=2)
+          (avg_pool3): AdaptiveAvgPool1d(output_size=4)
+          (fc_atten1): Sequential(
+            (0): Linear(in_features=1536, out_features=1536, bias=False)
+            (1): Sigmoid()
+          )
+          (fc_atten2): Sequential(
+            (0): Linear(in_features=1536, out_features=1536, bias=False)
+            (1): Sigmoid()
+          )
+          (fc_atten3): Sequential(
+            (0): Linear(in_features=1536, out_features=1536, bias=False)
+            (1): Sigmoid()
+          )
+          (gate_fc): Sequential(
+            (0): Linear(in_features=1536, out_features=1536, bias=False)
+            (1): Sigmoid()
+          )
+          (fc_redu): Linear(in_features=1536, out_features=768, bias=False)
+          (residual_fc): Linear(in_features=768, out_features=768, bias=False)
+          (fc1): Linear(in_features=768, out_features=1, bias=True)
+          (fc2): Linear(in_features=768, out_features=1, bias=True)
+          (nonlin): Sigmoid()
+        )
+        (memory_input1): Linear(in_features=768, out_features=768, bias=False)
+        (memory_input4): Linear(in_features=768, out_features=768, bias=False)
+        (memory_fusion): Sequential(
+          (0): Linear(in_features=1536, out_features=768, bias=False)
+          (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        )
+        (global_context): Sequential(
+          (0): Linear(in_features=768, out_features=384, bias=True)
+          (1): ReLU(inplace=True)
+          (2): Linear(in_features=384, out_features=768, bias=True)
+          (3): Sigmoid()
+        )
+        (final_refinement): Sequential(
+          (0): Linear(in_features=768, out_features=768, bias=True)
+          (1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU(inplace=True)
+          (3): Linear(in_features=768, out_features=768, bias=True)
+          (4): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        )
+      )
+      (gated_enhancement): GatedModalityEnhancement(
+        (rgb_gating): ModalityGatingUnit(
+          (cross_modal_attention): CrossModalAttentionGate(
+            (q_proj): Linear(in_features=768, out_features=768, bias=False)
+            (k_proj): Linear(in_features=768, out_features=768, bias=False)
+            (v_proj): Linear(in_features=768, out_features=768, bias=False)
+            (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (channel_gate): Sequential(
+            (0): Linear(in_features=768, out_features=192, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=192, out_features=768, bias=True)
+            (3): Sigmoid()
+          )
+          (spatial_gate): Sequential(
+            (0): Linear(in_features=1536, out_features=768, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=768, out_features=1, bias=True)
+            (3): Sigmoid()
+          )
+          (feature_fusion): Sequential(
+            (0): Linear(in_features=1536, out_features=1536, bias=True)
+            (1): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (2): ReLU(inplace=True)
+            (3): Linear(in_features=1536, out_features=768, bias=True)
+            (4): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (adaptive_weight): Sequential(
+            (0): Linear(in_features=1536, out_features=384, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=384, out_features=2, bias=True)
+            (3): Softmax(dim=-1)
+          )
+        )
+        (nir_gating): ModalityGatingUnit(
+          (cross_modal_attention): CrossModalAttentionGate(
+            (q_proj): Linear(in_features=768, out_features=768, bias=False)
+            (k_proj): Linear(in_features=768, out_features=768, bias=False)
+            (v_proj): Linear(in_features=768, out_features=768, bias=False)
+            (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (channel_gate): Sequential(
+            (0): Linear(in_features=768, out_features=192, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=192, out_features=768, bias=True)
+            (3): Sigmoid()
+          )
+          (spatial_gate): Sequential(
+            (0): Linear(in_features=1536, out_features=768, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=768, out_features=1, bias=True)
+            (3): Sigmoid()
+          )
+          (feature_fusion): Sequential(
+            (0): Linear(in_features=1536, out_features=1536, bias=True)
+            (1): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (2): ReLU(inplace=True)
+            (3): Linear(in_features=1536, out_features=768, bias=True)
+            (4): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (adaptive_weight): Sequential(
+            (0): Linear(in_features=1536, out_features=384, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=384, out_features=2, bias=True)
+            (3): Softmax(dim=-1)
+          )
+        )
+        (tir_gating): ModalityGatingUnit(
+          (cross_modal_attention): CrossModalAttentionGate(
+            (q_proj): Linear(in_features=768, out_features=768, bias=False)
+            (k_proj): Linear(in_features=768, out_features=768, bias=False)
+            (v_proj): Linear(in_features=768, out_features=768, bias=False)
+            (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (channel_gate): Sequential(
+            (0): Linear(in_features=768, out_features=192, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=192, out_features=768, bias=True)
+            (3): Sigmoid()
+          )
+          (spatial_gate): Sequential(
+            (0): Linear(in_features=1536, out_features=768, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=768, out_features=1, bias=True)
+            (3): Sigmoid()
+          )
+          (feature_fusion): Sequential(
+            (0): Linear(in_features=1536, out_features=1536, bias=True)
+            (1): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (2): ReLU(inplace=True)
+            (3): Linear(in_features=1536, out_features=768, bias=True)
+            (4): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (adaptive_weight): Sequential(
+            (0): Linear(in_features=1536, out_features=384, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=384, out_features=2, bias=True)
+            (3): Softmax(dim=-1)
+          )
+        )
+        (global_coordination): GlobalCoordinationGate(
+          (interaction_net): Sequential(
+            (0): Linear(in_features=2304, out_features=1536, bias=True)
+            (1): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (2): ReLU(inplace=True)
+            (3): Linear(in_features=1536, out_features=768, bias=True)
+            (4): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (balance_net): Sequential(
+            (0): Linear(in_features=4608, out_features=768, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=768, out_features=3, bias=True)
+            (3): Softmax(dim=-1)
+          )
+          (global_gate): Sequential(
+            (0): Linear(in_features=768, out_features=192, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=192, out_features=1, bias=True)
+            (3): Sigmoid()
+          )
+        )
+      )
+    )
+  )
+  (pool): AdaptiveAvgPool1d(output_size=1)
+  (rgb_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (nir_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (tir_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (generalFusion): GeneralFusion(
+    (r): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (n): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (t): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (rn): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (rt): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (nt): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (rnt): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (moe): MoM(
+      (experts): ModuleList(
+        (0): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (1): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (2): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (3): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (4): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (5): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (6): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (7): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=64, out_features=64, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+      )
+      (gating_network): GatingNetwork(
+        (gate): CrossAttention(
+          (linear_re): Sequential(
+            (0): Linear(in_features=3584, out_features=512, bias=True)
+            (1): QuickGELU()
+            (2): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (q_): Linear(in_features=512, out_features=512, bias=False)
+          (k_): Linear(in_features=512, out_features=512, bias=False)
+        )
+      )
+    )
+    (multimodal_token_se): MultiModalTokenSE(
+      (rgb_aggregator): Sequential(
+        (0): Linear(in_features=128, out_features=32, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=32, out_features=128, bias=True)
+        (3): Sigmoid()
+      )
+      (nir_aggregator): Sequential(
+        (0): Linear(in_features=128, out_features=32, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=32, out_features=128, bias=True)
+        (3): Sigmoid()
+      )
+      (tir_aggregator): Sequential(
+        (0): Linear(in_features=128, out_features=32, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=32, out_features=128, bias=True)
+        (3): Sigmoid()
+      )
+      (adaptive_weighting): AdaptiveWeighting(
+        (weight_net): Sequential(
+          (0): Linear(in_features=384, out_features=128, bias=True)
+          (1): ReLU(inplace=True)
+          (2): Linear(in_features=128, out_features=384, bias=True)
+          (3): Softmax(dim=-1)
+        )
+      )
+      (global_context_net): Sequential(
+        (0): Linear(in_features=384, out_features=128, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=128, out_features=128, bias=True)
+        (3): Sigmoid()
+      )
+      (modal_balance): Sequential(
+        (0): Linear(in_features=3, out_features=8, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=8, out_features=3, bias=True)
+        (3): Softmax(dim=-1)
+      )
+      (enhancement_net): Sequential(
+        (0): Linear(in_features=384, out_features=128, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=128, out_features=128, bias=True)
+        (3): Sigmoid()
+      )
+    )
+    (feature_diversifiers): ModuleList(
+      (0): FeatureDiversifier(
+        (diversify_net): Sequential(
+          (0): Linear(in_features=512, out_features=512, bias=True)
+          (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU()
+          (3): Linear(in_features=512, out_features=512, bias=True)
+        )
+      )
+      (1): FeatureDiversifier(
+        (diversify_net): Sequential(
+          (0): Linear(in_features=512, out_features=512, bias=True)
+          (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU()
+          (3): Linear(in_features=512, out_features=512, bias=True)
+        )
+      )
+      (2): FeatureDiversifier(
+        (diversify_net): Sequential(
+          (0): Linear(in_features=512, out_features=512, bias=True)
+          (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU()
+          (3): Linear(in_features=512, out_features=512, bias=True)
+        )
+      )
+      (3): FeatureDiversifier(
+        (diversify_net): Sequential(
+          (0): Linear(in_features=512, out_features=512, bias=True)
+          (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU()
+          (3): Linear(in_features=512, out_features=512, bias=True)
+        )
+      )
+      (4): FeatureDiversifier(
+        (diversify_net): Sequential(
+          (0): Linear(in_features=512, out_features=512, bias=True)
+          (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU()
+          (3): Linear(in_features=512, out_features=512, bias=True)
+        )
+      )
+      (5): FeatureDiversifier(
+        (diversify_net): Sequential(
+          (0): Linear(in_features=512, out_features=512, bias=True)
+          (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU()
+          (3): Linear(in_features=512, out_features=512, bias=True)
+        )
+      )
+      (6): FeatureDiversifier(
+        (diversify_net): Sequential(
+          (0): Linear(in_features=512, out_features=512, bias=True)
+          (1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (2): ReLU()
+          (3): Linear(in_features=512, out_features=512, bias=True)
+        )
+      )
+    )
+  )
+  (classifier_moe): Linear(in_features=3584, out_features=50, bias=False)
+  (bottleneck_moe): BatchNorm1d(3584, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier_r): Linear(in_features=512, out_features=50, bias=False)
+  (bottleneck_r): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier_n): Linear(in_features=512, out_features=50, bias=False)
+  (bottleneck_n): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier_t): Linear(in_features=512, out_features=50, bias=False)
+  (bottleneck_t): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+2025-05-27 15:07:06,254 DeMo INFO: number of parameters:219.382891
+using soft triplet loss for training
+label smooth on, numclasses: 50
+2025-05-27 15:07:06,359 DeMo.train INFO: start training
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/helpers.py:7: FutureWarning: Importing from timm.models.helpers is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/registry.py:4: FutureWarning: Importing from timm.models.registry is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/home/ma1/work/demorelated/DeMo/modeling/clip/clip.py:23: UserWarning: PyTorch version 1.7.1 or higher is recommended
+  warnings.warn("PyTorch version 1.7.1 or higher is recommended")
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/mmcv/__init__.py:20: UserWarning: On January 1, 2023, MMCV will release v2.0.0, in which it will remove components related to the training process and add a data transformation module. In addition, it will rename the package names mmcv to mmcv-lite and mmcv-full to mmcv. See https://github.com/open-mmlab/mmcv/blob/master/docs/en/compatibility.md for more details.
+  warnings.warn(
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/torchvision/transforms/transforms.py:329: UserWarning: Argument 'interpolation' of type int is deprecated since 0.13 and will be removed in 0.15. Please use InterpolationMode enum.
+  warnings.warn(
+2025-05-27 15:07:33,922 DeMo.train INFO: Epoch[1] Iteration[10/65] Loss: 11.842, Acc: 0.045, Base Lr: 9.80e-05
+2025-05-27 15:07:46,811 DeMo.train INFO: Epoch[1] Iteration[20/65] Loss: 9.893, Acc: 0.110, Base Lr: 9.80e-05
+2025-05-27 15:07:59,581 DeMo.train INFO: Epoch[1] Iteration[30/65] Loss: 9.044, Acc: 0.196, Base Lr: 9.80e-05
+2025-05-27 15:08:12,377 DeMo.train INFO: Epoch[1] Iteration[40/65] Loss: 8.516, Acc: 0.281, Base Lr: 9.80e-05
+2025-05-27 15:08:25,159 DeMo.train INFO: Epoch[1] Iteration[50/65] Loss: 8.118, Acc: 0.338, Base Lr: 9.80e-05
+2025-05-27 15:08:38,027 DeMo.train INFO: Epoch[1] Iteration[60/65] Loss: 7.821, Acc: 0.388, Base Lr: 9.80e-05
+2025-05-27 15:08:41,978 DeMo.train INFO: Epoch 1 done. Time per batch: 1.517[s] Speed: 84.4[samples/s]
+2025-05-27 15:08:41,982 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:08:41,982 DeMo.train INFO: Current is the ori feature testing!
+2025-05-27 15:08:41,983 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6218
+CMC curve: Rank-1: 0.8746, Rank-5: 0.8974, Rank-10: 0.9131
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6373
+CMC curve: Rank-1: 0.8886, Rank-5: 0.8985, Rank-10: 0.9108
+=> Improvement:
+mAP improvement: 0.0155 (+2.49%)
+Rank-1 improvement: 0.0140 (+1.60%)
+2025-05-27 15:12:31,522 DeMo.train INFO: Validation Results - Epoch: 1
+2025-05-27 15:12:31,522 DeMo.train INFO: mAP: 63.7%
+2025-05-27 15:12:31,522 DeMo.train INFO: CMC curve, Rank-1  :88.9%
+2025-05-27 15:12:31,522 DeMo.train INFO: CMC curve, Rank-5  :89.9%
+2025-05-27 15:12:31,522 DeMo.train INFO: CMC curve, Rank-10 :91.1%
+2025-05-27 15:12:31,522 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:12:31,531 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:12:31,531 DeMo.train INFO: Current is the moe feature testing!
+2025-05-27 15:12:31,531 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ma1/work/demorelated/DeMo/utils/reranking.py:40: UserWarning: This overload of addmm_ is deprecated:
+	addmm_(Number beta, Number alpha, Tensor mat1, Tensor mat2)
+Consider using one of the following signatures instead:
+	addmm_(Tensor mat1, Tensor mat2, *, Number beta, Number alpha) (Triggered internally at ../torch/csrc/utils/python_arg_parser.cpp:1420.)
+  distmat.addmm_(1, -2, feat, feat.t())
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6393
+CMC curve: Rank-1: 0.8601, Rank-5: 0.8898, Rank-10: 0.9026
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6492
+CMC curve: Rank-1: 0.8828, Rank-5: 0.8933, Rank-10: 0.9009
+=> Improvement:
+mAP improvement: 0.0099 (+1.54%)
+Rank-1 improvement: 0.0227 (+2.64%)
+2025-05-27 15:16:00,813 DeMo.train INFO: Validation Results - Epoch: 1
+2025-05-27 15:16:00,814 DeMo.train INFO: mAP: 64.9%
+2025-05-27 15:16:00,814 DeMo.train INFO: CMC curve, Rank-1  :88.3%
+2025-05-27 15:16:00,814 DeMo.train INFO: CMC curve, Rank-5  :89.3%
+2025-05-27 15:16:00,814 DeMo.train INFO: CMC curve, Rank-10 :90.1%
+2025-05-27 15:16:00,814 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:16:01,512 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:16:01,513 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-27 15:16:01,513 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6460
+CMC curve: Rank-1: 0.8717, Rank-5: 0.9003, Rank-10: 0.9125
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6598
+CMC curve: Rank-1: 0.8851, Rank-5: 0.8950, Rank-10: 0.9020
+=> Improvement:
+mAP improvement: 0.0138 (+2.13%)
+Rank-1 improvement: 0.0134 (+1.54%)
+2025-05-27 15:19:25,230 DeMo.train INFO: Validation Results - Epoch: 1
+2025-05-27 15:19:25,230 DeMo.train INFO: mAP: 66.0%
+2025-05-27 15:19:25,230 DeMo.train INFO: CMC curve, Rank-1  :88.5%
+2025-05-27 15:19:25,231 DeMo.train INFO: CMC curve, Rank-5  :89.5%
+2025-05-27 15:19:25,231 DeMo.train INFO: CMC curve, Rank-10 :90.2%
+2025-05-27 15:19:25,231 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:19:33,274 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:19:33,274 DeMo.train INFO: Best mAP: 66.0%
+2025-05-27 15:19:33,274 DeMo.train INFO: Best Rank-1: 88.5%
+2025-05-27 15:19:33,274 DeMo.train INFO: Best Rank-5: 89.5%
+2025-05-27 15:19:33,274 DeMo.train INFO: Best Rank-10: 90.2%
+2025-05-27 15:19:33,274 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:19:49,170 DeMo.train INFO: Epoch[2] Iteration[10/65] Loss: 5.866, Acc: 0.564, Base Lr: 1.61e-04
+2025-05-27 15:20:01,914 DeMo.train INFO: Epoch[2] Iteration[20/65] Loss: 5.625, Acc: 0.575, Base Lr: 1.61e-04
+2025-05-27 15:20:14,691 DeMo.train INFO: Epoch[2] Iteration[30/65] Loss: 5.396, Acc: 0.587, Base Lr: 1.61e-04
+2025-05-27 15:20:27,495 DeMo.train INFO: Epoch[2] Iteration[40/65] Loss: 5.088, Acc: 0.625, Base Lr: 1.61e-04
+2025-05-27 15:20:40,283 DeMo.train INFO: Epoch[2] Iteration[50/65] Loss: 4.882, Acc: 0.652, Base Lr: 1.61e-04
+2025-05-27 15:20:53,097 DeMo.train INFO: Epoch[2] Iteration[60/65] Loss: 4.683, Acc: 0.682, Base Lr: 1.61e-04
+2025-05-27 15:20:55,813 DeMo.train INFO: Epoch 2 done. Time per batch: 1.331[s] Speed: 96.1[samples/s]
+2025-05-27 15:20:55,825 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:20:55,825 DeMo.train INFO: Current is the ori feature testing!
+2025-05-27 15:20:55,825 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7028
+CMC curve: Rank-1: 0.8542, Rank-5: 0.8805, Rank-10: 0.8956
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7128
+CMC curve: Rank-1: 0.8688, Rank-5: 0.8723, Rank-10: 0.8787
+=> Improvement:
+mAP improvement: 0.0101 (+1.43%)
+Rank-1 improvement: 0.0146 (+1.71%)
+2025-05-27 15:24:50,080 DeMo.train INFO: Validation Results - Epoch: 2
+2025-05-27 15:24:50,081 DeMo.train INFO: mAP: 71.3%
+2025-05-27 15:24:50,081 DeMo.train INFO: CMC curve, Rank-1  :86.9%
+2025-05-27 15:24:50,081 DeMo.train INFO: CMC curve, Rank-5  :87.2%
+2025-05-27 15:24:50,081 DeMo.train INFO: CMC curve, Rank-10 :87.9%
+2025-05-27 15:24:50,082 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:24:50,289 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:24:50,290 DeMo.train INFO: Current is the moe feature testing!
+2025-05-27 15:24:50,290 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7097
+CMC curve: Rank-1: 0.8735, Rank-5: 0.8904, Rank-10: 0.8991
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7159
+CMC curve: Rank-1: 0.8711, Rank-5: 0.8793, Rank-10: 0.8851
+=> Improvement:
+mAP improvement: 0.0062 (+0.87%)
+Rank-1 improvement: -0.0023 (-0.27%)
+2025-05-27 15:29:00,020 DeMo.train INFO: Validation Results - Epoch: 2
+2025-05-27 15:29:00,021 DeMo.train INFO: mAP: 71.6%
+2025-05-27 15:29:00,021 DeMo.train INFO: CMC curve, Rank-1  :87.1%
+2025-05-27 15:29:00,021 DeMo.train INFO: CMC curve, Rank-5  :87.9%
+2025-05-27 15:29:00,021 DeMo.train INFO: CMC curve, Rank-10 :88.5%
+2025-05-27 15:29:00,021 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:29:00,584 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:29:00,585 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-27 15:29:00,585 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7160
+CMC curve: Rank-1: 0.8630, Rank-5: 0.8851, Rank-10: 0.8997
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7239
+CMC curve: Rank-1: 0.8665, Rank-5: 0.8676, Rank-10: 0.8758
+=> Improvement:
+mAP improvement: 0.0079 (+1.10%)
+Rank-1 improvement: 0.0035 (+0.41%)
+2025-05-27 15:32:40,169 DeMo.train INFO: Validation Results - Epoch: 2
+2025-05-27 15:32:40,169 DeMo.train INFO: mAP: 72.4%
+2025-05-27 15:32:40,169 DeMo.train INFO: CMC curve, Rank-1  :86.6%
+2025-05-27 15:32:40,169 DeMo.train INFO: CMC curve, Rank-5  :86.8%
+2025-05-27 15:32:40,169 DeMo.train INFO: CMC curve, Rank-10 :87.6%
+2025-05-27 15:32:40,169 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:32:47,970 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:32:47,970 DeMo.train INFO: Best mAP: 72.4%
+2025-05-27 15:32:47,970 DeMo.train INFO: Best Rank-1: 86.6%
+2025-05-27 15:32:47,970 DeMo.train INFO: Best Rank-5: 86.8%
+2025-05-27 15:32:47,970 DeMo.train INFO: Best Rank-10: 87.6%
+2025-05-27 15:32:47,970 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:33:04,519 DeMo.train INFO: Epoch[3] Iteration[10/65] Loss: 3.044, Acc: 0.766, Base Lr: 2.24e-04
+2025-05-27 15:33:17,293 DeMo.train INFO: Epoch[3] Iteration[20/65] Loss: 3.029, Acc: 0.806, Base Lr: 2.24e-04
+2025-05-27 15:33:30,112 DeMo.train INFO: Epoch[3] Iteration[30/65] Loss: 2.867, Acc: 0.844, Base Lr: 2.24e-04
+2025-05-27 15:33:42,938 DeMo.train INFO: Epoch[3] Iteration[40/65] Loss: 2.739, Acc: 0.870, Base Lr: 2.24e-04
+2025-05-27 15:33:55,687 DeMo.train INFO: Epoch[3] Iteration[50/65] Loss: 2.618, Acc: 0.886, Base Lr: 2.24e-04
+2025-05-27 15:34:08,443 DeMo.train INFO: Epoch[3] Iteration[60/65] Loss: 2.510, Acc: 0.898, Base Lr: 2.24e-04
+2025-05-27 15:34:12,440 DeMo.train INFO: Epoch 3 done. Time per batch: 1.341[s] Speed: 95.5[samples/s]
+2025-05-27 15:34:12,451 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:34:12,452 DeMo.train INFO: Current is the ori feature testing!
+2025-05-27 15:34:12,452 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6758
+CMC curve: Rank-1: 0.8192, Rank-5: 0.8443, Rank-10: 0.8630
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6827
+CMC curve: Rank-1: 0.8280, Rank-5: 0.8367, Rank-10: 0.8472
+=> Improvement:
+mAP improvement: 0.0069 (+1.02%)
+Rank-1 improvement: 0.0087 (+1.07%)
+2025-05-27 15:37:46,768 DeMo.train INFO: Validation Results - Epoch: 3
+2025-05-27 15:37:46,768 DeMo.train INFO: mAP: 68.3%
+2025-05-27 15:37:46,768 DeMo.train INFO: CMC curve, Rank-1  :82.8%
+2025-05-27 15:37:46,768 DeMo.train INFO: CMC curve, Rank-5  :83.7%
+2025-05-27 15:37:46,768 DeMo.train INFO: CMC curve, Rank-10 :84.7%
+2025-05-27 15:37:46,769 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:37:48,272 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:37:48,272 DeMo.train INFO: Current is the moe feature testing!
+2025-05-27 15:37:48,272 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6498
+CMC curve: Rank-1: 0.8105, Rank-5: 0.8420, Rank-10: 0.8560
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6611
+CMC curve: Rank-1: 0.8350, Rank-5: 0.8501, Rank-10: 0.8583
+=> Improvement:
+mAP improvement: 0.0113 (+1.74%)
+Rank-1 improvement: 0.0245 (+3.02%)
+2025-05-27 15:40:52,361 DeMo.train INFO: Validation Results - Epoch: 3
+2025-05-27 15:40:52,361 DeMo.train INFO: mAP: 66.1%
+2025-05-27 15:40:52,361 DeMo.train INFO: CMC curve, Rank-1  :83.5%
+2025-05-27 15:40:52,361 DeMo.train INFO: CMC curve, Rank-5  :85.0%
+2025-05-27 15:40:52,361 DeMo.train INFO: CMC curve, Rank-10 :85.8%
+2025-05-27 15:40:52,361 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:40:53,636 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:40:53,636 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-27 15:40:53,636 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.6775
+CMC curve: Rank-1: 0.8216, Rank-5: 0.8490, Rank-10: 0.8630
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.6831
+CMC curve: Rank-1: 0.8321, Rank-5: 0.8420, Rank-10: 0.8525
+=> Improvement:
+mAP improvement: 0.0057 (+0.84%)
+Rank-1 improvement: 0.0105 (+1.28%)
+2025-05-27 15:43:59,396 DeMo.train INFO: Validation Results - Epoch: 3
+2025-05-27 15:43:59,396 DeMo.train INFO: mAP: 68.3%
+2025-05-27 15:43:59,396 DeMo.train INFO: CMC curve, Rank-1  :83.2%
+2025-05-27 15:43:59,396 DeMo.train INFO: CMC curve, Rank-5  :84.2%
+2025-05-27 15:43:59,397 DeMo.train INFO: CMC curve, Rank-10 :85.2%
+2025-05-27 15:43:59,397 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:43:59,554 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:43:59,555 DeMo.train INFO: Best mAP: 72.4%
+2025-05-27 15:43:59,555 DeMo.train INFO: Best Rank-1: 86.6%
+2025-05-27 15:43:59,555 DeMo.train INFO: Best Rank-5: 86.8%
+2025-05-27 15:43:59,555 DeMo.train INFO: Best Rank-10: 87.6%
+2025-05-27 15:43:59,555 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:44:16,557 DeMo.train INFO: Epoch[4] Iteration[10/65] Loss: 2.130, Acc: 0.885, Base Lr: 2.87e-04
+2025-05-27 15:44:29,361 DeMo.train INFO: Epoch[4] Iteration[20/65] Loss: 1.847, Acc: 0.932, Base Lr: 2.87e-04
+2025-05-27 15:44:42,713 DeMo.train INFO: Epoch[4] Iteration[30/65] Loss: 1.751, Acc: 0.943, Base Lr: 2.87e-04
+2025-05-27 15:44:55,455 DeMo.train INFO: Epoch[4] Iteration[40/65] Loss: 1.663, Acc: 0.953, Base Lr: 2.87e-04
+2025-05-27 15:45:08,221 DeMo.train INFO: Epoch[4] Iteration[50/65] Loss: 1.592, Acc: 0.958, Base Lr: 2.87e-04
+2025-05-27 15:45:20,938 DeMo.train INFO: Epoch[4] Iteration[60/65] Loss: 1.533, Acc: 0.962, Base Lr: 2.87e-04
+2025-05-27 15:45:23,641 DeMo.train INFO: Epoch 4 done. Time per batch: 1.356[s] Speed: 94.4[samples/s]
+2025-05-27 15:45:23,654 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:45:23,655 DeMo.train INFO: Current is the ori feature testing!
+2025-05-27 15:45:23,655 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7541
+CMC curve: Rank-1: 0.8787, Rank-5: 0.9061, Rank-10: 0.9230
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7574
+CMC curve: Rank-1: 0.8752, Rank-5: 0.8822, Rank-10: 0.8921
+=> Improvement:
+mAP improvement: 0.0033 (+0.44%)
+Rank-1 improvement: -0.0035 (-0.40%)
+2025-05-27 15:48:50,308 DeMo.train INFO: Validation Results - Epoch: 4
+2025-05-27 15:48:50,309 DeMo.train INFO: mAP: 75.7%
+2025-05-27 15:48:50,309 DeMo.train INFO: CMC curve, Rank-1  :87.5%
+2025-05-27 15:48:50,309 DeMo.train INFO: CMC curve, Rank-5  :88.2%
+2025-05-27 15:48:50,309 DeMo.train INFO: CMC curve, Rank-10 :89.2%
+2025-05-27 15:48:50,309 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:48:50,877 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:48:50,878 DeMo.train INFO: Current is the moe feature testing!
+2025-05-27 15:48:50,878 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7526
+CMC curve: Rank-1: 0.8950, Rank-5: 0.9085, Rank-10: 0.9219
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7596
+CMC curve: Rank-1: 0.8962, Rank-5: 0.9009, Rank-10: 0.9108
+=> Improvement:
+mAP improvement: 0.0070 (+0.93%)
+Rank-1 improvement: 0.0012 (+0.13%)
+2025-05-27 15:51:53,078 DeMo.train INFO: Validation Results - Epoch: 4
+2025-05-27 15:51:53,079 DeMo.train INFO: mAP: 76.0%
+2025-05-27 15:51:53,079 DeMo.train INFO: CMC curve, Rank-1  :89.6%
+2025-05-27 15:51:53,079 DeMo.train INFO: CMC curve, Rank-5  :90.1%
+2025-05-27 15:51:53,079 DeMo.train INFO: CMC curve, Rank-10 :91.1%
+2025-05-27 15:51:53,079 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:51:53,207 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:51:53,207 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-27 15:51:53,207 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7628
+CMC curve: Rank-1: 0.8927, Rank-5: 0.9114, Rank-10: 0.9230
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7672
+CMC curve: Rank-1: 0.8921, Rank-5: 0.8974, Rank-10: 0.9032
+=> Improvement:
+mAP improvement: 0.0044 (+0.58%)
+Rank-1 improvement: -0.0006 (-0.07%)
+2025-05-27 15:54:56,731 DeMo.train INFO: Validation Results - Epoch: 4
+2025-05-27 15:54:56,731 DeMo.train INFO: mAP: 76.7%
+2025-05-27 15:54:56,731 DeMo.train INFO: CMC curve, Rank-1  :89.2%
+2025-05-27 15:54:56,731 DeMo.train INFO: CMC curve, Rank-5  :89.7%
+2025-05-27 15:54:56,732 DeMo.train INFO: CMC curve, Rank-10 :90.3%
+2025-05-27 15:54:56,732 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:55:05,516 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:55:05,517 DeMo.train INFO: Best mAP: 76.7%
+2025-05-27 15:55:05,517 DeMo.train INFO: Best Rank-1: 89.2%
+2025-05-27 15:55:05,517 DeMo.train INFO: Best Rank-5: 89.7%
+2025-05-27 15:55:05,517 DeMo.train INFO: Best Rank-10: 90.3%
+2025-05-27 15:55:05,517 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:55:23,148 DeMo.train INFO: Epoch[5] Iteration[10/65] Loss: 1.188, Acc: 0.992, Base Lr: 3.27e-04
+2025-05-27 15:55:35,987 DeMo.train INFO: Epoch[5] Iteration[20/65] Loss: 1.177, Acc: 0.986, Base Lr: 3.27e-04
+2025-05-27 15:55:48,710 DeMo.train INFO: Epoch[5] Iteration[30/65] Loss: 1.141, Acc: 0.984, Base Lr: 3.27e-04
+2025-05-27 15:56:01,432 DeMo.train INFO: Epoch[5] Iteration[40/65] Loss: 1.113, Acc: 0.979, Base Lr: 3.27e-04
+2025-05-27 15:56:14,161 DeMo.train INFO: Epoch[5] Iteration[50/65] Loss: 1.090, Acc: 0.982, Base Lr: 3.27e-04
+2025-05-27 15:56:26,829 DeMo.train INFO: Epoch[5] Iteration[60/65] Loss: 1.071, Acc: 0.984, Base Lr: 3.27e-04
+2025-05-27 15:56:30,791 DeMo.train INFO: Epoch 5 done. Time per batch: 1.354[s] Speed: 94.6[samples/s]
+2025-05-27 15:56:30,802 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:56:30,802 DeMo.train INFO: Current is the ori feature testing!
+2025-05-27 15:56:30,802 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7637
+CMC curve: Rank-1: 0.8939, Rank-5: 0.9120, Rank-10: 0.9224
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7692
+CMC curve: Rank-1: 0.9009, Rank-5: 0.9038, Rank-10: 0.9102
+=> Improvement:
+mAP improvement: 0.0055 (+0.71%)
+Rank-1 improvement: 0.0070 (+0.78%)
+2025-05-27 15:59:33,006 DeMo.train INFO: Validation Results - Epoch: 5
+2025-05-27 15:59:33,007 DeMo.train INFO: mAP: 76.9%
+2025-05-27 15:59:33,007 DeMo.train INFO: CMC curve, Rank-1  :90.1%
+2025-05-27 15:59:33,007 DeMo.train INFO: CMC curve, Rank-5  :90.4%
+2025-05-27 15:59:33,007 DeMo.train INFO: CMC curve, Rank-10 :91.0%
+2025-05-27 15:59:33,007 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:59:35,369 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 15:59:35,369 DeMo.train INFO: Current is the moe feature testing!
+2025-05-27 15:59:35,369 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7556
+CMC curve: Rank-1: 0.8950, Rank-5: 0.9067, Rank-10: 0.9178
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7592
+CMC curve: Rank-1: 0.8962, Rank-5: 0.8991, Rank-10: 0.9015
+=> Improvement:
+mAP improvement: 0.0036 (+0.48%)
+Rank-1 improvement: 0.0012 (+0.13%)
+2025-05-27 16:02:39,127 DeMo.train INFO: Validation Results - Epoch: 5
+2025-05-27 16:02:39,127 DeMo.train INFO: mAP: 75.9%
+2025-05-27 16:02:39,127 DeMo.train INFO: CMC curve, Rank-1  :89.6%
+2025-05-27 16:02:39,127 DeMo.train INFO: CMC curve, Rank-5  :89.9%
+2025-05-27 16:02:39,127 DeMo.train INFO: CMC curve, Rank-10 :90.1%
+2025-05-27 16:02:39,127 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:02:39,553 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:02:39,554 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-27 16:02:39,554 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7725
+CMC curve: Rank-1: 0.9003, Rank-5: 0.9143, Rank-10: 0.9259
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7761
+CMC curve: Rank-1: 0.8997, Rank-5: 0.9026, Rank-10: 0.9102
+=> Improvement:
+mAP improvement: 0.0036 (+0.47%)
+Rank-1 improvement: -0.0006 (-0.06%)
+2025-05-27 16:05:42,536 DeMo.train INFO: Validation Results - Epoch: 5
+2025-05-27 16:05:42,536 DeMo.train INFO: mAP: 77.6%
+2025-05-27 16:05:42,536 DeMo.train INFO: CMC curve, Rank-1  :90.0%
+2025-05-27 16:05:42,536 DeMo.train INFO: CMC curve, Rank-5  :90.3%
+2025-05-27 16:05:42,536 DeMo.train INFO: CMC curve, Rank-10 :91.0%
+2025-05-27 16:05:42,536 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:05:50,600 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:05:50,600 DeMo.train INFO: Best mAP: 77.6%
+2025-05-27 16:05:50,600 DeMo.train INFO: Best Rank-1: 90.0%
+2025-05-27 16:05:50,600 DeMo.train INFO: Best Rank-5: 90.3%
+2025-05-27 16:05:50,600 DeMo.train INFO: Best Rank-10: 91.0%
+2025-05-27 16:05:50,601 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:06:08,067 DeMo.train INFO: Epoch[6] Iteration[10/65] Loss: 0.959, Acc: 0.992, Base Lr: 3.17e-04
+2025-05-27 16:06:20,770 DeMo.train INFO: Epoch[6] Iteration[20/65] Loss: 0.938, Acc: 0.996, Base Lr: 3.17e-04
+2025-05-27 16:06:33,432 DeMo.train INFO: Epoch[6] Iteration[30/65] Loss: 0.929, Acc: 0.997, Base Lr: 3.17e-04
+2025-05-27 16:06:46,114 DeMo.train INFO: Epoch[6] Iteration[40/65] Loss: 0.918, Acc: 0.998, Base Lr: 3.17e-04
+2025-05-27 16:06:58,773 DeMo.train INFO: Epoch[6] Iteration[50/65] Loss: 0.911, Acc: 0.998, Base Lr: 3.17e-04
+2025-05-27 16:07:11,468 DeMo.train INFO: Epoch[6] Iteration[60/65] Loss: 0.903, Acc: 0.999, Base Lr: 3.17e-04
+2025-05-27 16:07:15,429 DeMo.train INFO: Epoch 6 done. Time per batch: 1.346[s] Speed: 95.1[samples/s]
+2025-05-27 16:07:15,442 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:07:15,442 DeMo.train INFO: Current is the ori feature testing!
+2025-05-27 16:07:15,442 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7684
+CMC curve: Rank-1: 0.8921, Rank-5: 0.9131, Rank-10: 0.9259
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7731
+CMC curve: Rank-1: 0.8991, Rank-5: 0.9061, Rank-10: 0.9120
+=> Improvement:
+mAP improvement: 0.0048 (+0.62%)
+Rank-1 improvement: 0.0070 (+0.78%)
+2025-05-27 16:10:17,720 DeMo.train INFO: Validation Results - Epoch: 6
+2025-05-27 16:10:17,720 DeMo.train INFO: mAP: 77.3%
+2025-05-27 16:10:17,720 DeMo.train INFO: CMC curve, Rank-1  :89.9%
+2025-05-27 16:10:17,720 DeMo.train INFO: CMC curve, Rank-5  :90.6%
+2025-05-27 16:10:17,720 DeMo.train INFO: CMC curve, Rank-10 :91.2%
+2025-05-27 16:10:17,721 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:10:18,866 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:10:18,866 DeMo.train INFO: Current is the moe feature testing!
+2025-05-27 16:10:18,866 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7644
+CMC curve: Rank-1: 0.9009, Rank-5: 0.9096, Rank-10: 0.9184
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7674
+CMC curve: Rank-1: 0.9015, Rank-5: 0.9032, Rank-10: 0.9108
+=> Improvement:
+mAP improvement: 0.0030 (+0.40%)
+Rank-1 improvement: 0.0006 (+0.06%)
+2025-05-27 16:13:21,396 DeMo.train INFO: Validation Results - Epoch: 6
+2025-05-27 16:13:21,397 DeMo.train INFO: mAP: 76.7%
+2025-05-27 16:13:21,397 DeMo.train INFO: CMC curve, Rank-1  :90.1%
+2025-05-27 16:13:21,397 DeMo.train INFO: CMC curve, Rank-5  :90.3%
+2025-05-27 16:13:21,397 DeMo.train INFO: CMC curve, Rank-10 :91.1%
+2025-05-27 16:13:21,397 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:13:21,932 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:13:21,932 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-27 16:13:21,933 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7783
+CMC curve: Rank-1: 0.9067, Rank-5: 0.9230, Rank-10: 0.9271
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7828
+CMC curve: Rank-1: 0.9114, Rank-5: 0.9195, Rank-10: 0.9224
+=> Improvement:
+mAP improvement: 0.0044 (+0.57%)
+Rank-1 improvement: 0.0047 (+0.51%)
+2025-05-27 16:16:25,335 DeMo.train INFO: Validation Results - Epoch: 6
+2025-05-27 16:16:25,335 DeMo.train INFO: mAP: 78.3%
+2025-05-27 16:16:25,335 DeMo.train INFO: CMC curve, Rank-1  :91.1%
+2025-05-27 16:16:25,335 DeMo.train INFO: CMC curve, Rank-5  :92.0%
+2025-05-27 16:16:25,335 DeMo.train INFO: CMC curve, Rank-10 :92.2%
+2025-05-27 16:16:25,335 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:16:34,298 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:16:34,298 DeMo.train INFO: Best mAP: 78.3%
+2025-05-27 16:16:34,298 DeMo.train INFO: Best Rank-1: 91.1%
+2025-05-27 16:16:34,298 DeMo.train INFO: Best Rank-5: 92.0%
+2025-05-27 16:16:34,298 DeMo.train INFO: Best Rank-10: 92.2%
+2025-05-27 16:16:34,298 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:16:52,736 DeMo.train INFO: Epoch[7] Iteration[10/65] Loss: 0.877, Acc: 1.000, Base Lr: 3.05e-04
+2025-05-27 16:17:05,454 DeMo.train INFO: Epoch[7] Iteration[20/65] Loss: 0.872, Acc: 1.000, Base Lr: 3.05e-04
+2025-05-27 16:17:18,115 DeMo.train INFO: Epoch[7] Iteration[30/65] Loss: 0.870, Acc: 1.000, Base Lr: 3.05e-04
+2025-05-27 16:17:30,841 DeMo.train INFO: Epoch[7] Iteration[40/65] Loss: 0.868, Acc: 1.000, Base Lr: 3.05e-04
+2025-05-27 16:17:43,507 DeMo.train INFO: Epoch[7] Iteration[50/65] Loss: 0.867, Acc: 1.000, Base Lr: 3.05e-04
+2025-05-27 16:17:56,161 DeMo.train INFO: Epoch[7] Iteration[60/65] Loss: 0.864, Acc: 1.000, Base Lr: 3.05e-04
+2025-05-27 16:18:00,132 DeMo.train INFO: Epoch 7 done. Time per batch: 1.362[s] Speed: 93.9[samples/s]
+2025-05-27 16:18:00,143 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:18:00,143 DeMo.train INFO: Current is the ori feature testing!
+2025-05-27 16:18:00,143 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7684
+CMC curve: Rank-1: 0.8950, Rank-5: 0.9096, Rank-10: 0.9289
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7738
+CMC curve: Rank-1: 0.9003, Rank-5: 0.9067, Rank-10: 0.9149
+=> Improvement:
+mAP improvement: 0.0055 (+0.71%)
+Rank-1 improvement: 0.0052 (+0.59%)
+2025-05-27 16:21:01,096 DeMo.train INFO: Validation Results - Epoch: 7
+2025-05-27 16:21:01,096 DeMo.train INFO: mAP: 77.4%
+2025-05-27 16:21:01,097 DeMo.train INFO: CMC curve, Rank-1  :90.0%
+2025-05-27 16:21:01,097 DeMo.train INFO: CMC curve, Rank-5  :90.7%
+2025-05-27 16:21:01,097 DeMo.train INFO: CMC curve, Rank-10 :91.5%
+2025-05-27 16:21:01,097 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:21:02,456 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:21:02,456 DeMo.train INFO: Current is the moe feature testing!
+2025-05-27 16:21:02,456 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7621
+CMC curve: Rank-1: 0.9085, Rank-5: 0.9155, Rank-10: 0.9242
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7639
+CMC curve: Rank-1: 0.8956, Rank-5: 0.8980, Rank-10: 0.9009
+=> Improvement:
+mAP improvement: 0.0018 (+0.23%)
+Rank-1 improvement: -0.0128 (-1.41%)
+2025-05-27 16:24:05,504 DeMo.train INFO: Validation Results - Epoch: 7
+2025-05-27 16:24:05,504 DeMo.train INFO: mAP: 76.4%
+2025-05-27 16:24:05,504 DeMo.train INFO: CMC curve, Rank-1  :89.6%
+2025-05-27 16:24:05,504 DeMo.train INFO: CMC curve, Rank-5  :89.8%
+2025-05-27 16:24:05,504 DeMo.train INFO: CMC curve, Rank-10 :90.1%
+2025-05-27 16:24:05,504 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:24:05,833 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:24:05,833 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-27 16:24:05,833 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7800
+CMC curve: Rank-1: 0.9067, Rank-5: 0.9213, Rank-10: 0.9306
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7861
+CMC curve: Rank-1: 0.9096, Rank-5: 0.9114, Rank-10: 0.9166
+=> Improvement:
+mAP improvement: 0.0060 (+0.77%)
+Rank-1 improvement: 0.0029 (+0.32%)
+2025-05-27 16:27:09,684 DeMo.train INFO: Validation Results - Epoch: 7
+2025-05-27 16:27:09,685 DeMo.train INFO: mAP: 78.6%
+2025-05-27 16:27:09,685 DeMo.train INFO: CMC curve, Rank-1  :91.0%
+2025-05-27 16:27:09,685 DeMo.train INFO: CMC curve, Rank-5  :91.1%
+2025-05-27 16:27:09,685 DeMo.train INFO: CMC curve, Rank-10 :91.7%
+2025-05-27 16:27:09,685 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:27:18,348 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:27:18,348 DeMo.train INFO: Best mAP: 78.6%
+2025-05-27 16:27:18,348 DeMo.train INFO: Best Rank-1: 91.0%
+2025-05-27 16:27:18,348 DeMo.train INFO: Best Rank-5: 91.1%
+2025-05-27 16:27:18,348 DeMo.train INFO: Best Rank-10: 91.7%
+2025-05-27 16:27:18,348 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:27:34,383 DeMo.train INFO: Epoch[8] Iteration[10/65] Loss: 0.860, Acc: 1.000, Base Lr: 2.92e-04
+2025-05-27 16:27:47,047 DeMo.train INFO: Epoch[8] Iteration[20/65] Loss: 0.855, Acc: 1.000, Base Lr: 2.92e-04
+2025-05-27 16:27:59,703 DeMo.train INFO: Epoch[8] Iteration[30/65] Loss: 0.853, Acc: 1.000, Base Lr: 2.92e-04
+2025-05-27 16:28:12,402 DeMo.train INFO: Epoch[8] Iteration[40/65] Loss: 0.850, Acc: 1.000, Base Lr: 2.92e-04
+2025-05-27 16:28:25,058 DeMo.train INFO: Epoch[8] Iteration[50/65] Loss: 0.847, Acc: 1.000, Base Lr: 2.92e-04
+2025-05-27 16:28:37,708 DeMo.train INFO: Epoch[8] Iteration[60/65] Loss: 0.846, Acc: 1.000, Base Lr: 2.92e-04
+2025-05-27 16:28:41,676 DeMo.train INFO: Epoch 8 done. Time per batch: 1.323[s] Speed: 96.8[samples/s]
+2025-05-27 16:28:41,688 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:28:41,688 DeMo.train INFO: Current is the ori feature testing!
+2025-05-27 16:28:41,689 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7715
+CMC curve: Rank-1: 0.9009, Rank-5: 0.9207, Rank-10: 0.9347
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7777
+CMC curve: Rank-1: 0.9114, Rank-5: 0.9184, Rank-10: 0.9254
+=> Improvement:
+mAP improvement: 0.0063 (+0.82%)
+Rank-1 improvement: 0.0105 (+1.17%)
+2025-05-27 16:31:43,847 DeMo.train INFO: Validation Results - Epoch: 8
+2025-05-27 16:31:43,848 DeMo.train INFO: mAP: 77.8%
+2025-05-27 16:31:43,848 DeMo.train INFO: CMC curve, Rank-1  :91.1%
+2025-05-27 16:31:43,848 DeMo.train INFO: CMC curve, Rank-5  :91.8%
+2025-05-27 16:31:43,848 DeMo.train INFO: CMC curve, Rank-10 :92.5%
+2025-05-27 16:31:43,848 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:31:44,309 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:31:44,309 DeMo.train INFO: Current is the moe feature testing!
+2025-05-27 16:31:44,309 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7691
+CMC curve: Rank-1: 0.9044, Rank-5: 0.9166, Rank-10: 0.9248
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7713
+CMC curve: Rank-1: 0.9009, Rank-5: 0.9067, Rank-10: 0.9102
+=> Improvement:
+mAP improvement: 0.0021 (+0.28%)
+Rank-1 improvement: -0.0035 (-0.39%)
+2025-05-27 16:34:49,158 DeMo.train INFO: Validation Results - Epoch: 8
+2025-05-27 16:34:49,158 DeMo.train INFO: mAP: 77.1%
+2025-05-27 16:34:49,158 DeMo.train INFO: CMC curve, Rank-1  :90.1%
+2025-05-27 16:34:49,158 DeMo.train INFO: CMC curve, Rank-5  :90.7%
+2025-05-27 16:34:49,159 DeMo.train INFO: CMC curve, Rank-10 :91.0%
+2025-05-27 16:34:49,159 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:34:49,781 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:34:49,781 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-27 16:34:49,781 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The test feature is normalized
+=> Computing DistMat with euclidean_distance (before reranking)
+=> Results before reranking:
+mAP: 0.7807
+CMC curve: Rank-1: 0.9079, Rank-5: 0.9259, Rank-10: 0.9341
+=> Enter reranking
+=> Results after reranking:
+mAP: 0.7869
+CMC curve: Rank-1: 0.9143, Rank-5: 0.9166, Rank-10: 0.9230
+=> Improvement:
+mAP improvement: 0.0062 (+0.80%)
+Rank-1 improvement: 0.0064 (+0.71%)
+2025-05-27 16:37:54,328 DeMo.train INFO: Validation Results - Epoch: 8
+2025-05-27 16:37:54,329 DeMo.train INFO: mAP: 78.7%
+2025-05-27 16:37:54,329 DeMo.train INFO: CMC curve, Rank-1  :91.4%
+2025-05-27 16:37:54,329 DeMo.train INFO: CMC curve, Rank-5  :91.7%
+2025-05-27 16:37:54,329 DeMo.train INFO: CMC curve, Rank-10 :92.3%
+2025-05-27 16:37:54,329 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:38:02,281 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:38:02,281 DeMo.train INFO: Best mAP: 78.7%
+2025-05-27 16:38:02,281 DeMo.train INFO: Best Rank-1: 91.4%
+2025-05-27 16:38:02,281 DeMo.train INFO: Best Rank-5: 91.7%
+2025-05-27 16:38:02,282 DeMo.train INFO: Best Rank-10: 92.3%
+2025-05-27 16:38:02,282 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-27 16:38:18,639 DeMo.train INFO: Epoch[9] Iteration[10/65] Loss: 0.835, Acc: 1.000, Base Lr: 2.78e-04
+2025-05-27 16:38:31,512 DeMo.train INFO: Epoch[9] Iteration[20/65] Loss: 0.834, Acc: 1.000, Base Lr: 2.78e-04
+2025-05-27 16:38:44,164 DeMo.train INFO: Epoch[9] Iteration[30/65] Loss: 0.835, Acc: 1.000, Base Lr: 2.78e-04

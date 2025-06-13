@@ -3021,10 +3021,10 @@ class AdaptiveFusionAblation(nn.Module):
 
 
 class AdaptiveBoQAblation(torch.nn.Module):
-    """AdaptiveBoQ with Ablation Study Interface"""
+    """AdaptiveBoQ with Ablation Study Interface """
 
     def __init__(self, input_dim=512, num_queries=32, num_layers=2, row_dim=32,
-                 use_positional_encoding=True, ablation_config=None):
+                 use_positional_encoding=False, ablation_config=None):
         super().__init__()
 
         self.use_positional_encoding = use_positional_encoding
@@ -4298,7 +4298,7 @@ class GeneralFusion(nn.Module):
         self.HDM = cfg.MODEL.HDM
         self.ATM = cfg.MODEL.ATM
 
-        self.combineway = 'cmeboqablation'
+        self.combineway = 'adaptiveboqdeformablation'
         print('combineway:', self.combineway,'mxa')
         logger = logging.getLogger("DeMo")
         logger.info(f'combineway: {self.combineway}')

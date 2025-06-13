@@ -1,0 +1,18 @@
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/helpers.py:7: FutureWarning: Importing from timm.models.helpers is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/registry.py:4: FutureWarning: Importing from timm.models.registry is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+/home/ma1/anaconda3/envs/DeMo/lib/python3.8/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/home/ma1/work/demorelated/DeMo/modeling/clip/clip.py:23: UserWarning: PyTorch version 1.7.1 or higher is recommended
+  warnings.warn("PyTorch version 1.7.1 or higher is recommended")
+Traceback (most recent call last):
+  File "train_net.py", line 3, in <module>
+    from modeling import make_model
+  File "/home/ma1/work/demorelated/DeMo/modeling/__init__.py", line 1, in <module>
+    from .make_model import make_model
+  File "/home/ma1/work/demorelated/DeMo/modeling/make_model.py", line 10, in <module>
+    from modeling.moe.AttnMOE import GeneralFusion, QuickGELU
+  File "/home/ma1/work/demorelated/DeMo/modeling/moe/AttnMOE.py", line 29, in <module>
+    from newboq import (
+ModuleNotFoundError: No module named 'newboq'

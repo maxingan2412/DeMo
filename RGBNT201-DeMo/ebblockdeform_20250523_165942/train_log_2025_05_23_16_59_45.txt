@@ -1,0 +1,2643 @@
+2025-05-23 16:59:45,598 DeMo INFO: Saving model in the path :./RGBNT201-DeMo/ebblockdeform_20250523_165942
+2025-05-23 16:59:45,598 DeMo INFO: Namespace(config_file='configs/RGBNT201/DeMo.yml', fea_cft=0, local_rank=0, opts=['OUTPUT_DIR', './RGBNT201-DeMo/ebblockdeform_20250523_165942'])
+2025-05-23 16:59:45,598 DeMo INFO: Loaded configuration file configs/RGBNT201/DeMo.yml
+2025-05-23 16:59:45,599 DeMo INFO: 
+MODEL:
+  TRANSFORMER_TYPE: 'ViT-B-16'
+  STRIDE_SIZE: [ 16, 16 ]
+  SIE_CAMERA: True
+  DIRECT: 1
+  SIE_COE: 1.0
+  ID_LOSS_WEIGHT: 0.25
+  TRIPLET_LOSS_WEIGHT: 1.0
+  GLOBAL_LOCAL: True
+  HDM: True
+  ATM: True
+  HEAD: 4 # orginal 4
+  FROZEN: False
+
+INPUT:
+  SIZE_TRAIN: [ 256, 128 ]
+  SIZE_TEST: [ 256, 128 ]
+  PROB: 0.5 # random horizontal flip
+  RE_PROB: 0.5 # random erasing
+  PADDING: 10
+
+DATALOADER:
+  SAMPLER: 'softmax_triplet'
+  NUM_INSTANCE: 8
+  NUM_WORKERS: 14
+
+DATASETS:
+  NAMES: ('RGBNT201')
+  ROOT_DIR: '..'
+
+SOLVER:
+  BASE_LR: 0.00035
+  WARMUP_ITERS: 10
+  MAX_EPOCHS: 50
+  OPTIMIZER_NAME: 'Adam'
+  IMS_PER_BATCH: 64 # orginal 64
+  EVAL_PERIOD: 1
+  SEED: 1111
+
+TEST:
+  IMS_PER_BATCH: 128
+  RE_RANKING: 'no'
+  WEIGHT: ''
+  NECK_FEAT: 'before'
+  FEAT_NORM: 'yes'
+  MISS: "nothing"
+
+OUTPUT_DIR: '..'
+
+
+
+2025-05-23 16:59:45,599 DeMo INFO: Running with config:
+DATALOADER:
+  NUM_INSTANCE: 8
+  NUM_WORKERS: 14
+  SAMPLER: softmax_triplet
+DATASETS:
+  NAMES: RGBNT201
+  ROOT_DIR: ..
+INPUT:
+  PADDING: 10
+  PIXEL_MEAN: [0.5, 0.5, 0.5]
+  PIXEL_STD: [0.5, 0.5, 0.5]
+  PROB: 0.5
+  RE_PROB: 0.5
+  SIZE_TEST: [256, 128]
+  SIZE_TRAIN: [256, 128]
+MODEL:
+  ADAPTER: False
+  ATM: True
+  ATT_DROP_RATE: 0.0
+  DEVICE: cuda
+  DEVICE_ID: 0
+  DIRECT: 1
+  DIST_TRAIN: False
+  DROP_OUT: 0.0
+  DROP_PATH: 0.1
+  FROZEN: False
+  GLOBAL_LOCAL: True
+  HDM: True
+  HEAD: 4
+  ID_LOSS_TYPE: softmax
+  ID_LOSS_WEIGHT: 0.25
+  IF_LABELSMOOTH: on
+  IF_WITH_CENTER: no
+  METRIC_LOSS_TYPE: triplet
+  NAME: DeMo
+  NECK: bnneck
+  NO_MARGIN: True
+  PRETRAIN_PATH_T: /path/to/your/vitb_16_224_21k.pth
+  PROMPT: False
+  SIE_CAMERA: True
+  SIE_COE: 1.0
+  SIE_VIEW: False
+  STRIDE_SIZE: [16, 16]
+  TRANSFORMER_TYPE: ViT-B-16
+  TRIPLET_LOSS_WEIGHT: 1.0
+OUTPUT_DIR: ./RGBNT201-DeMo/ebblockdeform_20250523_165942
+SOLVER:
+  BASE_LR: 0.00035
+  BIAS_LR_FACTOR: 2
+  CENTER_LOSS_WEIGHT: 0.0005
+  CENTER_LR: 0.5
+  CHECKPOINT_PERIOD: 60
+  CLUSTER_MARGIN: 0.3
+  COSINE_MARGIN: 0.5
+  COSINE_SCALE: 30
+  EVAL_PERIOD: 1
+  GAMMA: 0.1
+  IMS_PER_BATCH: 64
+  LARGE_FC_LR: False
+  LOG_PERIOD: 10
+  MARGIN: 0.3
+  MAX_EPOCHS: 50
+  MOMENTUM: 0.9
+  OPTIMIZER_NAME: Adam
+  RANGE_ALPHA: 0
+  RANGE_BETA: 1
+  RANGE_K: 2
+  RANGE_LOSS_WEIGHT: 1
+  RANGE_MARGIN: 0.3
+  SEED: 1111
+  STEPS: (40, 70)
+  WARMUP_FACTOR: 0.01
+  WARMUP_ITERS: 10
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY_BIAS: 0.0001
+TEST:
+  FEAT: 0
+  FEAT_NORM: yes
+  IMS_PER_BATCH: 128
+  MISS: nothing
+  NECK_FEAT: before
+  RE_RANKING: no
+  WEIGHT: 
+2025-05-23 16:59:50,646 DeMo INFO: combineway: ebblockdeform
+2025-05-23 16:59:50,699 DeMo INFO: DeMo(
+  (BACKBONE): build_transformer(
+    (base): VisionTransformer(
+      (conv1): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16), bias=False)
+      (ln_pre): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (transformer): Transformer(
+        (resblocks): Sequential(
+          (0): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (1): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (2): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (3): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (4): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (5): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (6): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (7): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (8): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (9): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (10): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (11): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+            )
+            (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+            )
+            (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+      )
+      (ln_post): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+  (pool): AdaptiveAvgPool1d(output_size=1)
+  (rgb_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (nir_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (tir_reduce): Sequential(
+    (0): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=1024, out_features=512, bias=True)
+    (2): QuickGELU()
+  )
+  (generalFusion): GeneralFusion(
+    (r): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (n): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (t): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (rn): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (rt): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (nt): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (rnt): MultiheadAttention(
+      (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+    )
+    (moe): MoM(
+      (experts): ModuleList(
+        (0): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (1): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (2): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+        (3): ExpertHead(
+          (expertHead): ModuleList(
+            (0): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (1): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (2): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (3): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (4): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (5): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+            (6): Expert(
+              (mlp): Sequential(
+                (0): Linear(in_features=128, out_features=128, bias=True)
+                (1): QuickGELU()
+                (2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+            )
+          )
+        )
+      )
+      (gating_network): GatingNetwork(
+        (gate): CrossAttention(
+          (linear_re): Sequential(
+            (0): Linear(in_features=3584, out_features=512, bias=True)
+            (1): QuickGELU()
+            (2): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (q_): Linear(in_features=512, out_features=512, bias=False)
+          (k_): Linear(in_features=512, out_features=512, bias=False)
+        )
+      )
+    )
+    (ebblock_r): EBlock(
+      (extra_conv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
+      (conv1): Conv2d(512, 1024, kernel_size=(1, 1), stride=(1, 1))
+      (branches): ModuleList(
+        (0): Branch(
+          (branch): Sequential(
+            (0): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=1024)
+          )
+        )
+        (1): Branch(
+          (branch): Sequential(
+            (0): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(4, 4), dilation=(4, 4), groups=1024)
+          )
+        )
+        (2): Branch(
+          (branch): Sequential(
+            (0): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(9, 9), dilation=(9, 9), groups=1024)
+          )
+        )
+      )
+      (sca): Sequential(
+        (0): AdaptiveAvgPool2d(output_size=1)
+        (1): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      )
+      (sg1): SimpleGate()
+      (conv3): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (norm1): LayerNorm2d()
+      (norm2): LayerNorm2d()
+      (freq): FreMLP(
+        (process1): Sequential(
+          (0): Conv2d(512, 1024, kernel_size=(1, 1), stride=(1, 1))
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1))
+        )
+      )
+    )
+    (ebblock_n): EBlock(
+      (extra_conv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
+      (conv1): Conv2d(512, 1024, kernel_size=(1, 1), stride=(1, 1))
+      (branches): ModuleList(
+        (0): Branch(
+          (branch): Sequential(
+            (0): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=1024)
+          )
+        )
+        (1): Branch(
+          (branch): Sequential(
+            (0): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(4, 4), dilation=(4, 4), groups=1024)
+          )
+        )
+        (2): Branch(
+          (branch): Sequential(
+            (0): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(9, 9), dilation=(9, 9), groups=1024)
+          )
+        )
+      )
+      (sca): Sequential(
+        (0): AdaptiveAvgPool2d(output_size=1)
+        (1): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      )
+      (sg1): SimpleGate()
+      (conv3): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (norm1): LayerNorm2d()
+      (norm2): LayerNorm2d()
+      (freq): FreMLP(
+        (process1): Sequential(
+          (0): Conv2d(512, 1024, kernel_size=(1, 1), stride=(1, 1))
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1))
+        )
+      )
+    )
+    (ebblock_t): EBlock(
+      (extra_conv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
+      (conv1): Conv2d(512, 1024, kernel_size=(1, 1), stride=(1, 1))
+      (branches): ModuleList(
+        (0): Branch(
+          (branch): Sequential(
+            (0): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=1024)
+          )
+        )
+        (1): Branch(
+          (branch): Sequential(
+            (0): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(4, 4), dilation=(4, 4), groups=1024)
+          )
+        )
+        (2): Branch(
+          (branch): Sequential(
+            (0): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(9, 9), dilation=(9, 9), groups=1024)
+          )
+        )
+      )
+      (sca): Sequential(
+        (0): AdaptiveAvgPool2d(output_size=1)
+        (1): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      )
+      (sg1): SimpleGate()
+      (conv3): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (norm1): LayerNorm2d()
+      (norm2): LayerNorm2d()
+      (freq): FreMLP(
+        (process1): Sequential(
+          (0): Conv2d(512, 1024, kernel_size=(1, 1), stride=(1, 1))
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1))
+        )
+      )
+    )
+    (deformselect): DAttentionBaseline(
+      (conv_offset): Sequential(
+        (0): Conv2d(1536, 512, kernel_size=(1, 1), stride=(1, 1))
+        (1): GELU(approximate='none')
+        (2): Conv2d(512, 512, kernel_size=(4, 4), stride=(2, 2), groups=512)
+        (3): GELU(approximate='none')
+        (4): Conv2d(512, 2, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      )
+      (proj_q): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_k): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_v): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_out): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1))
+      (proj_drop): Dropout(p=0.0, inplace=False)
+      (attn_drop): Dropout(p=0.0, inplace=False)
+    )
+  )
+  (classifier_moe): Linear(in_features=3584, out_features=171, bias=False)
+  (bottleneck_moe): BatchNorm1d(3584, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (classifier): Linear(in_features=1536, out_features=171, bias=False)
+  (bottleneck): BatchNorm1d(1536, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+2025-05-23 16:59:50,701 DeMo INFO: number of parameters:107.0592
+2025-05-23 16:59:50,738 DeMo.train INFO: start training
+2025-05-23 17:00:04,873 DeMo.train INFO: Epoch[1] Iteration[10/54] Loss: 5.766, Acc: 0.008, Base Lr: 6.65e-05
+2025-05-23 17:00:08,189 DeMo.train INFO: Epoch[1] Iteration[20/54] Loss: 5.126, Acc: 0.012, Base Lr: 6.65e-05
+2025-05-23 17:00:11,360 DeMo.train INFO: Epoch[1] Iteration[30/54] Loss: 4.807, Acc: 0.024, Base Lr: 6.65e-05
+2025-05-23 17:00:14,541 DeMo.train INFO: Epoch[1] Iteration[40/54] Loss: 4.583, Acc: 0.042, Base Lr: 6.65e-05
+2025-05-23 17:00:17,717 DeMo.train INFO: Epoch[1] Iteration[50/54] Loss: 4.430, Acc: 0.058, Base Lr: 6.65e-05
+2025-05-23 17:00:18,743 DeMo.train INFO: Epoch 1 done. Time per batch: 0.528[s] Speed: 121.2[samples/s]
+2025-05-23 17:00:18,745 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:00:18,745 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:00:18,745 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:00:31,899 DeMo.train INFO: Validation Results - Epoch: 1
+2025-05-23 17:00:31,899 DeMo.train INFO: mAP: 32.6%
+2025-05-23 17:00:31,899 DeMo.train INFO: CMC curve, Rank-1  :31.1%
+2025-05-23 17:00:31,899 DeMo.train INFO: CMC curve, Rank-5  :48.0%
+2025-05-23 17:00:31,900 DeMo.train INFO: CMC curve, Rank-10 :55.5%
+2025-05-23 17:00:31,900 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:00:31,901 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:00:31,901 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:00:31,901 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:00:42,310 DeMo.train INFO: Validation Results - Epoch: 1
+2025-05-23 17:00:42,310 DeMo.train INFO: mAP: 39.8%
+2025-05-23 17:00:42,310 DeMo.train INFO: CMC curve, Rank-1  :41.1%
+2025-05-23 17:00:42,310 DeMo.train INFO: CMC curve, Rank-5  :54.7%
+2025-05-23 17:00:42,310 DeMo.train INFO: CMC curve, Rank-10 :63.4%
+2025-05-23 17:00:42,311 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:00:42,314 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:00:42,314 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:00:42,314 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:00:53,457 DeMo.train INFO: Validation Results - Epoch: 1
+2025-05-23 17:00:53,458 DeMo.train INFO: mAP: 33.9%
+2025-05-23 17:00:53,458 DeMo.train INFO: CMC curve, Rank-1  :32.8%
+2025-05-23 17:00:53,458 DeMo.train INFO: CMC curve, Rank-5  :49.2%
+2025-05-23 17:00:53,458 DeMo.train INFO: CMC curve, Rank-10 :56.9%
+2025-05-23 17:00:53,458 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:00:57,172 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:00:57,172 DeMo.train INFO: Best mAP: 33.9%
+2025-05-23 17:00:57,172 DeMo.train INFO: Best Rank-1: 32.8%
+2025-05-23 17:00:57,172 DeMo.train INFO: Best Rank-5: 49.2%
+2025-05-23 17:00:57,172 DeMo.train INFO: Best Rank-10: 56.9%
+2025-05-23 17:00:57,172 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:02,743 DeMo.train INFO: Epoch[2] Iteration[10/54] Loss: 3.248, Acc: 0.222, Base Lr: 9.80e-05
+2025-05-23 17:01:06,369 DeMo.train INFO: Epoch[2] Iteration[20/54] Loss: 3.144, Acc: 0.253, Base Lr: 9.80e-05
+2025-05-23 17:01:09,568 DeMo.train INFO: Epoch[2] Iteration[30/54] Loss: 3.059, Acc: 0.244, Base Lr: 9.80e-05
+2025-05-23 17:01:12,770 DeMo.train INFO: Epoch[2] Iteration[40/54] Loss: 3.026, Acc: 0.243, Base Lr: 9.80e-05
+2025-05-23 17:01:15,933 DeMo.train INFO: Epoch[2] Iteration[50/54] Loss: 2.989, Acc: 0.236, Base Lr: 9.80e-05
+2025-05-23 17:01:16,985 DeMo.train INFO: Epoch 2 done. Time per batch: 0.374[s] Speed: 171.2[samples/s]
+2025-05-23 17:01:16,989 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:16,989 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:01:16,990 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:27,488 DeMo.train INFO: Validation Results - Epoch: 2
+2025-05-23 17:01:27,489 DeMo.train INFO: mAP: 57.2%
+2025-05-23 17:01:27,489 DeMo.train INFO: CMC curve, Rank-1  :61.5%
+2025-05-23 17:01:27,489 DeMo.train INFO: CMC curve, Rank-5  :74.6%
+2025-05-23 17:01:27,489 DeMo.train INFO: CMC curve, Rank-10 :82.9%
+2025-05-23 17:01:27,489 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:27,543 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:27,543 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:01:27,543 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:38,006 DeMo.train INFO: Validation Results - Epoch: 2
+2025-05-23 17:01:38,006 DeMo.train INFO: mAP: 59.4%
+2025-05-23 17:01:38,006 DeMo.train INFO: CMC curve, Rank-1  :62.6%
+2025-05-23 17:01:38,006 DeMo.train INFO: CMC curve, Rank-5  :75.4%
+2025-05-23 17:01:38,006 DeMo.train INFO: CMC curve, Rank-10 :84.6%
+2025-05-23 17:01:38,006 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:38,008 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:38,008 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:01:38,008 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:48,553 DeMo.train INFO: Validation Results - Epoch: 2
+2025-05-23 17:01:48,553 DeMo.train INFO: mAP: 59.9%
+2025-05-23 17:01:48,553 DeMo.train INFO: CMC curve, Rank-1  :63.0%
+2025-05-23 17:01:48,553 DeMo.train INFO: CMC curve, Rank-5  :77.5%
+2025-05-23 17:01:48,553 DeMo.train INFO: CMC curve, Rank-10 :84.7%
+2025-05-23 17:01:48,553 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:52,364 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:52,365 DeMo.train INFO: Best mAP: 59.9%
+2025-05-23 17:01:52,365 DeMo.train INFO: Best Rank-1: 63.0%
+2025-05-23 17:01:52,365 DeMo.train INFO: Best Rank-5: 77.5%
+2025-05-23 17:01:52,365 DeMo.train INFO: Best Rank-10: 84.7%
+2025-05-23 17:01:52,365 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:01:57,324 DeMo.train INFO: Epoch[3] Iteration[10/54] Loss: 2.385, Acc: 0.539, Base Lr: 1.30e-04
+2025-05-23 17:02:00,904 DeMo.train INFO: Epoch[3] Iteration[20/54] Loss: 2.268, Acc: 0.539, Base Lr: 1.30e-04
+2025-05-23 17:02:04,086 DeMo.train INFO: Epoch[3] Iteration[30/54] Loss: 2.246, Acc: 0.486, Base Lr: 1.30e-04
+2025-05-23 17:02:07,279 DeMo.train INFO: Epoch[3] Iteration[40/54] Loss: 2.175, Acc: 0.475, Base Lr: 1.30e-04
+2025-05-23 17:02:10,451 DeMo.train INFO: Epoch[3] Iteration[50/54] Loss: 2.110, Acc: 0.505, Base Lr: 1.30e-04
+2025-05-23 17:02:11,527 DeMo.train INFO: Epoch 3 done. Time per batch: 0.362[s] Speed: 177.0[samples/s]
+2025-05-23 17:02:11,529 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:11,529 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:02:11,529 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:22,286 DeMo.train INFO: Validation Results - Epoch: 3
+2025-05-23 17:02:22,286 DeMo.train INFO: mAP: 67.0%
+2025-05-23 17:02:22,286 DeMo.train INFO: CMC curve, Rank-1  :69.9%
+2025-05-23 17:02:22,286 DeMo.train INFO: CMC curve, Rank-5  :81.0%
+2025-05-23 17:02:22,286 DeMo.train INFO: CMC curve, Rank-10 :85.6%
+2025-05-23 17:02:22,286 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:22,339 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:22,339 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:02:22,339 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:33,364 DeMo.train INFO: Validation Results - Epoch: 3
+2025-05-23 17:02:33,365 DeMo.train INFO: mAP: 66.9%
+2025-05-23 17:02:33,365 DeMo.train INFO: CMC curve, Rank-1  :70.8%
+2025-05-23 17:02:33,365 DeMo.train INFO: CMC curve, Rank-5  :78.9%
+2025-05-23 17:02:33,365 DeMo.train INFO: CMC curve, Rank-10 :83.0%
+2025-05-23 17:02:33,365 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:33,367 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:33,367 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:02:33,367 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:47,377 DeMo.train INFO: Validation Results - Epoch: 3
+2025-05-23 17:02:47,378 DeMo.train INFO: mAP: 67.8%
+2025-05-23 17:02:47,378 DeMo.train INFO: CMC curve, Rank-1  :70.7%
+2025-05-23 17:02:47,378 DeMo.train INFO: CMC curve, Rank-5  :81.2%
+2025-05-23 17:02:47,378 DeMo.train INFO: CMC curve, Rank-10 :86.7%
+2025-05-23 17:02:47,378 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:51,224 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:51,224 DeMo.train INFO: Best mAP: 67.8%
+2025-05-23 17:02:51,224 DeMo.train INFO: Best Rank-1: 70.7%
+2025-05-23 17:02:51,225 DeMo.train INFO: Best Rank-5: 81.2%
+2025-05-23 17:02:51,225 DeMo.train INFO: Best Rank-10: 86.7%
+2025-05-23 17:02:51,225 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:02:57,872 DeMo.train INFO: Epoch[4] Iteration[10/54] Loss: 1.596, Acc: 0.711, Base Lr: 1.61e-04
+2025-05-23 17:03:03,880 DeMo.train INFO: Epoch[4] Iteration[20/54] Loss: 1.560, Acc: 0.727, Base Lr: 1.61e-04
+2025-05-23 17:03:09,615 DeMo.train INFO: Epoch[4] Iteration[30/54] Loss: 1.558, Acc: 0.745, Base Lr: 1.61e-04
+2025-05-23 17:03:15,323 DeMo.train INFO: Epoch[4] Iteration[40/54] Loss: 1.509, Acc: 0.767, Base Lr: 1.61e-04
+2025-05-23 17:03:21,244 DeMo.train INFO: Epoch[4] Iteration[50/54] Loss: 1.464, Acc: 0.780, Base Lr: 1.61e-04
+2025-05-23 17:03:23,011 DeMo.train INFO: Epoch 4 done. Time per batch: 0.600[s] Speed: 106.7[samples/s]
+2025-05-23 17:03:23,014 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:03:23,015 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:03:23,015 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:03:41,798 DeMo.train INFO: Validation Results - Epoch: 4
+2025-05-23 17:03:41,799 DeMo.train INFO: mAP: 68.5%
+2025-05-23 17:03:41,799 DeMo.train INFO: CMC curve, Rank-1  :70.7%
+2025-05-23 17:03:41,799 DeMo.train INFO: CMC curve, Rank-5  :82.8%
+2025-05-23 17:03:41,799 DeMo.train INFO: CMC curve, Rank-10 :87.0%
+2025-05-23 17:03:41,799 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:03:42,910 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:03:42,911 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:03:42,911 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:04:01,838 DeMo.train INFO: Validation Results - Epoch: 4
+2025-05-23 17:04:01,838 DeMo.train INFO: mAP: 69.2%
+2025-05-23 17:04:01,838 DeMo.train INFO: CMC curve, Rank-1  :72.0%
+2025-05-23 17:04:01,838 DeMo.train INFO: CMC curve, Rank-5  :81.0%
+2025-05-23 17:04:01,838 DeMo.train INFO: CMC curve, Rank-10 :85.3%
+2025-05-23 17:04:01,838 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:04:01,843 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:04:01,843 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:04:01,843 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:04:20,120 DeMo.train INFO: Validation Results - Epoch: 4
+2025-05-23 17:04:20,121 DeMo.train INFO: mAP: 69.2%
+2025-05-23 17:04:20,121 DeMo.train INFO: CMC curve, Rank-1  :71.5%
+2025-05-23 17:04:20,121 DeMo.train INFO: CMC curve, Rank-5  :82.9%
+2025-05-23 17:04:20,121 DeMo.train INFO: CMC curve, Rank-10 :87.7%
+2025-05-23 17:04:20,121 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:04:23,948 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:04:23,948 DeMo.train INFO: Best mAP: 69.2%
+2025-05-23 17:04:23,948 DeMo.train INFO: Best Rank-1: 71.5%
+2025-05-23 17:04:23,948 DeMo.train INFO: Best Rank-5: 82.9%
+2025-05-23 17:04:23,948 DeMo.train INFO: Best Rank-10: 87.7%
+2025-05-23 17:04:23,948 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:04:31,619 DeMo.train INFO: Epoch[5] Iteration[10/54] Loss: 1.114, Acc: 0.894, Base Lr: 1.93e-04
+2025-05-23 17:04:37,908 DeMo.train INFO: Epoch[5] Iteration[20/54] Loss: 1.141, Acc: 0.825, Base Lr: 1.93e-04
+2025-05-23 17:04:44,194 DeMo.train INFO: Epoch[5] Iteration[30/54] Loss: 1.111, Acc: 0.835, Base Lr: 1.93e-04
+2025-05-23 17:04:50,498 DeMo.train INFO: Epoch[5] Iteration[40/54] Loss: 1.108, Acc: 0.840, Base Lr: 1.93e-04
+2025-05-23 17:04:56,791 DeMo.train INFO: Epoch[5] Iteration[50/54] Loss: 1.075, Acc: 0.852, Base Lr: 1.93e-04
+2025-05-23 17:04:58,793 DeMo.train INFO: Epoch 5 done. Time per batch: 0.657[s] Speed: 97.3[samples/s]
+2025-05-23 17:04:58,795 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:04:58,796 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:04:58,796 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:05:19,961 DeMo.train INFO: Validation Results - Epoch: 5
+2025-05-23 17:05:19,961 DeMo.train INFO: mAP: 75.3%
+2025-05-23 17:05:19,961 DeMo.train INFO: CMC curve, Rank-1  :79.2%
+2025-05-23 17:05:19,961 DeMo.train INFO: CMC curve, Rank-5  :87.9%
+2025-05-23 17:05:19,962 DeMo.train INFO: CMC curve, Rank-10 :91.3%
+2025-05-23 17:05:19,962 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:05:20,544 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:05:20,544 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:05:20,544 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:05:41,851 DeMo.train INFO: Validation Results - Epoch: 5
+2025-05-23 17:05:41,851 DeMo.train INFO: mAP: 73.5%
+2025-05-23 17:05:41,851 DeMo.train INFO: CMC curve, Rank-1  :78.6%
+2025-05-23 17:05:41,852 DeMo.train INFO: CMC curve, Rank-5  :87.8%
+2025-05-23 17:05:41,852 DeMo.train INFO: CMC curve, Rank-10 :90.9%
+2025-05-23 17:05:41,852 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:05:41,853 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:05:41,853 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:05:41,854 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:06:02,071 DeMo.train INFO: Validation Results - Epoch: 5
+2025-05-23 17:06:02,071 DeMo.train INFO: mAP: 75.8%
+2025-05-23 17:06:02,071 DeMo.train INFO: CMC curve, Rank-1  :79.9%
+2025-05-23 17:06:02,071 DeMo.train INFO: CMC curve, Rank-5  :88.8%
+2025-05-23 17:06:02,071 DeMo.train INFO: CMC curve, Rank-10 :91.3%
+2025-05-23 17:06:02,071 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:06:05,904 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:06:05,904 DeMo.train INFO: Best mAP: 75.8%
+2025-05-23 17:06:05,904 DeMo.train INFO: Best Rank-1: 79.9%
+2025-05-23 17:06:05,904 DeMo.train INFO: Best Rank-5: 88.8%
+2025-05-23 17:06:05,904 DeMo.train INFO: Best Rank-10: 91.3%
+2025-05-23 17:06:05,904 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:06:14,235 DeMo.train INFO: Epoch[6] Iteration[10/54] Loss: 0.838, Acc: 0.939, Base Lr: 2.24e-04
+2025-05-23 17:06:20,553 DeMo.train INFO: Epoch[6] Iteration[20/54] Loss: 0.790, Acc: 0.947, Base Lr: 2.24e-04
+2025-05-23 17:06:26,792 DeMo.train INFO: Epoch[6] Iteration[30/54] Loss: 0.817, Acc: 0.940, Base Lr: 2.24e-04
+2025-05-23 17:06:33,098 DeMo.train INFO: Epoch[6] Iteration[40/54] Loss: 0.802, Acc: 0.939, Base Lr: 2.24e-04
+2025-05-23 17:06:39,319 DeMo.train INFO: Epoch[6] Iteration[50/54] Loss: 0.785, Acc: 0.945, Base Lr: 2.24e-04
+2025-05-23 17:06:41,354 DeMo.train INFO: Epoch 6 done. Time per batch: 0.669[s] Speed: 95.7[samples/s]
+2025-05-23 17:06:41,357 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:06:41,357 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:06:41,357 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:07:02,450 DeMo.train INFO: Validation Results - Epoch: 6
+2025-05-23 17:07:02,451 DeMo.train INFO: mAP: 75.8%
+2025-05-23 17:07:02,451 DeMo.train INFO: CMC curve, Rank-1  :78.5%
+2025-05-23 17:07:02,451 DeMo.train INFO: CMC curve, Rank-5  :84.4%
+2025-05-23 17:07:02,451 DeMo.train INFO: CMC curve, Rank-10 :87.3%
+2025-05-23 17:07:02,451 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:07:03,683 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:07:03,683 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:07:03,683 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:07:24,715 DeMo.train INFO: Validation Results - Epoch: 6
+2025-05-23 17:07:24,715 DeMo.train INFO: mAP: 72.9%
+2025-05-23 17:07:24,715 DeMo.train INFO: CMC curve, Rank-1  :74.8%
+2025-05-23 17:07:24,715 DeMo.train INFO: CMC curve, Rank-5  :81.9%
+2025-05-23 17:07:24,715 DeMo.train INFO: CMC curve, Rank-10 :85.5%
+2025-05-23 17:07:24,715 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:07:24,717 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:07:24,717 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:07:24,717 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:07:45,883 DeMo.train INFO: Validation Results - Epoch: 6
+2025-05-23 17:07:45,883 DeMo.train INFO: mAP: 76.3%
+2025-05-23 17:07:45,883 DeMo.train INFO: CMC curve, Rank-1  :79.2%
+2025-05-23 17:07:45,883 DeMo.train INFO: CMC curve, Rank-5  :84.8%
+2025-05-23 17:07:45,884 DeMo.train INFO: CMC curve, Rank-10 :87.2%
+2025-05-23 17:07:45,884 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:07:49,714 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:07:49,714 DeMo.train INFO: Best mAP: 76.3%
+2025-05-23 17:07:49,714 DeMo.train INFO: Best Rank-1: 79.2%
+2025-05-23 17:07:49,714 DeMo.train INFO: Best Rank-5: 84.8%
+2025-05-23 17:07:49,714 DeMo.train INFO: Best Rank-10: 87.2%
+2025-05-23 17:07:49,715 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:07:55,172 DeMo.train INFO: Epoch[7] Iteration[10/54] Loss: 0.622, Acc: 0.994, Base Lr: 2.55e-04
+2025-05-23 17:07:59,646 DeMo.train INFO: Epoch[7] Iteration[20/54] Loss: 0.643, Acc: 0.977, Base Lr: 2.55e-04
+2025-05-23 17:08:05,947 DeMo.train INFO: Epoch[7] Iteration[30/54] Loss: 0.628, Acc: 0.977, Base Lr: 2.55e-04
+2025-05-23 17:08:12,223 DeMo.train INFO: Epoch[7] Iteration[40/54] Loss: 0.622, Acc: 0.979, Base Lr: 2.55e-04
+2025-05-23 17:08:18,501 DeMo.train INFO: Epoch[7] Iteration[50/54] Loss: 0.612, Acc: 0.981, Base Lr: 2.55e-04
+2025-05-23 17:08:20,494 DeMo.train INFO: Epoch 7 done. Time per batch: 0.581[s] Speed: 110.2[samples/s]
+2025-05-23 17:08:20,496 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:08:20,497 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:08:20,497 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:08:41,726 DeMo.train INFO: Validation Results - Epoch: 7
+2025-05-23 17:08:41,727 DeMo.train INFO: mAP: 75.3%
+2025-05-23 17:08:41,727 DeMo.train INFO: CMC curve, Rank-1  :77.4%
+2025-05-23 17:08:41,727 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 17:08:41,727 DeMo.train INFO: CMC curve, Rank-10 :88.3%
+2025-05-23 17:08:41,727 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:08:41,873 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:08:41,873 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:08:41,873 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:09:02,878 DeMo.train INFO: Validation Results - Epoch: 7
+2025-05-23 17:09:02,878 DeMo.train INFO: mAP: 75.4%
+2025-05-23 17:09:02,878 DeMo.train INFO: CMC curve, Rank-1  :78.9%
+2025-05-23 17:09:02,878 DeMo.train INFO: CMC curve, Rank-5  :84.2%
+2025-05-23 17:09:02,878 DeMo.train INFO: CMC curve, Rank-10 :86.1%
+2025-05-23 17:09:02,878 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:09:02,883 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:09:02,883 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:09:02,883 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:09:24,116 DeMo.train INFO: Validation Results - Epoch: 7
+2025-05-23 17:09:24,117 DeMo.train INFO: mAP: 75.8%
+2025-05-23 17:09:24,117 DeMo.train INFO: CMC curve, Rank-1  :78.2%
+2025-05-23 17:09:24,117 DeMo.train INFO: CMC curve, Rank-5  :85.4%
+2025-05-23 17:09:24,117 DeMo.train INFO: CMC curve, Rank-10 :88.9%
+2025-05-23 17:09:24,117 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:09:24,119 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:09:24,119 DeMo.train INFO: Best mAP: 76.3%
+2025-05-23 17:09:24,119 DeMo.train INFO: Best Rank-1: 79.2%
+2025-05-23 17:09:24,119 DeMo.train INFO: Best Rank-5: 84.8%
+2025-05-23 17:09:24,119 DeMo.train INFO: Best Rank-10: 87.2%
+2025-05-23 17:09:24,119 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:09:31,298 DeMo.train INFO: Epoch[8] Iteration[10/54] Loss: 0.556, Acc: 0.989, Base Lr: 2.87e-04
+2025-05-23 17:09:37,604 DeMo.train INFO: Epoch[8] Iteration[20/54] Loss: 0.566, Acc: 0.986, Base Lr: 2.87e-04
+2025-05-23 17:09:43,878 DeMo.train INFO: Epoch[8] Iteration[30/54] Loss: 0.574, Acc: 0.986, Base Lr: 2.87e-04
+2025-05-23 17:09:50,193 DeMo.train INFO: Epoch[8] Iteration[40/54] Loss: 0.581, Acc: 0.985, Base Lr: 2.87e-04
+2025-05-23 17:09:55,882 DeMo.train INFO: Epoch[8] Iteration[50/54] Loss: 0.583, Acc: 0.983, Base Lr: 2.87e-04
+2025-05-23 17:09:57,013 DeMo.train INFO: Epoch 8 done. Time per batch: 0.621[s] Speed: 103.1[samples/s]
+2025-05-23 17:09:57,015 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:09:57,016 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:09:57,016 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:10:12,578 DeMo.train INFO: Validation Results - Epoch: 8
+2025-05-23 17:10:12,578 DeMo.train INFO: mAP: 73.3%
+2025-05-23 17:10:12,578 DeMo.train INFO: CMC curve, Rank-1  :77.6%
+2025-05-23 17:10:12,579 DeMo.train INFO: CMC curve, Rank-5  :84.4%
+2025-05-23 17:10:12,579 DeMo.train INFO: CMC curve, Rank-10 :88.2%
+2025-05-23 17:10:12,579 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:10:12,633 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:10:12,633 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:10:12,633 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:10:31,914 DeMo.train INFO: Validation Results - Epoch: 8
+2025-05-23 17:10:31,914 DeMo.train INFO: mAP: 73.6%
+2025-05-23 17:10:31,914 DeMo.train INFO: CMC curve, Rank-1  :76.8%
+2025-05-23 17:10:31,914 DeMo.train INFO: CMC curve, Rank-5  :82.5%
+2025-05-23 17:10:31,914 DeMo.train INFO: CMC curve, Rank-10 :86.5%
+2025-05-23 17:10:31,914 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:10:31,919 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:10:31,919 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:10:31,919 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:10:50,922 DeMo.train INFO: Validation Results - Epoch: 8
+2025-05-23 17:10:50,922 DeMo.train INFO: mAP: 73.9%
+2025-05-23 17:10:50,922 DeMo.train INFO: CMC curve, Rank-1  :77.2%
+2025-05-23 17:10:50,922 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 17:10:50,922 DeMo.train INFO: CMC curve, Rank-10 :88.6%
+2025-05-23 17:10:50,922 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:10:50,924 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:10:50,925 DeMo.train INFO: Best mAP: 76.3%
+2025-05-23 17:10:50,925 DeMo.train INFO: Best Rank-1: 79.2%
+2025-05-23 17:10:50,925 DeMo.train INFO: Best Rank-5: 84.8%
+2025-05-23 17:10:50,925 DeMo.train INFO: Best Rank-10: 87.2%
+2025-05-23 17:10:50,925 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:10:58,208 DeMo.train INFO: Epoch[9] Iteration[10/54] Loss: 0.581, Acc: 0.977, Base Lr: 3.18e-04
+2025-05-23 17:11:04,027 DeMo.train INFO: Epoch[9] Iteration[20/54] Loss: 0.565, Acc: 0.984, Base Lr: 3.18e-04
+2025-05-23 17:11:09,776 DeMo.train INFO: Epoch[9] Iteration[30/54] Loss: 0.556, Acc: 0.989, Base Lr: 3.18e-04
+2025-05-23 17:11:15,765 DeMo.train INFO: Epoch[9] Iteration[40/54] Loss: 0.554, Acc: 0.987, Base Lr: 3.18e-04
+2025-05-23 17:11:21,491 DeMo.train INFO: Epoch[9] Iteration[50/54] Loss: 0.550, Acc: 0.989, Base Lr: 3.18e-04
+2025-05-23 17:11:22,759 DeMo.train INFO: Epoch 9 done. Time per batch: 0.601[s] Speed: 106.6[samples/s]
+2025-05-23 17:11:22,761 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:11:22,761 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:11:22,761 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:11:43,828 DeMo.train INFO: Validation Results - Epoch: 9
+2025-05-23 17:11:43,829 DeMo.train INFO: mAP: 74.4%
+2025-05-23 17:11:43,829 DeMo.train INFO: CMC curve, Rank-1  :76.8%
+2025-05-23 17:11:43,829 DeMo.train INFO: CMC curve, Rank-5  :84.1%
+2025-05-23 17:11:43,829 DeMo.train INFO: CMC curve, Rank-10 :88.0%
+2025-05-23 17:11:43,829 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:11:43,882 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:11:43,883 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:11:43,883 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:12:04,897 DeMo.train INFO: Validation Results - Epoch: 9
+2025-05-23 17:12:04,898 DeMo.train INFO: mAP: 77.0%
+2025-05-23 17:12:04,898 DeMo.train INFO: CMC curve, Rank-1  :77.9%
+2025-05-23 17:12:04,898 DeMo.train INFO: CMC curve, Rank-5  :85.2%
+2025-05-23 17:12:04,898 DeMo.train INFO: CMC curve, Rank-10 :88.0%
+2025-05-23 17:12:04,898 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:12:04,900 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:12:04,900 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:12:04,900 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:12:25,927 DeMo.train INFO: Validation Results - Epoch: 9
+2025-05-23 17:12:25,927 DeMo.train INFO: mAP: 75.2%
+2025-05-23 17:12:25,927 DeMo.train INFO: CMC curve, Rank-1  :77.6%
+2025-05-23 17:12:25,927 DeMo.train INFO: CMC curve, Rank-5  :84.4%
+2025-05-23 17:12:25,927 DeMo.train INFO: CMC curve, Rank-10 :87.8%
+2025-05-23 17:12:25,927 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:12:25,930 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:12:25,930 DeMo.train INFO: Best mAP: 76.3%
+2025-05-23 17:12:25,930 DeMo.train INFO: Best Rank-1: 79.2%
+2025-05-23 17:12:25,930 DeMo.train INFO: Best Rank-5: 84.8%
+2025-05-23 17:12:25,930 DeMo.train INFO: Best Rank-10: 87.2%
+2025-05-23 17:12:25,930 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:12:34,304 DeMo.train INFO: Epoch[10] Iteration[10/54] Loss: 0.529, Acc: 1.000, Base Lr: 3.17e-04
+2025-05-23 17:12:40,593 DeMo.train INFO: Epoch[10] Iteration[20/54] Loss: 0.525, Acc: 0.999, Base Lr: 3.17e-04
+2025-05-23 17:12:46,850 DeMo.train INFO: Epoch[10] Iteration[30/54] Loss: 0.527, Acc: 0.988, Base Lr: 3.17e-04
+2025-05-23 17:12:53,137 DeMo.train INFO: Epoch[10] Iteration[40/54] Loss: 0.526, Acc: 0.991, Base Lr: 3.17e-04
+2025-05-23 17:12:59,383 DeMo.train INFO: Epoch[10] Iteration[50/54] Loss: 0.523, Acc: 0.993, Base Lr: 3.17e-04
+2025-05-23 17:13:01,388 DeMo.train INFO: Epoch 10 done. Time per batch: 0.669[s] Speed: 95.7[samples/s]
+2025-05-23 17:13:01,391 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:13:01,391 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:13:01,391 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:13:21,751 DeMo.train INFO: Validation Results - Epoch: 10
+2025-05-23 17:13:21,751 DeMo.train INFO: mAP: 75.1%
+2025-05-23 17:13:21,751 DeMo.train INFO: CMC curve, Rank-1  :77.6%
+2025-05-23 17:13:21,751 DeMo.train INFO: CMC curve, Rank-5  :84.8%
+2025-05-23 17:13:21,751 DeMo.train INFO: CMC curve, Rank-10 :88.4%
+2025-05-23 17:13:21,751 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:13:21,866 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:13:21,866 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:13:21,866 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:13:41,952 DeMo.train INFO: Validation Results - Epoch: 10
+2025-05-23 17:13:41,952 DeMo.train INFO: mAP: 76.8%
+2025-05-23 17:13:41,952 DeMo.train INFO: CMC curve, Rank-1  :79.3%
+2025-05-23 17:13:41,952 DeMo.train INFO: CMC curve, Rank-5  :85.6%
+2025-05-23 17:13:41,952 DeMo.train INFO: CMC curve, Rank-10 :89.6%
+2025-05-23 17:13:41,952 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:13:41,954 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:13:41,954 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:13:41,954 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:14:03,136 DeMo.train INFO: Validation Results - Epoch: 10
+2025-05-23 17:14:03,137 DeMo.train INFO: mAP: 75.9%
+2025-05-23 17:14:03,137 DeMo.train INFO: CMC curve, Rank-1  :78.3%
+2025-05-23 17:14:03,137 DeMo.train INFO: CMC curve, Rank-5  :84.9%
+2025-05-23 17:14:03,137 DeMo.train INFO: CMC curve, Rank-10 :89.4%
+2025-05-23 17:14:03,137 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:14:03,140 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:14:03,140 DeMo.train INFO: Best mAP: 76.3%
+2025-05-23 17:14:03,140 DeMo.train INFO: Best Rank-1: 79.2%
+2025-05-23 17:14:03,140 DeMo.train INFO: Best Rank-5: 84.8%
+2025-05-23 17:14:03,140 DeMo.train INFO: Best Rank-10: 87.2%
+2025-05-23 17:14:03,140 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:14:10,902 DeMo.train INFO: Epoch[11] Iteration[10/54] Loss: 0.518, Acc: 0.988, Base Lr: 3.10e-04
+2025-05-23 17:14:17,183 DeMo.train INFO: Epoch[11] Iteration[20/54] Loss: 0.519, Acc: 0.992, Base Lr: 3.10e-04
+2025-05-23 17:14:23,388 DeMo.train INFO: Epoch[11] Iteration[30/54] Loss: 0.516, Acc: 0.995, Base Lr: 3.10e-04
+2025-05-23 17:14:29,675 DeMo.train INFO: Epoch[11] Iteration[40/54] Loss: 0.533, Acc: 0.995, Base Lr: 3.10e-04
+2025-05-23 17:14:35,883 DeMo.train INFO: Epoch[11] Iteration[50/54] Loss: 0.529, Acc: 0.996, Base Lr: 3.10e-04
+2025-05-23 17:14:37,895 DeMo.train INFO: Epoch 11 done. Time per batch: 0.656[s] Speed: 97.6[samples/s]
+2025-05-23 17:14:37,897 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:14:37,897 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:14:37,897 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:14:59,083 DeMo.train INFO: Validation Results - Epoch: 11
+2025-05-23 17:14:59,083 DeMo.train INFO: mAP: 74.1%
+2025-05-23 17:14:59,083 DeMo.train INFO: CMC curve, Rank-1  :76.1%
+2025-05-23 17:14:59,083 DeMo.train INFO: CMC curve, Rank-5  :83.3%
+2025-05-23 17:14:59,083 DeMo.train INFO: CMC curve, Rank-10 :89.1%
+2025-05-23 17:14:59,083 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:14:59,968 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:14:59,969 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:14:59,969 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:15:21,054 DeMo.train INFO: Validation Results - Epoch: 11
+2025-05-23 17:15:21,055 DeMo.train INFO: mAP: 76.3%
+2025-05-23 17:15:21,055 DeMo.train INFO: CMC curve, Rank-1  :78.0%
+2025-05-23 17:15:21,055 DeMo.train INFO: CMC curve, Rank-5  :84.0%
+2025-05-23 17:15:21,055 DeMo.train INFO: CMC curve, Rank-10 :88.3%
+2025-05-23 17:15:21,055 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:15:21,057 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:15:21,057 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:15:21,057 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:15:39,978 DeMo.train INFO: Validation Results - Epoch: 11
+2025-05-23 17:15:39,979 DeMo.train INFO: mAP: 74.9%
+2025-05-23 17:15:39,979 DeMo.train INFO: CMC curve, Rank-1  :76.7%
+2025-05-23 17:15:39,979 DeMo.train INFO: CMC curve, Rank-5  :84.3%
+2025-05-23 17:15:39,979 DeMo.train INFO: CMC curve, Rank-10 :89.1%
+2025-05-23 17:15:39,979 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:15:39,982 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:15:39,982 DeMo.train INFO: Best mAP: 76.3%
+2025-05-23 17:15:39,982 DeMo.train INFO: Best Rank-1: 79.2%
+2025-05-23 17:15:39,982 DeMo.train INFO: Best Rank-5: 84.8%
+2025-05-23 17:15:39,982 DeMo.train INFO: Best Rank-10: 87.2%
+2025-05-23 17:15:39,982 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:15:48,782 DeMo.train INFO: Epoch[12] Iteration[10/54] Loss: 0.516, Acc: 1.000, Base Lr: 3.03e-04
+2025-05-23 17:15:55,102 DeMo.train INFO: Epoch[12] Iteration[20/54] Loss: 0.509, Acc: 1.000, Base Lr: 3.03e-04
+2025-05-23 17:16:01,306 DeMo.train INFO: Epoch[12] Iteration[30/54] Loss: 0.509, Acc: 1.000, Base Lr: 3.03e-04
+2025-05-23 17:16:07,632 DeMo.train INFO: Epoch[12] Iteration[40/54] Loss: 0.507, Acc: 1.000, Base Lr: 3.03e-04
+2025-05-23 17:16:13,864 DeMo.train INFO: Epoch[12] Iteration[50/54] Loss: 0.506, Acc: 0.999, Base Lr: 3.03e-04
+2025-05-23 17:16:15,888 DeMo.train INFO: Epoch 12 done. Time per batch: 0.677[s] Speed: 94.5[samples/s]
+2025-05-23 17:16:15,891 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:16:15,891 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:16:15,891 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:16:37,075 DeMo.train INFO: Validation Results - Epoch: 12
+2025-05-23 17:16:37,075 DeMo.train INFO: mAP: 74.6%
+2025-05-23 17:16:37,076 DeMo.train INFO: CMC curve, Rank-1  :76.9%
+2025-05-23 17:16:37,076 DeMo.train INFO: CMC curve, Rank-5  :83.1%
+2025-05-23 17:16:37,076 DeMo.train INFO: CMC curve, Rank-10 :88.9%
+2025-05-23 17:16:37,076 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:16:37,912 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:16:37,912 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:16:37,912 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:16:58,994 DeMo.train INFO: Validation Results - Epoch: 12
+2025-05-23 17:16:58,995 DeMo.train INFO: mAP: 75.8%
+2025-05-23 17:16:58,995 DeMo.train INFO: CMC curve, Rank-1  :77.3%
+2025-05-23 17:16:58,995 DeMo.train INFO: CMC curve, Rank-5  :82.9%
+2025-05-23 17:16:58,995 DeMo.train INFO: CMC curve, Rank-10 :87.3%
+2025-05-23 17:16:58,995 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:16:58,997 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:16:58,997 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:16:58,997 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:17:19,958 DeMo.train INFO: Validation Results - Epoch: 12
+2025-05-23 17:17:19,959 DeMo.train INFO: mAP: 75.5%
+2025-05-23 17:17:19,959 DeMo.train INFO: CMC curve, Rank-1  :77.2%
+2025-05-23 17:17:19,959 DeMo.train INFO: CMC curve, Rank-5  :84.1%
+2025-05-23 17:17:19,959 DeMo.train INFO: CMC curve, Rank-10 :89.2%
+2025-05-23 17:17:19,959 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:17:19,962 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:17:19,962 DeMo.train INFO: Best mAP: 76.3%
+2025-05-23 17:17:19,962 DeMo.train INFO: Best Rank-1: 79.2%
+2025-05-23 17:17:19,962 DeMo.train INFO: Best Rank-5: 84.8%
+2025-05-23 17:17:19,962 DeMo.train INFO: Best Rank-10: 87.2%
+2025-05-23 17:17:19,962 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:17:24,313 DeMo.train INFO: Epoch[13] Iteration[10/54] Loss: 0.498, Acc: 1.000, Base Lr: 2.95e-04
+2025-05-23 17:17:27,522 DeMo.train INFO: Epoch[13] Iteration[20/54] Loss: 0.502, Acc: 1.000, Base Lr: 2.95e-04
+2025-05-23 17:17:32,828 DeMo.train INFO: Epoch[13] Iteration[30/54] Loss: 0.504, Acc: 0.998, Base Lr: 2.95e-04
+2025-05-23 17:17:38,721 DeMo.train INFO: Epoch[13] Iteration[40/54] Loss: 0.503, Acc: 0.998, Base Lr: 2.95e-04
+2025-05-23 17:17:44,463 DeMo.train INFO: Epoch[13] Iteration[50/54] Loss: 0.502, Acc: 0.998, Base Lr: 2.95e-04
+2025-05-23 17:17:45,646 DeMo.train INFO: Epoch 13 done. Time per batch: 0.494[s] Speed: 129.6[samples/s]
+2025-05-23 17:17:45,649 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:17:45,649 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:17:45,649 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:18:04,474 DeMo.train INFO: Validation Results - Epoch: 13
+2025-05-23 17:18:04,474 DeMo.train INFO: mAP: 74.7%
+2025-05-23 17:18:04,474 DeMo.train INFO: CMC curve, Rank-1  :77.3%
+2025-05-23 17:18:04,474 DeMo.train INFO: CMC curve, Rank-5  :83.3%
+2025-05-23 17:18:04,474 DeMo.train INFO: CMC curve, Rank-10 :88.5%
+2025-05-23 17:18:04,475 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:18:05,573 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:18:05,573 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:18:05,573 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:18:24,863 DeMo.train INFO: Validation Results - Epoch: 13
+2025-05-23 17:18:24,864 DeMo.train INFO: mAP: 75.0%
+2025-05-23 17:18:24,864 DeMo.train INFO: CMC curve, Rank-1  :76.3%
+2025-05-23 17:18:24,864 DeMo.train INFO: CMC curve, Rank-5  :82.8%
+2025-05-23 17:18:24,864 DeMo.train INFO: CMC curve, Rank-10 :87.2%
+2025-05-23 17:18:24,864 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:18:24,866 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:18:24,866 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:18:24,866 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:18:44,047 DeMo.train INFO: Validation Results - Epoch: 13
+2025-05-23 17:18:44,047 DeMo.train INFO: mAP: 75.4%
+2025-05-23 17:18:44,048 DeMo.train INFO: CMC curve, Rank-1  :77.6%
+2025-05-23 17:18:44,048 DeMo.train INFO: CMC curve, Rank-5  :83.9%
+2025-05-23 17:18:44,048 DeMo.train INFO: CMC curve, Rank-10 :88.2%
+2025-05-23 17:18:44,048 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:18:44,050 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:18:44,050 DeMo.train INFO: Best mAP: 76.3%
+2025-05-23 17:18:44,050 DeMo.train INFO: Best Rank-1: 79.2%
+2025-05-23 17:18:44,050 DeMo.train INFO: Best Rank-5: 84.8%
+2025-05-23 17:18:44,050 DeMo.train INFO: Best Rank-10: 87.2%
+2025-05-23 17:18:44,050 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:18:51,728 DeMo.train INFO: Epoch[14] Iteration[10/54] Loss: 0.492, Acc: 0.998, Base Lr: 2.87e-04
+2025-05-23 17:18:57,967 DeMo.train INFO: Epoch[14] Iteration[20/54] Loss: 0.517, Acc: 0.999, Base Lr: 2.87e-04
+2025-05-23 17:19:04,211 DeMo.train INFO: Epoch[14] Iteration[30/54] Loss: 0.512, Acc: 0.999, Base Lr: 2.87e-04
+2025-05-23 17:19:10,470 DeMo.train INFO: Epoch[14] Iteration[40/54] Loss: 0.508, Acc: 0.999, Base Lr: 2.87e-04
+2025-05-23 17:19:16,739 DeMo.train INFO: Epoch[14] Iteration[50/54] Loss: 0.507, Acc: 0.999, Base Lr: 2.87e-04
+2025-05-23 17:19:18,696 DeMo.train INFO: Epoch 14 done. Time per batch: 0.654[s] Speed: 97.9[samples/s]
+2025-05-23 17:19:18,698 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:19:18,699 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:19:18,699 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:19:39,853 DeMo.train INFO: Validation Results - Epoch: 14
+2025-05-23 17:19:39,853 DeMo.train INFO: mAP: 74.6%
+2025-05-23 17:19:39,853 DeMo.train INFO: CMC curve, Rank-1  :75.8%
+2025-05-23 17:19:39,853 DeMo.train INFO: CMC curve, Rank-5  :83.1%
+2025-05-23 17:19:39,853 DeMo.train INFO: CMC curve, Rank-10 :88.8%
+2025-05-23 17:19:39,853 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:19:39,917 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:19:39,917 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:19:39,917 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:20:00,952 DeMo.train INFO: Validation Results - Epoch: 14
+2025-05-23 17:20:00,952 DeMo.train INFO: mAP: 75.4%
+2025-05-23 17:20:00,952 DeMo.train INFO: CMC curve, Rank-1  :77.8%
+2025-05-23 17:20:00,952 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 17:20:00,952 DeMo.train INFO: CMC curve, Rank-10 :88.0%
+2025-05-23 17:20:00,952 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:20:00,957 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:20:00,957 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:20:00,957 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:20:21,907 DeMo.train INFO: Validation Results - Epoch: 14
+2025-05-23 17:20:21,908 DeMo.train INFO: mAP: 75.3%
+2025-05-23 17:20:21,908 DeMo.train INFO: CMC curve, Rank-1  :76.7%
+2025-05-23 17:20:21,908 DeMo.train INFO: CMC curve, Rank-5  :84.0%
+2025-05-23 17:20:21,908 DeMo.train INFO: CMC curve, Rank-10 :88.6%
+2025-05-23 17:20:21,908 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:20:21,910 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:20:21,910 DeMo.train INFO: Best mAP: 76.3%
+2025-05-23 17:20:21,910 DeMo.train INFO: Best Rank-1: 79.2%
+2025-05-23 17:20:21,910 DeMo.train INFO: Best Rank-5: 84.8%
+2025-05-23 17:20:21,910 DeMo.train INFO: Best Rank-10: 87.2%
+2025-05-23 17:20:21,910 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:20:29,930 DeMo.train INFO: Epoch[15] Iteration[10/54] Loss: 0.487, Acc: 1.000, Base Lr: 2.78e-04
+2025-05-23 17:20:36,198 DeMo.train INFO: Epoch[15] Iteration[20/54] Loss: 0.488, Acc: 1.000, Base Lr: 2.78e-04
+2025-05-23 17:20:42,489 DeMo.train INFO: Epoch[15] Iteration[30/54] Loss: 0.488, Acc: 0.999, Base Lr: 2.78e-04
+2025-05-23 17:20:47,508 DeMo.train INFO: Epoch[15] Iteration[40/54] Loss: 0.491, Acc: 0.999, Base Lr: 2.78e-04
+2025-05-23 17:20:51,531 DeMo.train INFO: Epoch[15] Iteration[50/54] Loss: 0.492, Acc: 0.999, Base Lr: 2.78e-04
+2025-05-23 17:20:53,566 DeMo.train INFO: Epoch 15 done. Time per batch: 0.597[s] Speed: 107.2[samples/s]
+2025-05-23 17:20:53,569 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:20:53,569 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:20:53,569 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:21:14,788 DeMo.train INFO: Validation Results - Epoch: 15
+2025-05-23 17:21:14,789 DeMo.train INFO: mAP: 75.3%
+2025-05-23 17:21:14,789 DeMo.train INFO: CMC curve, Rank-1  :77.3%
+2025-05-23 17:21:14,789 DeMo.train INFO: CMC curve, Rank-5  :83.3%
+2025-05-23 17:21:14,789 DeMo.train INFO: CMC curve, Rank-10 :87.9%
+2025-05-23 17:21:14,789 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:21:14,847 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:21:14,847 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:21:14,847 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:21:35,854 DeMo.train INFO: Validation Results - Epoch: 15
+2025-05-23 17:21:35,854 DeMo.train INFO: mAP: 76.9%
+2025-05-23 17:21:35,854 DeMo.train INFO: CMC curve, Rank-1  :79.1%
+2025-05-23 17:21:35,854 DeMo.train INFO: CMC curve, Rank-5  :86.0%
+2025-05-23 17:21:35,854 DeMo.train INFO: CMC curve, Rank-10 :89.0%
+2025-05-23 17:21:35,854 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:21:35,856 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:21:35,856 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:21:35,856 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:21:56,915 DeMo.train INFO: Validation Results - Epoch: 15
+2025-05-23 17:21:56,915 DeMo.train INFO: mAP: 76.4%
+2025-05-23 17:21:56,916 DeMo.train INFO: CMC curve, Rank-1  :78.3%
+2025-05-23 17:21:56,916 DeMo.train INFO: CMC curve, Rank-5  :84.0%
+2025-05-23 17:21:56,916 DeMo.train INFO: CMC curve, Rank-10 :88.5%
+2025-05-23 17:21:56,916 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:22:00,750 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:22:00,750 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:22:00,750 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:22:00,750 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:22:00,750 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:22:00,750 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:22:08,327 DeMo.train INFO: Epoch[16] Iteration[10/54] Loss: 0.490, Acc: 0.998, Base Lr: 2.69e-04
+2025-05-23 17:22:14,600 DeMo.train INFO: Epoch[16] Iteration[20/54] Loss: 0.491, Acc: 0.999, Base Lr: 2.69e-04
+2025-05-23 17:22:20,857 DeMo.train INFO: Epoch[16] Iteration[30/54] Loss: 0.490, Acc: 0.999, Base Lr: 2.69e-04
+2025-05-23 17:22:27,089 DeMo.train INFO: Epoch[16] Iteration[40/54] Loss: 0.494, Acc: 0.999, Base Lr: 2.69e-04
+2025-05-23 17:22:33,349 DeMo.train INFO: Epoch[16] Iteration[50/54] Loss: 0.493, Acc: 0.999, Base Lr: 2.69e-04
+2025-05-23 17:22:35,304 DeMo.train INFO: Epoch 16 done. Time per batch: 0.652[s] Speed: 98.2[samples/s]
+2025-05-23 17:22:35,306 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:22:35,307 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:22:35,307 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:22:53,008 DeMo.train INFO: Validation Results - Epoch: 16
+2025-05-23 17:22:53,008 DeMo.train INFO: mAP: 74.5%
+2025-05-23 17:22:53,008 DeMo.train INFO: CMC curve, Rank-1  :75.5%
+2025-05-23 17:22:53,008 DeMo.train INFO: CMC curve, Rank-5  :81.8%
+2025-05-23 17:22:53,009 DeMo.train INFO: CMC curve, Rank-10 :86.7%
+2025-05-23 17:22:53,009 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:22:53,063 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:22:53,063 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:22:53,063 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:23:13,969 DeMo.train INFO: Validation Results - Epoch: 16
+2025-05-23 17:23:13,970 DeMo.train INFO: mAP: 73.9%
+2025-05-23 17:23:13,970 DeMo.train INFO: CMC curve, Rank-1  :75.7%
+2025-05-23 17:23:13,970 DeMo.train INFO: CMC curve, Rank-5  :81.2%
+2025-05-23 17:23:13,970 DeMo.train INFO: CMC curve, Rank-10 :85.6%
+2025-05-23 17:23:13,970 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:23:13,974 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:23:13,975 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:23:13,975 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:23:34,824 DeMo.train INFO: Validation Results - Epoch: 16
+2025-05-23 17:23:34,825 DeMo.train INFO: mAP: 75.1%
+2025-05-23 17:23:34,825 DeMo.train INFO: CMC curve, Rank-1  :76.0%
+2025-05-23 17:23:34,825 DeMo.train INFO: CMC curve, Rank-5  :82.2%
+2025-05-23 17:23:34,825 DeMo.train INFO: CMC curve, Rank-10 :86.6%
+2025-05-23 17:23:34,825 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:23:34,827 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:23:34,827 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:23:34,827 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:23:34,828 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:23:34,828 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:23:34,828 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:23:43,434 DeMo.train INFO: Epoch[17] Iteration[10/54] Loss: 0.486, Acc: 0.997, Base Lr: 2.59e-04
+2025-05-23 17:23:49,639 DeMo.train INFO: Epoch[17] Iteration[20/54] Loss: 0.484, Acc: 0.998, Base Lr: 2.59e-04
+2025-05-23 17:23:55,936 DeMo.train INFO: Epoch[17] Iteration[30/54] Loss: 0.483, Acc: 0.999, Base Lr: 2.59e-04
+2025-05-23 17:24:02,205 DeMo.train INFO: Epoch[17] Iteration[40/54] Loss: 0.487, Acc: 0.998, Base Lr: 2.59e-04
+2025-05-23 17:24:08,446 DeMo.train INFO: Epoch[17] Iteration[50/54] Loss: 0.489, Acc: 0.998, Base Lr: 2.59e-04
+2025-05-23 17:24:10,441 DeMo.train INFO: Epoch 17 done. Time per batch: 0.672[s] Speed: 95.2[samples/s]
+2025-05-23 17:24:10,444 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:24:10,444 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:24:10,444 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:24:31,438 DeMo.train INFO: Validation Results - Epoch: 17
+2025-05-23 17:24:31,438 DeMo.train INFO: mAP: 74.2%
+2025-05-23 17:24:31,438 DeMo.train INFO: CMC curve, Rank-1  :75.6%
+2025-05-23 17:24:31,438 DeMo.train INFO: CMC curve, Rank-5  :81.5%
+2025-05-23 17:24:31,438 DeMo.train INFO: CMC curve, Rank-10 :87.4%
+2025-05-23 17:24:31,438 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:24:32,152 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:24:32,152 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:24:32,152 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:24:48,111 DeMo.train INFO: Validation Results - Epoch: 17
+2025-05-23 17:24:48,112 DeMo.train INFO: mAP: 73.7%
+2025-05-23 17:24:48,112 DeMo.train INFO: CMC curve, Rank-1  :76.2%
+2025-05-23 17:24:48,112 DeMo.train INFO: CMC curve, Rank-5  :82.9%
+2025-05-23 17:24:48,112 DeMo.train INFO: CMC curve, Rank-10 :88.0%
+2025-05-23 17:24:48,112 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:24:48,114 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:24:48,114 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:24:48,114 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:25:04,431 DeMo.train INFO: Validation Results - Epoch: 17
+2025-05-23 17:25:04,431 DeMo.train INFO: mAP: 74.8%
+2025-05-23 17:25:04,431 DeMo.train INFO: CMC curve, Rank-1  :76.3%
+2025-05-23 17:25:04,431 DeMo.train INFO: CMC curve, Rank-5  :82.8%
+2025-05-23 17:25:04,431 DeMo.train INFO: CMC curve, Rank-10 :87.3%
+2025-05-23 17:25:04,431 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:25:04,433 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:25:04,434 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:25:04,434 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:25:04,434 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:25:04,434 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:25:04,434 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:25:11,216 DeMo.train INFO: Epoch[18] Iteration[10/54] Loss: 0.495, Acc: 1.000, Base Lr: 2.50e-04
+2025-05-23 17:25:17,163 DeMo.train INFO: Epoch[18] Iteration[20/54] Loss: 0.493, Acc: 0.999, Base Lr: 2.50e-04
+2025-05-23 17:25:22,948 DeMo.train INFO: Epoch[18] Iteration[30/54] Loss: 0.493, Acc: 0.999, Base Lr: 2.50e-04
+2025-05-23 17:25:28,689 DeMo.train INFO: Epoch[18] Iteration[40/54] Loss: 0.492, Acc: 0.999, Base Lr: 2.50e-04
+2025-05-23 17:25:34,379 DeMo.train INFO: Epoch[18] Iteration[50/54] Loss: 0.490, Acc: 0.999, Base Lr: 2.50e-04
+2025-05-23 17:25:36,255 DeMo.train INFO: Epoch 18 done. Time per batch: 0.600[s] Speed: 106.6[samples/s]
+2025-05-23 17:25:36,257 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:25:36,257 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:25:36,257 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:25:55,342 DeMo.train INFO: Validation Results - Epoch: 18
+2025-05-23 17:25:55,342 DeMo.train INFO: mAP: 74.3%
+2025-05-23 17:25:55,342 DeMo.train INFO: CMC curve, Rank-1  :76.4%
+2025-05-23 17:25:55,342 DeMo.train INFO: CMC curve, Rank-5  :81.6%
+2025-05-23 17:25:55,342 DeMo.train INFO: CMC curve, Rank-10 :86.7%
+2025-05-23 17:25:55,342 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:25:55,399 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:25:55,399 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:25:55,399 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:26:13,795 DeMo.train INFO: Validation Results - Epoch: 18
+2025-05-23 17:26:13,795 DeMo.train INFO: mAP: 71.1%
+2025-05-23 17:26:13,795 DeMo.train INFO: CMC curve, Rank-1  :73.8%
+2025-05-23 17:26:13,795 DeMo.train INFO: CMC curve, Rank-5  :80.1%
+2025-05-23 17:26:13,795 DeMo.train INFO: CMC curve, Rank-10 :83.6%
+2025-05-23 17:26:13,795 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:26:13,797 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:26:13,797 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:26:13,797 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:26:34,714 DeMo.train INFO: Validation Results - Epoch: 18
+2025-05-23 17:26:34,714 DeMo.train INFO: mAP: 74.8%
+2025-05-23 17:26:34,714 DeMo.train INFO: CMC curve, Rank-1  :77.2%
+2025-05-23 17:26:34,714 DeMo.train INFO: CMC curve, Rank-5  :82.5%
+2025-05-23 17:26:34,714 DeMo.train INFO: CMC curve, Rank-10 :86.4%
+2025-05-23 17:26:34,715 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:26:34,717 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:26:34,717 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:26:34,717 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:26:34,717 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:26:34,718 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:26:34,718 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:26:42,025 DeMo.train INFO: Epoch[19] Iteration[10/54] Loss: 0.481, Acc: 0.995, Base Lr: 2.40e-04
+2025-05-23 17:26:48,323 DeMo.train INFO: Epoch[19] Iteration[20/54] Loss: 0.486, Acc: 0.997, Base Lr: 2.40e-04
+2025-05-23 17:26:54,532 DeMo.train INFO: Epoch[19] Iteration[30/54] Loss: 0.484, Acc: 0.998, Base Lr: 2.40e-04
+2025-05-23 17:27:00,828 DeMo.train INFO: Epoch[19] Iteration[40/54] Loss: 0.485, Acc: 0.998, Base Lr: 2.40e-04
+2025-05-23 17:27:07,103 DeMo.train INFO: Epoch[19] Iteration[50/54] Loss: 0.484, Acc: 0.999, Base Lr: 2.40e-04
+2025-05-23 17:27:09,130 DeMo.train INFO: Epoch 19 done. Time per batch: 0.649[s] Speed: 98.6[samples/s]
+2025-05-23 17:27:09,132 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:27:09,132 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:27:09,132 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:27:30,236 DeMo.train INFO: Validation Results - Epoch: 19
+2025-05-23 17:27:30,237 DeMo.train INFO: mAP: 74.5%
+2025-05-23 17:27:30,237 DeMo.train INFO: CMC curve, Rank-1  :76.7%
+2025-05-23 17:27:30,237 DeMo.train INFO: CMC curve, Rank-5  :82.1%
+2025-05-23 17:27:30,237 DeMo.train INFO: CMC curve, Rank-10 :86.0%
+2025-05-23 17:27:30,237 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:27:31,527 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:27:31,527 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:27:31,527 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:27:52,637 DeMo.train INFO: Validation Results - Epoch: 19
+2025-05-23 17:27:52,637 DeMo.train INFO: mAP: 72.3%
+2025-05-23 17:27:52,637 DeMo.train INFO: CMC curve, Rank-1  :74.9%
+2025-05-23 17:27:52,637 DeMo.train INFO: CMC curve, Rank-5  :79.8%
+2025-05-23 17:27:52,637 DeMo.train INFO: CMC curve, Rank-10 :83.9%
+2025-05-23 17:27:52,637 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:27:52,642 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:27:52,642 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:27:52,642 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:28:13,418 DeMo.train INFO: Validation Results - Epoch: 19
+2025-05-23 17:28:13,418 DeMo.train INFO: mAP: 74.8%
+2025-05-23 17:28:13,418 DeMo.train INFO: CMC curve, Rank-1  :76.4%
+2025-05-23 17:28:13,418 DeMo.train INFO: CMC curve, Rank-5  :82.4%
+2025-05-23 17:28:13,418 DeMo.train INFO: CMC curve, Rank-10 :86.1%
+2025-05-23 17:28:13,418 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:28:13,421 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:28:13,421 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:28:13,421 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:28:13,421 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:28:13,421 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:28:13,421 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:28:19,805 DeMo.train INFO: Epoch[20] Iteration[10/54] Loss: 0.472, Acc: 0.998, Base Lr: 2.29e-04
+2025-05-23 17:28:26,147 DeMo.train INFO: Epoch[20] Iteration[20/54] Loss: 0.473, Acc: 0.999, Base Lr: 2.29e-04
+2025-05-23 17:28:32,372 DeMo.train INFO: Epoch[20] Iteration[30/54] Loss: 0.476, Acc: 0.999, Base Lr: 2.29e-04
+2025-05-23 17:28:38,708 DeMo.train INFO: Epoch[20] Iteration[40/54] Loss: 0.476, Acc: 1.000, Base Lr: 2.29e-04
+2025-05-23 17:28:44,937 DeMo.train INFO: Epoch[20] Iteration[50/54] Loss: 0.476, Acc: 1.000, Base Lr: 2.29e-04
+2025-05-23 17:28:46,968 DeMo.train INFO: Epoch 20 done. Time per batch: 0.633[s] Speed: 101.1[samples/s]
+2025-05-23 17:28:46,971 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:28:46,971 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:28:46,971 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:29:08,091 DeMo.train INFO: Validation Results - Epoch: 20
+2025-05-23 17:29:08,091 DeMo.train INFO: mAP: 75.4%
+2025-05-23 17:29:08,091 DeMo.train INFO: CMC curve, Rank-1  :77.3%
+2025-05-23 17:29:08,091 DeMo.train INFO: CMC curve, Rank-5  :83.5%
+2025-05-23 17:29:08,091 DeMo.train INFO: CMC curve, Rank-10 :87.6%
+2025-05-23 17:29:08,091 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:29:09,192 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:29:09,192 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:29:09,192 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:29:30,324 DeMo.train INFO: Validation Results - Epoch: 20
+2025-05-23 17:29:30,324 DeMo.train INFO: mAP: 74.3%
+2025-05-23 17:29:30,324 DeMo.train INFO: CMC curve, Rank-1  :78.0%
+2025-05-23 17:29:30,324 DeMo.train INFO: CMC curve, Rank-5  :82.9%
+2025-05-23 17:29:30,325 DeMo.train INFO: CMC curve, Rank-10 :85.6%
+2025-05-23 17:29:30,325 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:29:30,326 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:29:30,326 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:29:30,326 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:29:51,718 DeMo.train INFO: Validation Results - Epoch: 20
+2025-05-23 17:29:51,718 DeMo.train INFO: mAP: 76.1%
+2025-05-23 17:29:51,718 DeMo.train INFO: CMC curve, Rank-1  :78.3%
+2025-05-23 17:29:51,718 DeMo.train INFO: CMC curve, Rank-5  :84.0%
+2025-05-23 17:29:51,718 DeMo.train INFO: CMC curve, Rank-10 :88.6%
+2025-05-23 17:29:51,718 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:29:51,721 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:29:51,721 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:29:51,721 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:29:51,721 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:29:51,721 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:29:51,721 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:30:00,450 DeMo.train INFO: Epoch[21] Iteration[10/54] Loss: 0.493, Acc: 1.000, Base Lr: 2.19e-04
+2025-05-23 17:30:06,651 DeMo.train INFO: Epoch[21] Iteration[20/54] Loss: 0.482, Acc: 1.000, Base Lr: 2.19e-04
+2025-05-23 17:30:12,304 DeMo.train INFO: Epoch[21] Iteration[30/54] Loss: 0.479, Acc: 1.000, Base Lr: 2.19e-04
+2025-05-23 17:30:15,853 DeMo.train INFO: Epoch[21] Iteration[40/54] Loss: 0.479, Acc: 1.000, Base Lr: 2.19e-04
+2025-05-23 17:30:22,140 DeMo.train INFO: Epoch[21] Iteration[50/54] Loss: 0.478, Acc: 1.000, Base Lr: 2.19e-04
+2025-05-23 17:30:24,105 DeMo.train INFO: Epoch 21 done. Time per batch: 0.611[s] Speed: 104.7[samples/s]
+2025-05-23 17:30:24,107 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:30:24,108 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:30:24,108 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:30:45,138 DeMo.train INFO: Validation Results - Epoch: 21
+2025-05-23 17:30:45,138 DeMo.train INFO: mAP: 75.2%
+2025-05-23 17:30:45,138 DeMo.train INFO: CMC curve, Rank-1  :77.5%
+2025-05-23 17:30:45,138 DeMo.train INFO: CMC curve, Rank-5  :82.9%
+2025-05-23 17:30:45,138 DeMo.train INFO: CMC curve, Rank-10 :86.7%
+2025-05-23 17:30:45,138 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:30:45,192 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:30:45,192 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:30:45,193 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:31:06,566 DeMo.train INFO: Validation Results - Epoch: 21
+2025-05-23 17:31:06,566 DeMo.train INFO: mAP: 72.8%
+2025-05-23 17:31:06,566 DeMo.train INFO: CMC curve, Rank-1  :75.5%
+2025-05-23 17:31:06,566 DeMo.train INFO: CMC curve, Rank-5  :80.1%
+2025-05-23 17:31:06,566 DeMo.train INFO: CMC curve, Rank-10 :83.6%
+2025-05-23 17:31:06,566 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:31:06,571 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:31:06,571 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:31:06,571 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:31:27,516 DeMo.train INFO: Validation Results - Epoch: 21
+2025-05-23 17:31:27,516 DeMo.train INFO: mAP: 75.7%
+2025-05-23 17:31:27,516 DeMo.train INFO: CMC curve, Rank-1  :77.3%
+2025-05-23 17:31:27,516 DeMo.train INFO: CMC curve, Rank-5  :83.4%
+2025-05-23 17:31:27,517 DeMo.train INFO: CMC curve, Rank-10 :86.8%
+2025-05-23 17:31:27,517 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:31:27,520 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:31:27,520 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:31:27,520 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:31:27,520 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:31:27,520 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:31:27,520 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:31:34,693 DeMo.train INFO: Epoch[22] Iteration[10/54] Loss: 0.474, Acc: 0.998, Base Lr: 2.08e-04
+2025-05-23 17:31:40,979 DeMo.train INFO: Epoch[22] Iteration[20/54] Loss: 0.475, Acc: 0.999, Base Lr: 2.08e-04
+2025-05-23 17:31:47,274 DeMo.train INFO: Epoch[22] Iteration[30/54] Loss: 0.475, Acc: 0.999, Base Lr: 2.08e-04
+2025-05-23 17:31:53,483 DeMo.train INFO: Epoch[22] Iteration[40/54] Loss: 0.475, Acc: 1.000, Base Lr: 2.08e-04
+2025-05-23 17:31:59,760 DeMo.train INFO: Epoch[22] Iteration[50/54] Loss: 0.474, Acc: 1.000, Base Lr: 2.08e-04
+2025-05-23 17:32:01,718 DeMo.train INFO: Epoch 22 done. Time per batch: 0.645[s] Speed: 99.2[samples/s]
+2025-05-23 17:32:01,720 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:32:01,721 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:32:01,721 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:32:17,567 DeMo.train INFO: Validation Results - Epoch: 22
+2025-05-23 17:32:17,567 DeMo.train INFO: mAP: 75.4%
+2025-05-23 17:32:17,567 DeMo.train INFO: CMC curve, Rank-1  :77.8%
+2025-05-23 17:32:17,567 DeMo.train INFO: CMC curve, Rank-5  :83.6%
+2025-05-23 17:32:17,568 DeMo.train INFO: CMC curve, Rank-10 :87.9%
+2025-05-23 17:32:17,568 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:32:17,791 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:32:17,791 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:32:17,791 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:32:35,205 DeMo.train INFO: Validation Results - Epoch: 22
+2025-05-23 17:32:35,206 DeMo.train INFO: mAP: 71.5%
+2025-05-23 17:32:35,206 DeMo.train INFO: CMC curve, Rank-1  :74.8%
+2025-05-23 17:32:35,206 DeMo.train INFO: CMC curve, Rank-5  :81.0%
+2025-05-23 17:32:35,206 DeMo.train INFO: CMC curve, Rank-10 :83.7%
+2025-05-23 17:32:35,206 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:32:35,208 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:32:35,208 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:32:35,208 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:32:54,597 DeMo.train INFO: Validation Results - Epoch: 22
+2025-05-23 17:32:54,597 DeMo.train INFO: mAP: 75.7%
+2025-05-23 17:32:54,597 DeMo.train INFO: CMC curve, Rank-1  :78.2%
+2025-05-23 17:32:54,597 DeMo.train INFO: CMC curve, Rank-5  :84.1%
+2025-05-23 17:32:54,597 DeMo.train INFO: CMC curve, Rank-10 :87.6%
+2025-05-23 17:32:54,597 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:32:54,600 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:32:54,600 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:32:54,600 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:32:54,600 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:32:54,600 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:32:54,600 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:33:01,532 DeMo.train INFO: Epoch[23] Iteration[10/54] Loss: 0.473, Acc: 1.000, Base Lr: 1.97e-04
+2025-05-23 17:33:07,251 DeMo.train INFO: Epoch[23] Iteration[20/54] Loss: 0.473, Acc: 1.000, Base Lr: 1.97e-04
+2025-05-23 17:33:12,975 DeMo.train INFO: Epoch[23] Iteration[30/54] Loss: 0.471, Acc: 0.999, Base Lr: 1.97e-04
+2025-05-23 17:33:18,689 DeMo.train INFO: Epoch[23] Iteration[40/54] Loss: 0.470, Acc: 1.000, Base Lr: 1.97e-04
+2025-05-23 17:33:24,407 DeMo.train INFO: Epoch[23] Iteration[50/54] Loss: 0.470, Acc: 1.000, Base Lr: 1.97e-04
+2025-05-23 17:33:26,264 DeMo.train INFO: Epoch 23 done. Time per batch: 0.597[s] Speed: 107.1[samples/s]
+2025-05-23 17:33:26,268 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:33:26,268 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:33:26,268 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:33:44,420 DeMo.train INFO: Validation Results - Epoch: 23
+2025-05-23 17:33:44,421 DeMo.train INFO: mAP: 76.2%
+2025-05-23 17:33:44,421 DeMo.train INFO: CMC curve, Rank-1  :78.5%
+2025-05-23 17:33:44,421 DeMo.train INFO: CMC curve, Rank-5  :84.2%
+2025-05-23 17:33:44,421 DeMo.train INFO: CMC curve, Rank-10 :88.6%
+2025-05-23 17:33:44,421 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:33:44,474 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:33:44,474 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:33:44,474 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:34:05,443 DeMo.train INFO: Validation Results - Epoch: 23
+2025-05-23 17:34:05,443 DeMo.train INFO: mAP: 73.1%
+2025-05-23 17:34:05,443 DeMo.train INFO: CMC curve, Rank-1  :76.8%
+2025-05-23 17:34:05,443 DeMo.train INFO: CMC curve, Rank-5  :81.6%
+2025-05-23 17:34:05,443 DeMo.train INFO: CMC curve, Rank-10 :83.7%
+2025-05-23 17:34:05,443 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:34:05,445 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:34:05,445 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:34:05,445 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:34:26,506 DeMo.train INFO: Validation Results - Epoch: 23
+2025-05-23 17:34:26,507 DeMo.train INFO: mAP: 76.3%
+2025-05-23 17:34:26,507 DeMo.train INFO: CMC curve, Rank-1  :78.6%
+2025-05-23 17:34:26,507 DeMo.train INFO: CMC curve, Rank-5  :84.0%
+2025-05-23 17:34:26,507 DeMo.train INFO: CMC curve, Rank-10 :87.7%
+2025-05-23 17:34:26,507 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:34:26,509 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:34:26,510 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:34:26,510 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:34:26,510 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:34:26,510 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:34:26,510 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:34:33,642 DeMo.train INFO: Epoch[24] Iteration[10/54] Loss: 0.464, Acc: 1.000, Base Lr: 1.86e-04
+2025-05-23 17:34:39,984 DeMo.train INFO: Epoch[24] Iteration[20/54] Loss: 0.463, Acc: 1.000, Base Lr: 1.86e-04
+2025-05-23 17:34:46,180 DeMo.train INFO: Epoch[24] Iteration[30/54] Loss: 0.461, Acc: 1.000, Base Lr: 1.86e-04
+2025-05-23 17:34:52,464 DeMo.train INFO: Epoch[24] Iteration[40/54] Loss: 0.462, Acc: 1.000, Base Lr: 1.86e-04
+2025-05-23 17:34:58,709 DeMo.train INFO: Epoch[24] Iteration[50/54] Loss: 0.461, Acc: 1.000, Base Lr: 1.86e-04
+2025-05-23 17:35:00,725 DeMo.train INFO: Epoch 24 done. Time per batch: 0.646[s] Speed: 99.1[samples/s]
+2025-05-23 17:35:00,728 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:35:00,728 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:35:00,728 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:35:21,914 DeMo.train INFO: Validation Results - Epoch: 24
+2025-05-23 17:35:21,915 DeMo.train INFO: mAP: 76.0%
+2025-05-23 17:35:21,915 DeMo.train INFO: CMC curve, Rank-1  :78.5%
+2025-05-23 17:35:21,915 DeMo.train INFO: CMC curve, Rank-5  :84.1%
+2025-05-23 17:35:21,915 DeMo.train INFO: CMC curve, Rank-10 :88.5%
+2025-05-23 17:35:21,915 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:35:22,082 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:35:22,083 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:35:22,083 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:35:42,374 DeMo.train INFO: Validation Results - Epoch: 24
+2025-05-23 17:35:42,374 DeMo.train INFO: mAP: 72.0%
+2025-05-23 17:35:42,374 DeMo.train INFO: CMC curve, Rank-1  :75.4%
+2025-05-23 17:35:42,374 DeMo.train INFO: CMC curve, Rank-5  :80.7%
+2025-05-23 17:35:42,374 DeMo.train INFO: CMC curve, Rank-10 :83.5%
+2025-05-23 17:35:42,374 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:35:42,380 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:35:42,380 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:35:42,380 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:36:01,379 DeMo.train INFO: Validation Results - Epoch: 24
+2025-05-23 17:36:01,379 DeMo.train INFO: mAP: 76.1%
+2025-05-23 17:36:01,379 DeMo.train INFO: CMC curve, Rank-1  :78.7%
+2025-05-23 17:36:01,379 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 17:36:01,380 DeMo.train INFO: CMC curve, Rank-10 :87.4%
+2025-05-23 17:36:01,380 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:36:01,382 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:36:01,382 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:36:01,382 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:36:01,382 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:36:01,382 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:36:01,382 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:36:08,559 DeMo.train INFO: Epoch[25] Iteration[10/54] Loss: 0.465, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-23 17:36:14,801 DeMo.train INFO: Epoch[25] Iteration[20/54] Loss: 0.464, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-23 17:36:21,073 DeMo.train INFO: Epoch[25] Iteration[30/54] Loss: 0.462, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-23 17:36:27,288 DeMo.train INFO: Epoch[25] Iteration[40/54] Loss: 0.462, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-23 17:36:33,588 DeMo.train INFO: Epoch[25] Iteration[50/54] Loss: 0.462, Acc: 1.000, Base Lr: 1.75e-04
+2025-05-23 17:36:35,567 DeMo.train INFO: Epoch 25 done. Time per batch: 0.645[s] Speed: 99.2[samples/s]
+2025-05-23 17:36:35,569 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:36:35,569 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:36:35,569 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:36:56,747 DeMo.train INFO: Validation Results - Epoch: 25
+2025-05-23 17:36:56,747 DeMo.train INFO: mAP: 76.0%
+2025-05-23 17:36:56,748 DeMo.train INFO: CMC curve, Rank-1  :78.2%
+2025-05-23 17:36:56,748 DeMo.train INFO: CMC curve, Rank-5  :84.3%
+2025-05-23 17:36:56,748 DeMo.train INFO: CMC curve, Rank-10 :89.0%
+2025-05-23 17:36:56,748 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:36:57,804 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:36:57,805 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:36:57,805 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:37:18,829 DeMo.train INFO: Validation Results - Epoch: 25
+2025-05-23 17:37:18,829 DeMo.train INFO: mAP: 72.8%
+2025-05-23 17:37:18,829 DeMo.train INFO: CMC curve, Rank-1  :75.4%
+2025-05-23 17:37:18,829 DeMo.train INFO: CMC curve, Rank-5  :81.2%
+2025-05-23 17:37:18,829 DeMo.train INFO: CMC curve, Rank-10 :84.2%
+2025-05-23 17:37:18,829 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:37:18,831 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:37:18,831 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:37:18,831 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:37:39,785 DeMo.train INFO: Validation Results - Epoch: 25
+2025-05-23 17:37:39,785 DeMo.train INFO: mAP: 76.3%
+2025-05-23 17:37:39,785 DeMo.train INFO: CMC curve, Rank-1  :78.7%
+2025-05-23 17:37:39,785 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 17:37:39,785 DeMo.train INFO: CMC curve, Rank-10 :89.0%
+2025-05-23 17:37:39,785 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:37:39,788 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:37:39,788 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:37:39,788 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:37:39,788 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:37:39,788 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:37:39,788 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:37:45,182 DeMo.train INFO: Epoch[26] Iteration[10/54] Loss: 0.461, Acc: 1.000, Base Lr: 1.64e-04
+2025-05-23 17:37:50,866 DeMo.train INFO: Epoch[26] Iteration[20/54] Loss: 0.463, Acc: 1.000, Base Lr: 1.64e-04
+2025-05-23 17:37:57,125 DeMo.train INFO: Epoch[26] Iteration[30/54] Loss: 0.464, Acc: 1.000, Base Lr: 1.64e-04
+2025-05-23 17:38:03,396 DeMo.train INFO: Epoch[26] Iteration[40/54] Loss: 0.463, Acc: 1.000, Base Lr: 1.64e-04
+2025-05-23 17:38:09,655 DeMo.train INFO: Epoch[26] Iteration[50/54] Loss: 0.464, Acc: 1.000, Base Lr: 1.64e-04
+2025-05-23 17:38:10,994 DeMo.train INFO: Epoch 26 done. Time per batch: 0.600[s] Speed: 106.6[samples/s]
+2025-05-23 17:38:10,996 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:38:10,997 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:38:10,997 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:38:32,033 DeMo.train INFO: Validation Results - Epoch: 26
+2025-05-23 17:38:32,034 DeMo.train INFO: mAP: 75.6%
+2025-05-23 17:38:32,034 DeMo.train INFO: CMC curve, Rank-1  :78.3%
+2025-05-23 17:38:32,034 DeMo.train INFO: CMC curve, Rank-5  :84.3%
+2025-05-23 17:38:32,034 DeMo.train INFO: CMC curve, Rank-10 :88.8%
+2025-05-23 17:38:32,034 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:38:32,099 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:38:32,099 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:38:32,099 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:38:53,899 DeMo.train INFO: Validation Results - Epoch: 26
+2025-05-23 17:38:53,899 DeMo.train INFO: mAP: 73.2%
+2025-05-23 17:38:53,899 DeMo.train INFO: CMC curve, Rank-1  :77.0%
+2025-05-23 17:38:53,899 DeMo.train INFO: CMC curve, Rank-5  :82.7%
+2025-05-23 17:38:53,899 DeMo.train INFO: CMC curve, Rank-10 :85.6%
+2025-05-23 17:38:53,899 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:38:53,904 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:38:53,904 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:38:53,904 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:39:14,988 DeMo.train INFO: Validation Results - Epoch: 26
+2025-05-23 17:39:14,988 DeMo.train INFO: mAP: 76.1%
+2025-05-23 17:39:14,988 DeMo.train INFO: CMC curve, Rank-1  :79.1%
+2025-05-23 17:39:14,988 DeMo.train INFO: CMC curve, Rank-5  :85.3%
+2025-05-23 17:39:14,988 DeMo.train INFO: CMC curve, Rank-10 :88.8%
+2025-05-23 17:39:14,988 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:39:14,990 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:39:14,990 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:39:14,991 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:39:14,991 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:39:14,991 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:39:14,991 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:39:23,084 DeMo.train INFO: Epoch[27] Iteration[10/54] Loss: 0.460, Acc: 1.000, Base Lr: 1.53e-04
+2025-05-23 17:39:29,348 DeMo.train INFO: Epoch[27] Iteration[20/54] Loss: 0.461, Acc: 0.999, Base Lr: 1.53e-04
+2025-05-23 17:39:35,597 DeMo.train INFO: Epoch[27] Iteration[30/54] Loss: 0.463, Acc: 0.999, Base Lr: 1.53e-04
+2025-05-23 17:39:41,892 DeMo.train INFO: Epoch[27] Iteration[40/54] Loss: 0.463, Acc: 1.000, Base Lr: 1.53e-04
+2025-05-23 17:39:45,837 DeMo.train INFO: Epoch[27] Iteration[50/54] Loss: 0.462, Acc: 1.000, Base Lr: 1.53e-04
+2025-05-23 17:39:46,904 DeMo.train INFO: Epoch 27 done. Time per batch: 0.602[s] Speed: 106.3[samples/s]
+2025-05-23 17:39:46,907 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:39:46,907 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:39:46,907 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:40:03,081 DeMo.train INFO: Validation Results - Epoch: 27
+2025-05-23 17:40:03,081 DeMo.train INFO: mAP: 75.4%
+2025-05-23 17:40:03,081 DeMo.train INFO: CMC curve, Rank-1  :78.5%
+2025-05-23 17:40:03,081 DeMo.train INFO: CMC curve, Rank-5  :84.1%
+2025-05-23 17:40:03,081 DeMo.train INFO: CMC curve, Rank-10 :88.3%
+2025-05-23 17:40:03,081 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:40:04,368 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:40:04,368 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:40:04,369 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:40:23,290 DeMo.train INFO: Validation Results - Epoch: 27
+2025-05-23 17:40:23,290 DeMo.train INFO: mAP: 73.4%
+2025-05-23 17:40:23,290 DeMo.train INFO: CMC curve, Rank-1  :76.4%
+2025-05-23 17:40:23,290 DeMo.train INFO: CMC curve, Rank-5  :83.0%
+2025-05-23 17:40:23,290 DeMo.train INFO: CMC curve, Rank-10 :85.2%
+2025-05-23 17:40:23,291 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:40:23,292 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:40:23,292 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:40:23,292 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:40:42,758 DeMo.train INFO: Validation Results - Epoch: 27
+2025-05-23 17:40:42,759 DeMo.train INFO: mAP: 75.9%
+2025-05-23 17:40:42,759 DeMo.train INFO: CMC curve, Rank-1  :79.4%
+2025-05-23 17:40:42,759 DeMo.train INFO: CMC curve, Rank-5  :85.4%
+2025-05-23 17:40:42,759 DeMo.train INFO: CMC curve, Rank-10 :89.0%
+2025-05-23 17:40:42,759 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:40:42,761 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:40:42,762 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:40:42,762 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:40:42,762 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:40:42,762 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:40:42,762 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:40:50,346 DeMo.train INFO: Epoch[28] Iteration[10/54] Loss: 0.469, Acc: 1.000, Base Lr: 1.42e-04
+2025-05-23 17:40:56,130 DeMo.train INFO: Epoch[28] Iteration[20/54] Loss: 0.466, Acc: 1.000, Base Lr: 1.42e-04
+2025-05-23 17:41:01,861 DeMo.train INFO: Epoch[28] Iteration[30/54] Loss: 0.465, Acc: 1.000, Base Lr: 1.42e-04
+2025-05-23 17:41:07,926 DeMo.train INFO: Epoch[28] Iteration[40/54] Loss: 0.464, Acc: 1.000, Base Lr: 1.42e-04
+2025-05-23 17:41:12,924 DeMo.train INFO: Epoch[28] Iteration[50/54] Loss: 0.464, Acc: 1.000, Base Lr: 1.42e-04
+2025-05-23 17:41:14,929 DeMo.train INFO: Epoch 28 done. Time per batch: 0.607[s] Speed: 105.4[samples/s]
+2025-05-23 17:41:14,932 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:41:14,932 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:41:14,932 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:41:36,146 DeMo.train INFO: Validation Results - Epoch: 28
+2025-05-23 17:41:36,146 DeMo.train INFO: mAP: 75.0%
+2025-05-23 17:41:36,147 DeMo.train INFO: CMC curve, Rank-1  :78.6%
+2025-05-23 17:41:36,147 DeMo.train INFO: CMC curve, Rank-5  :83.4%
+2025-05-23 17:41:36,147 DeMo.train INFO: CMC curve, Rank-10 :87.8%
+2025-05-23 17:41:36,147 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:41:36,201 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:41:36,201 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:41:36,201 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:41:57,157 DeMo.train INFO: Validation Results - Epoch: 28
+2025-05-23 17:41:57,158 DeMo.train INFO: mAP: 71.4%
+2025-05-23 17:41:57,158 DeMo.train INFO: CMC curve, Rank-1  :74.3%
+2025-05-23 17:41:57,158 DeMo.train INFO: CMC curve, Rank-5  :80.4%
+2025-05-23 17:41:57,158 DeMo.train INFO: CMC curve, Rank-10 :83.6%
+2025-05-23 17:41:57,158 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:41:57,163 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:41:57,163 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:41:57,163 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:42:18,014 DeMo.train INFO: Validation Results - Epoch: 28
+2025-05-23 17:42:18,014 DeMo.train INFO: mAP: 75.2%
+2025-05-23 17:42:18,014 DeMo.train INFO: CMC curve, Rank-1  :78.6%
+2025-05-23 17:42:18,014 DeMo.train INFO: CMC curve, Rank-5  :83.7%
+2025-05-23 17:42:18,014 DeMo.train INFO: CMC curve, Rank-10 :87.7%
+2025-05-23 17:42:18,014 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:42:18,016 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:42:18,016 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:42:18,017 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:42:18,017 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:42:18,017 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:42:18,017 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:42:25,138 DeMo.train INFO: Epoch[29] Iteration[10/54] Loss: 0.457, Acc: 1.000, Base Lr: 1.32e-04
+2025-05-23 17:42:31,857 DeMo.train INFO: Epoch[29] Iteration[20/54] Loss: 0.462, Acc: 1.000, Base Lr: 1.32e-04
+2025-05-23 17:42:38,104 DeMo.train INFO: Epoch[29] Iteration[30/54] Loss: 0.462, Acc: 1.000, Base Lr: 1.32e-04
+2025-05-23 17:42:44,408 DeMo.train INFO: Epoch[29] Iteration[40/54] Loss: 0.466, Acc: 1.000, Base Lr: 1.32e-04
+2025-05-23 17:42:50,644 DeMo.train INFO: Epoch[29] Iteration[50/54] Loss: 0.466, Acc: 1.000, Base Lr: 1.32e-04
+2025-05-23 17:42:52,644 DeMo.train INFO: Epoch 29 done. Time per batch: 0.653[s] Speed: 98.0[samples/s]
+2025-05-23 17:42:52,647 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:42:52,647 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:42:52,647 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:43:11,745 DeMo.train INFO: Validation Results - Epoch: 29
+2025-05-23 17:43:11,745 DeMo.train INFO: mAP: 73.9%
+2025-05-23 17:43:11,745 DeMo.train INFO: CMC curve, Rank-1  :76.9%
+2025-05-23 17:43:11,746 DeMo.train INFO: CMC curve, Rank-5  :82.4%
+2025-05-23 17:43:11,746 DeMo.train INFO: CMC curve, Rank-10 :86.6%
+2025-05-23 17:43:11,746 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:43:11,802 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:43:11,803 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:43:11,803 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:43:32,955 DeMo.train INFO: Validation Results - Epoch: 29
+2025-05-23 17:43:32,955 DeMo.train INFO: mAP: 71.5%
+2025-05-23 17:43:32,955 DeMo.train INFO: CMC curve, Rank-1  :73.3%
+2025-05-23 17:43:32,955 DeMo.train INFO: CMC curve, Rank-5  :79.2%
+2025-05-23 17:43:32,955 DeMo.train INFO: CMC curve, Rank-10 :83.1%
+2025-05-23 17:43:32,955 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:43:32,957 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:43:32,957 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:43:32,957 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:43:54,060 DeMo.train INFO: Validation Results - Epoch: 29
+2025-05-23 17:43:54,060 DeMo.train INFO: mAP: 74.2%
+2025-05-23 17:43:54,060 DeMo.train INFO: CMC curve, Rank-1  :77.0%
+2025-05-23 17:43:54,060 DeMo.train INFO: CMC curve, Rank-5  :82.2%
+2025-05-23 17:43:54,060 DeMo.train INFO: CMC curve, Rank-10 :86.5%
+2025-05-23 17:43:54,060 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:43:54,063 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:43:54,063 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:43:54,063 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:43:54,063 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:43:54,063 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:43:54,063 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:44:02,536 DeMo.train INFO: Epoch[30] Iteration[10/54] Loss: 0.469, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-23 17:44:08,783 DeMo.train INFO: Epoch[30] Iteration[20/54] Loss: 0.467, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-23 17:44:15,047 DeMo.train INFO: Epoch[30] Iteration[30/54] Loss: 0.467, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-23 17:44:21,335 DeMo.train INFO: Epoch[30] Iteration[40/54] Loss: 0.465, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-23 17:44:27,755 DeMo.train INFO: Epoch[30] Iteration[50/54] Loss: 0.465, Acc: 1.000, Base Lr: 1.21e-04
+2025-05-23 17:44:29,718 DeMo.train INFO: Epoch 30 done. Time per batch: 0.673[s] Speed: 95.1[samples/s]
+2025-05-23 17:44:29,721 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:44:29,721 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:44:29,721 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:44:50,704 DeMo.train INFO: Validation Results - Epoch: 30
+2025-05-23 17:44:50,705 DeMo.train INFO: mAP: 74.8%
+2025-05-23 17:44:50,705 DeMo.train INFO: CMC curve, Rank-1  :78.5%
+2025-05-23 17:44:50,705 DeMo.train INFO: CMC curve, Rank-5  :82.9%
+2025-05-23 17:44:50,705 DeMo.train INFO: CMC curve, Rank-10 :86.6%
+2025-05-23 17:44:50,705 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:44:50,759 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:44:50,759 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:44:50,759 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:45:11,192 DeMo.train INFO: Validation Results - Epoch: 30
+2025-05-23 17:45:11,192 DeMo.train INFO: mAP: 73.0%
+2025-05-23 17:45:11,192 DeMo.train INFO: CMC curve, Rank-1  :76.1%
+2025-05-23 17:45:11,193 DeMo.train INFO: CMC curve, Rank-5  :81.5%
+2025-05-23 17:45:11,193 DeMo.train INFO: CMC curve, Rank-10 :83.3%
+2025-05-23 17:45:11,193 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:45:11,197 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:45:11,197 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:45:11,197 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:45:30,461 DeMo.train INFO: Validation Results - Epoch: 30
+2025-05-23 17:45:30,461 DeMo.train INFO: mAP: 75.3%
+2025-05-23 17:45:30,462 DeMo.train INFO: CMC curve, Rank-1  :78.2%
+2025-05-23 17:45:30,462 DeMo.train INFO: CMC curve, Rank-5  :83.6%
+2025-05-23 17:45:30,462 DeMo.train INFO: CMC curve, Rank-10 :87.6%
+2025-05-23 17:45:30,462 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:45:30,464 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:45:30,464 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:45:30,464 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:45:30,464 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:45:30,464 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:45:30,464 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:45:37,546 DeMo.train INFO: Epoch[31] Iteration[10/54] Loss: 0.465, Acc: 1.000, Base Lr: 1.11e-04
+2025-05-23 17:45:43,790 DeMo.train INFO: Epoch[31] Iteration[20/54] Loss: 0.460, Acc: 1.000, Base Lr: 1.11e-04
+2025-05-23 17:45:50,058 DeMo.train INFO: Epoch[31] Iteration[30/54] Loss: 0.460, Acc: 1.000, Base Lr: 1.11e-04
+2025-05-23 17:45:56,271 DeMo.train INFO: Epoch[31] Iteration[40/54] Loss: 0.459, Acc: 1.000, Base Lr: 1.11e-04
+2025-05-23 17:46:02,553 DeMo.train INFO: Epoch[31] Iteration[50/54] Loss: 0.459, Acc: 1.000, Base Lr: 1.11e-04
+2025-05-23 17:46:04,503 DeMo.train INFO: Epoch 31 done. Time per batch: 0.642[s] Speed: 99.7[samples/s]
+2025-05-23 17:46:04,506 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:46:04,506 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:46:04,506 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:46:25,532 DeMo.train INFO: Validation Results - Epoch: 31
+2025-05-23 17:46:25,532 DeMo.train INFO: mAP: 75.0%
+2025-05-23 17:46:25,532 DeMo.train INFO: CMC curve, Rank-1  :78.8%
+2025-05-23 17:46:25,532 DeMo.train INFO: CMC curve, Rank-5  :83.3%
+2025-05-23 17:46:25,533 DeMo.train INFO: CMC curve, Rank-10 :87.4%
+2025-05-23 17:46:25,533 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:46:25,587 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:46:25,587 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:46:25,587 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:46:46,439 DeMo.train INFO: Validation Results - Epoch: 31
+2025-05-23 17:46:46,439 DeMo.train INFO: mAP: 72.0%
+2025-05-23 17:46:46,439 DeMo.train INFO: CMC curve, Rank-1  :75.4%
+2025-05-23 17:46:46,439 DeMo.train INFO: CMC curve, Rank-5  :81.1%
+2025-05-23 17:46:46,439 DeMo.train INFO: CMC curve, Rank-10 :83.6%
+2025-05-23 17:46:46,440 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:46:46,441 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:46:46,441 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:46:46,441 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:47:07,322 DeMo.train INFO: Validation Results - Epoch: 31
+2025-05-23 17:47:07,322 DeMo.train INFO: mAP: 75.5%
+2025-05-23 17:47:07,322 DeMo.train INFO: CMC curve, Rank-1  :78.6%
+2025-05-23 17:47:07,322 DeMo.train INFO: CMC curve, Rank-5  :84.0%
+2025-05-23 17:47:07,322 DeMo.train INFO: CMC curve, Rank-10 :87.6%
+2025-05-23 17:47:07,322 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:47:07,325 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:47:07,325 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:47:07,325 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:47:07,325 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:47:07,325 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:47:07,325 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:47:13,571 DeMo.train INFO: Epoch[32] Iteration[10/54] Loss: 0.455, Acc: 1.000, Base Lr: 1.01e-04
+2025-05-23 17:47:16,769 DeMo.train INFO: Epoch[32] Iteration[20/54] Loss: 0.458, Acc: 1.000, Base Lr: 1.01e-04
+2025-05-23 17:47:19,952 DeMo.train INFO: Epoch[32] Iteration[30/54] Loss: 0.458, Acc: 1.000, Base Lr: 1.01e-04
+2025-05-23 17:47:24,837 DeMo.train INFO: Epoch[32] Iteration[40/54] Loss: 0.458, Acc: 1.000, Base Lr: 1.01e-04
+2025-05-23 17:47:30,602 DeMo.train INFO: Epoch[32] Iteration[50/54] Loss: 0.459, Acc: 1.000, Base Lr: 1.01e-04
+2025-05-23 17:47:32,494 DeMo.train INFO: Epoch 32 done. Time per batch: 0.475[s] Speed: 134.8[samples/s]
+2025-05-23 17:47:32,496 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:47:32,496 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:47:32,496 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:47:51,421 DeMo.train INFO: Validation Results - Epoch: 32
+2025-05-23 17:47:51,422 DeMo.train INFO: mAP: 75.4%
+2025-05-23 17:47:51,422 DeMo.train INFO: CMC curve, Rank-1  :78.8%
+2025-05-23 17:47:51,422 DeMo.train INFO: CMC curve, Rank-5  :83.6%
+2025-05-23 17:47:51,422 DeMo.train INFO: CMC curve, Rank-10 :88.4%
+2025-05-23 17:47:51,422 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:47:51,792 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:47:51,792 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:47:51,792 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:48:10,576 DeMo.train INFO: Validation Results - Epoch: 32
+2025-05-23 17:48:10,577 DeMo.train INFO: mAP: 72.0%
+2025-05-23 17:48:10,577 DeMo.train INFO: CMC curve, Rank-1  :77.2%
+2025-05-23 17:48:10,577 DeMo.train INFO: CMC curve, Rank-5  :81.6%
+2025-05-23 17:48:10,577 DeMo.train INFO: CMC curve, Rank-10 :84.2%
+2025-05-23 17:48:10,577 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:48:10,579 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:48:10,579 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:48:10,579 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:48:29,890 DeMo.train INFO: Validation Results - Epoch: 32
+2025-05-23 17:48:29,891 DeMo.train INFO: mAP: 76.0%
+2025-05-23 17:48:29,891 DeMo.train INFO: CMC curve, Rank-1  :79.9%
+2025-05-23 17:48:29,891 DeMo.train INFO: CMC curve, Rank-5  :84.3%
+2025-05-23 17:48:29,891 DeMo.train INFO: CMC curve, Rank-10 :88.2%
+2025-05-23 17:48:29,891 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:48:29,893 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:48:29,893 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:48:29,893 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:48:29,893 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:48:29,893 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:48:29,893 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:48:36,695 DeMo.train INFO: Epoch[33] Iteration[10/54] Loss: 0.460, Acc: 1.000, Base Lr: 9.10e-05
+2025-05-23 17:48:41,473 DeMo.train INFO: Epoch[33] Iteration[20/54] Loss: 0.460, Acc: 1.000, Base Lr: 9.10e-05
+2025-05-23 17:48:47,468 DeMo.train INFO: Epoch[33] Iteration[30/54] Loss: 0.458, Acc: 1.000, Base Lr: 9.10e-05
+2025-05-23 17:48:53,734 DeMo.train INFO: Epoch[33] Iteration[40/54] Loss: 0.458, Acc: 1.000, Base Lr: 9.10e-05
+2025-05-23 17:49:00,075 DeMo.train INFO: Epoch[33] Iteration[50/54] Loss: 0.457, Acc: 1.000, Base Lr: 9.10e-05
+2025-05-23 17:49:02,047 DeMo.train INFO: Epoch 33 done. Time per batch: 0.607[s] Speed: 105.5[samples/s]
+2025-05-23 17:49:02,049 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:49:02,049 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:49:02,049 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:49:23,116 DeMo.train INFO: Validation Results - Epoch: 33
+2025-05-23 17:49:23,116 DeMo.train INFO: mAP: 75.8%
+2025-05-23 17:49:23,116 DeMo.train INFO: CMC curve, Rank-1  :78.8%
+2025-05-23 17:49:23,117 DeMo.train INFO: CMC curve, Rank-5  :84.0%
+2025-05-23 17:49:23,117 DeMo.train INFO: CMC curve, Rank-10 :88.9%
+2025-05-23 17:49:23,117 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:49:23,625 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:49:23,625 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:49:23,625 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:49:44,511 DeMo.train INFO: Validation Results - Epoch: 33
+2025-05-23 17:49:44,511 DeMo.train INFO: mAP: 71.0%
+2025-05-23 17:49:44,511 DeMo.train INFO: CMC curve, Rank-1  :75.6%
+2025-05-23 17:49:44,511 DeMo.train INFO: CMC curve, Rank-5  :80.9%
+2025-05-23 17:49:44,511 DeMo.train INFO: CMC curve, Rank-10 :83.3%
+2025-05-23 17:49:44,512 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:49:44,516 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:49:44,516 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:49:44,516 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:50:05,496 DeMo.train INFO: Validation Results - Epoch: 33
+2025-05-23 17:50:05,497 DeMo.train INFO: mAP: 76.2%
+2025-05-23 17:50:05,497 DeMo.train INFO: CMC curve, Rank-1  :79.3%
+2025-05-23 17:50:05,497 DeMo.train INFO: CMC curve, Rank-5  :84.4%
+2025-05-23 17:50:05,497 DeMo.train INFO: CMC curve, Rank-10 :87.9%
+2025-05-23 17:50:05,497 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:50:05,499 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:50:05,499 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:50:05,499 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:50:05,499 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:50:05,499 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:50:05,499 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:50:13,447 DeMo.train INFO: Epoch[34] Iteration[10/54] Loss: 0.462, Acc: 1.000, Base Lr: 8.15e-05
+2025-05-23 17:50:19,707 DeMo.train INFO: Epoch[34] Iteration[20/54] Loss: 0.460, Acc: 1.000, Base Lr: 8.15e-05
+2025-05-23 17:50:25,963 DeMo.train INFO: Epoch[34] Iteration[30/54] Loss: 0.457, Acc: 1.000, Base Lr: 8.15e-05
+2025-05-23 17:50:32,245 DeMo.train INFO: Epoch[34] Iteration[40/54] Loss: 0.457, Acc: 1.000, Base Lr: 8.15e-05
+2025-05-23 17:50:38,364 DeMo.train INFO: Epoch[34] Iteration[50/54] Loss: 0.457, Acc: 1.000, Base Lr: 8.15e-05
+2025-05-23 17:50:39,443 DeMo.train INFO: Epoch 34 done. Time per batch: 0.640[s] Speed: 99.9[samples/s]
+2025-05-23 17:50:39,446 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:50:39,446 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:50:39,446 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:50:59,679 DeMo.train INFO: Validation Results - Epoch: 34
+2025-05-23 17:50:59,680 DeMo.train INFO: mAP: 75.6%
+2025-05-23 17:50:59,680 DeMo.train INFO: CMC curve, Rank-1  :78.9%
+2025-05-23 17:50:59,680 DeMo.train INFO: CMC curve, Rank-5  :83.9%
+2025-05-23 17:50:59,680 DeMo.train INFO: CMC curve, Rank-10 :88.3%
+2025-05-23 17:50:59,680 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:51:00,584 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:51:00,585 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:51:00,585 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:51:21,445 DeMo.train INFO: Validation Results - Epoch: 34
+2025-05-23 17:51:21,445 DeMo.train INFO: mAP: 70.9%
+2025-05-23 17:51:21,445 DeMo.train INFO: CMC curve, Rank-1  :74.4%
+2025-05-23 17:51:21,446 DeMo.train INFO: CMC curve, Rank-5  :80.0%
+2025-05-23 17:51:21,446 DeMo.train INFO: CMC curve, Rank-10 :82.5%
+2025-05-23 17:51:21,446 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:51:21,447 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:51:21,448 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:51:21,448 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:51:42,402 DeMo.train INFO: Validation Results - Epoch: 34
+2025-05-23 17:51:42,402 DeMo.train INFO: mAP: 76.1%
+2025-05-23 17:51:42,403 DeMo.train INFO: CMC curve, Rank-1  :78.8%
+2025-05-23 17:51:42,403 DeMo.train INFO: CMC curve, Rank-5  :84.3%
+2025-05-23 17:51:42,403 DeMo.train INFO: CMC curve, Rank-10 :87.7%
+2025-05-23 17:51:42,403 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:51:42,405 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:51:42,405 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:51:42,405 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:51:42,405 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:51:42,405 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:51:42,405 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:51:50,516 DeMo.train INFO: Epoch[35] Iteration[10/54] Loss: 0.454, Acc: 1.000, Base Lr: 7.24e-05
+2025-05-23 17:51:56,802 DeMo.train INFO: Epoch[35] Iteration[20/54] Loss: 0.455, Acc: 0.999, Base Lr: 7.24e-05
+2025-05-23 17:52:02,993 DeMo.train INFO: Epoch[35] Iteration[30/54] Loss: 0.455, Acc: 0.999, Base Lr: 7.24e-05
+2025-05-23 17:52:09,281 DeMo.train INFO: Epoch[35] Iteration[40/54] Loss: 0.455, Acc: 1.000, Base Lr: 7.24e-05
+2025-05-23 17:52:15,521 DeMo.train INFO: Epoch[35] Iteration[50/54] Loss: 0.455, Acc: 1.000, Base Lr: 7.24e-05
+2025-05-23 17:52:17,516 DeMo.train INFO: Epoch 35 done. Time per batch: 0.662[s] Speed: 96.6[samples/s]
+2025-05-23 17:52:17,518 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:52:17,518 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:52:17,518 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:52:38,540 DeMo.train INFO: Validation Results - Epoch: 35
+2025-05-23 17:52:38,540 DeMo.train INFO: mAP: 75.7%
+2025-05-23 17:52:38,540 DeMo.train INFO: CMC curve, Rank-1  :78.7%
+2025-05-23 17:52:38,540 DeMo.train INFO: CMC curve, Rank-5  :83.7%
+2025-05-23 17:52:38,540 DeMo.train INFO: CMC curve, Rank-10 :88.3%
+2025-05-23 17:52:38,540 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:52:38,594 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:52:38,594 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:52:38,594 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:52:57,289 DeMo.train INFO: Validation Results - Epoch: 35
+2025-05-23 17:52:57,289 DeMo.train INFO: mAP: 72.2%
+2025-05-23 17:52:57,289 DeMo.train INFO: CMC curve, Rank-1  :75.6%
+2025-05-23 17:52:57,289 DeMo.train INFO: CMC curve, Rank-5  :81.3%
+2025-05-23 17:52:57,290 DeMo.train INFO: CMC curve, Rank-10 :83.5%
+2025-05-23 17:52:57,290 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:52:57,295 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:52:57,295 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:52:57,295 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:53:18,095 DeMo.train INFO: Validation Results - Epoch: 35
+2025-05-23 17:53:18,096 DeMo.train INFO: mAP: 76.2%
+2025-05-23 17:53:18,096 DeMo.train INFO: CMC curve, Rank-1  :79.3%
+2025-05-23 17:53:18,096 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 17:53:18,096 DeMo.train INFO: CMC curve, Rank-10 :88.2%
+2025-05-23 17:53:18,096 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:53:18,099 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:53:18,099 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:53:18,099 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:53:18,099 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:53:18,099 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:53:18,099 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:53:25,992 DeMo.train INFO: Epoch[36] Iteration[10/54] Loss: 0.454, Acc: 1.000, Base Lr: 6.37e-05
+2025-05-23 17:53:32,296 DeMo.train INFO: Epoch[36] Iteration[20/54] Loss: 0.454, Acc: 1.000, Base Lr: 6.37e-05
+2025-05-23 17:53:38,509 DeMo.train INFO: Epoch[36] Iteration[30/54] Loss: 0.453, Acc: 1.000, Base Lr: 6.37e-05
+2025-05-23 17:53:44,785 DeMo.train INFO: Epoch[36] Iteration[40/54] Loss: 0.452, Acc: 1.000, Base Lr: 6.37e-05
+2025-05-23 17:53:50,980 DeMo.train INFO: Epoch[36] Iteration[50/54] Loss: 0.452, Acc: 1.000, Base Lr: 6.37e-05
+2025-05-23 17:53:52,998 DeMo.train INFO: Epoch 36 done. Time per batch: 0.658[s] Speed: 97.2[samples/s]
+2025-05-23 17:53:53,000 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:53:53,000 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:53:53,000 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:54:13,706 DeMo.train INFO: Validation Results - Epoch: 36
+2025-05-23 17:54:13,706 DeMo.train INFO: mAP: 75.6%
+2025-05-23 17:54:13,706 DeMo.train INFO: CMC curve, Rank-1  :78.5%
+2025-05-23 17:54:13,706 DeMo.train INFO: CMC curve, Rank-5  :83.7%
+2025-05-23 17:54:13,706 DeMo.train INFO: CMC curve, Rank-10 :88.2%
+2025-05-23 17:54:13,706 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:54:13,773 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:54:13,773 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:54:13,773 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:54:34,646 DeMo.train INFO: Validation Results - Epoch: 36
+2025-05-23 17:54:34,646 DeMo.train INFO: mAP: 71.4%
+2025-05-23 17:54:34,646 DeMo.train INFO: CMC curve, Rank-1  :74.5%
+2025-05-23 17:54:34,646 DeMo.train INFO: CMC curve, Rank-5  :80.1%
+2025-05-23 17:54:34,646 DeMo.train INFO: CMC curve, Rank-10 :82.1%
+2025-05-23 17:54:34,646 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:54:34,651 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:54:34,651 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:54:34,651 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:54:47,721 DeMo.train INFO: Validation Results - Epoch: 36
+2025-05-23 17:54:47,721 DeMo.train INFO: mAP: 76.0%
+2025-05-23 17:54:47,721 DeMo.train INFO: CMC curve, Rank-1  :79.1%
+2025-05-23 17:54:47,721 DeMo.train INFO: CMC curve, Rank-5  :84.1%
+2025-05-23 17:54:47,721 DeMo.train INFO: CMC curve, Rank-10 :87.9%
+2025-05-23 17:54:47,721 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:54:47,724 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:54:47,724 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:54:47,724 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:54:47,724 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:54:47,724 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:54:47,724 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:54:54,546 DeMo.train INFO: Epoch[37] Iteration[10/54] Loss: 0.460, Acc: 1.000, Base Lr: 5.55e-05
+2025-05-23 17:55:00,185 DeMo.train INFO: Epoch[37] Iteration[20/54] Loss: 0.458, Acc: 1.000, Base Lr: 5.55e-05
+2025-05-23 17:55:05,884 DeMo.train INFO: Epoch[37] Iteration[30/54] Loss: 0.455, Acc: 1.000, Base Lr: 5.55e-05
+2025-05-23 17:55:11,608 DeMo.train INFO: Epoch[37] Iteration[40/54] Loss: 0.454, Acc: 1.000, Base Lr: 5.55e-05
+2025-05-23 17:55:17,235 DeMo.train INFO: Epoch[37] Iteration[50/54] Loss: 0.454, Acc: 1.000, Base Lr: 5.55e-05
+2025-05-23 17:55:18,507 DeMo.train INFO: Epoch 37 done. Time per batch: 0.592[s] Speed: 108.1[samples/s]
+2025-05-23 17:55:18,510 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:55:18,510 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:55:18,510 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:55:37,488 DeMo.train INFO: Validation Results - Epoch: 37
+2025-05-23 17:55:37,488 DeMo.train INFO: mAP: 75.9%
+2025-05-23 17:55:37,488 DeMo.train INFO: CMC curve, Rank-1  :78.5%
+2025-05-23 17:55:37,489 DeMo.train INFO: CMC curve, Rank-5  :83.5%
+2025-05-23 17:55:37,489 DeMo.train INFO: CMC curve, Rank-10 :88.4%
+2025-05-23 17:55:37,489 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:55:37,544 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:55:37,545 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:55:37,545 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:55:56,374 DeMo.train INFO: Validation Results - Epoch: 37
+2025-05-23 17:55:56,374 DeMo.train INFO: mAP: 70.8%
+2025-05-23 17:55:56,374 DeMo.train INFO: CMC curve, Rank-1  :75.6%
+2025-05-23 17:55:56,375 DeMo.train INFO: CMC curve, Rank-5  :81.2%
+2025-05-23 17:55:56,375 DeMo.train INFO: CMC curve, Rank-10 :82.9%
+2025-05-23 17:55:56,375 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:55:56,376 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:55:56,376 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:55:56,377 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:56:15,209 DeMo.train INFO: Validation Results - Epoch: 37
+2025-05-23 17:56:15,209 DeMo.train INFO: mAP: 76.3%
+2025-05-23 17:56:15,209 DeMo.train INFO: CMC curve, Rank-1  :79.1%
+2025-05-23 17:56:15,209 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 17:56:15,209 DeMo.train INFO: CMC curve, Rank-10 :88.3%
+2025-05-23 17:56:15,209 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:56:15,211 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:56:15,211 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:56:15,211 DeMo.train INFO: Best Rank-1: 78.3%
+2025-05-23 17:56:15,212 DeMo.train INFO: Best Rank-5: 84.0%
+2025-05-23 17:56:15,212 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 17:56:15,212 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:56:24,108 DeMo.train INFO: Epoch[38] Iteration[10/54] Loss: 0.454, Acc: 1.000, Base Lr: 4.77e-05
+2025-05-23 17:56:30,366 DeMo.train INFO: Epoch[38] Iteration[20/54] Loss: 0.452, Acc: 1.000, Base Lr: 4.77e-05
+2025-05-23 17:56:36,651 DeMo.train INFO: Epoch[38] Iteration[30/54] Loss: 0.452, Acc: 1.000, Base Lr: 4.77e-05
+2025-05-23 17:56:42,866 DeMo.train INFO: Epoch[38] Iteration[40/54] Loss: 0.452, Acc: 1.000, Base Lr: 4.77e-05
+2025-05-23 17:56:49,163 DeMo.train INFO: Epoch[38] Iteration[50/54] Loss: 0.451, Acc: 1.000, Base Lr: 4.77e-05
+2025-05-23 17:56:51,088 DeMo.train INFO: Epoch 38 done. Time per batch: 0.677[s] Speed: 94.5[samples/s]
+2025-05-23 17:56:51,090 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:56:51,090 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:56:51,090 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:57:11,987 DeMo.train INFO: Validation Results - Epoch: 38
+2025-05-23 17:57:11,987 DeMo.train INFO: mAP: 75.8%
+2025-05-23 17:57:11,988 DeMo.train INFO: CMC curve, Rank-1  :78.3%
+2025-05-23 17:57:11,988 DeMo.train INFO: CMC curve, Rank-5  :83.5%
+2025-05-23 17:57:11,988 DeMo.train INFO: CMC curve, Rank-10 :88.4%
+2025-05-23 17:57:11,988 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:57:12,042 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:57:12,042 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:57:12,042 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:57:32,770 DeMo.train INFO: Validation Results - Epoch: 38
+2025-05-23 17:57:32,770 DeMo.train INFO: mAP: 71.8%
+2025-05-23 17:57:32,770 DeMo.train INFO: CMC curve, Rank-1  :76.0%
+2025-05-23 17:57:32,770 DeMo.train INFO: CMC curve, Rank-5  :80.9%
+2025-05-23 17:57:32,770 DeMo.train INFO: CMC curve, Rank-10 :83.7%
+2025-05-23 17:57:32,771 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:57:32,772 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:57:32,772 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:57:32,772 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:57:53,535 DeMo.train INFO: Validation Results - Epoch: 38
+2025-05-23 17:57:53,535 DeMo.train INFO: mAP: 76.4%
+2025-05-23 17:57:53,535 DeMo.train INFO: CMC curve, Rank-1  :79.5%
+2025-05-23 17:57:53,536 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 17:57:53,536 DeMo.train INFO: CMC curve, Rank-10 :88.4%
+2025-05-23 17:57:53,536 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:57:57,374 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:57:57,374 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:57:57,374 DeMo.train INFO: Best Rank-1: 79.5%
+2025-05-23 17:57:57,374 DeMo.train INFO: Best Rank-5: 84.6%
+2025-05-23 17:57:57,375 DeMo.train INFO: Best Rank-10: 88.4%
+2025-05-23 17:57:57,375 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:58:02,116 DeMo.train INFO: Epoch[39] Iteration[10/54] Loss: 0.453, Acc: 1.000, Base Lr: 4.05e-05
+2025-05-23 17:58:08,225 DeMo.train INFO: Epoch[39] Iteration[20/54] Loss: 0.454, Acc: 1.000, Base Lr: 4.05e-05
+2025-05-23 17:58:14,471 DeMo.train INFO: Epoch[39] Iteration[30/54] Loss: 0.453, Acc: 1.000, Base Lr: 4.05e-05
+2025-05-23 17:58:20,693 DeMo.train INFO: Epoch[39] Iteration[40/54] Loss: 0.453, Acc: 1.000, Base Lr: 4.05e-05
+2025-05-23 17:58:26,951 DeMo.train INFO: Epoch[39] Iteration[50/54] Loss: 0.452, Acc: 1.000, Base Lr: 4.05e-05
+2025-05-23 17:58:28,918 DeMo.train INFO: Epoch 39 done. Time per batch: 0.595[s] Speed: 107.5[samples/s]
+2025-05-23 17:58:28,920 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:58:28,920 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 17:58:28,920 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:58:49,880 DeMo.train INFO: Validation Results - Epoch: 39
+2025-05-23 17:58:49,880 DeMo.train INFO: mAP: 75.6%
+2025-05-23 17:58:49,881 DeMo.train INFO: CMC curve, Rank-1  :78.5%
+2025-05-23 17:58:49,881 DeMo.train INFO: CMC curve, Rank-5  :83.3%
+2025-05-23 17:58:49,881 DeMo.train INFO: CMC curve, Rank-10 :88.5%
+2025-05-23 17:58:49,881 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:58:49,938 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:58:49,938 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 17:58:49,938 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:59:10,705 DeMo.train INFO: Validation Results - Epoch: 39
+2025-05-23 17:59:10,705 DeMo.train INFO: mAP: 71.0%
+2025-05-23 17:59:10,705 DeMo.train INFO: CMC curve, Rank-1  :74.3%
+2025-05-23 17:59:10,705 DeMo.train INFO: CMC curve, Rank-5  :80.0%
+2025-05-23 17:59:10,705 DeMo.train INFO: CMC curve, Rank-10 :83.0%
+2025-05-23 17:59:10,706 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:59:10,707 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:59:10,707 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 17:59:10,707 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:59:31,484 DeMo.train INFO: Validation Results - Epoch: 39
+2025-05-23 17:59:31,484 DeMo.train INFO: mAP: 76.0%
+2025-05-23 17:59:31,485 DeMo.train INFO: CMC curve, Rank-1  :78.5%
+2025-05-23 17:59:31,485 DeMo.train INFO: CMC curve, Rank-5  :84.2%
+2025-05-23 17:59:31,485 DeMo.train INFO: CMC curve, Rank-10 :87.9%
+2025-05-23 17:59:31,485 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:59:31,487 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:59:31,487 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 17:59:31,487 DeMo.train INFO: Best Rank-1: 79.5%
+2025-05-23 17:59:31,487 DeMo.train INFO: Best Rank-5: 84.6%
+2025-05-23 17:59:31,487 DeMo.train INFO: Best Rank-10: 88.4%
+2025-05-23 17:59:31,488 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 17:59:39,125 DeMo.train INFO: Epoch[40] Iteration[10/54] Loss: 0.453, Acc: 0.998, Base Lr: 3.37e-05
+2025-05-23 17:59:45,336 DeMo.train INFO: Epoch[40] Iteration[20/54] Loss: 0.452, Acc: 0.999, Base Lr: 3.37e-05
+2025-05-23 17:59:51,561 DeMo.train INFO: Epoch[40] Iteration[30/54] Loss: 0.452, Acc: 0.999, Base Lr: 3.37e-05
+2025-05-23 17:59:57,817 DeMo.train INFO: Epoch[40] Iteration[40/54] Loss: 0.452, Acc: 1.000, Base Lr: 3.37e-05
+2025-05-23 18:00:01,671 DeMo.train INFO: Epoch[40] Iteration[50/54] Loss: 0.451, Acc: 1.000, Base Lr: 3.37e-05
+2025-05-23 18:00:03,383 DeMo.train INFO: Epoch 40 done. Time per batch: 0.602[s] Speed: 106.3[samples/s]
+2025-05-23 18:00:03,386 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:00:03,386 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:00:03,386 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:00:24,179 DeMo.train INFO: Validation Results - Epoch: 40
+2025-05-23 18:00:24,179 DeMo.train INFO: mAP: 75.8%
+2025-05-23 18:00:24,179 DeMo.train INFO: CMC curve, Rank-1  :78.5%
+2025-05-23 18:00:24,179 DeMo.train INFO: CMC curve, Rank-5  :83.5%
+2025-05-23 18:00:24,179 DeMo.train INFO: CMC curve, Rank-10 :88.4%
+2025-05-23 18:00:24,179 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:00:24,236 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:00:24,236 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:00:24,236 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:00:45,032 DeMo.train INFO: Validation Results - Epoch: 40
+2025-05-23 18:00:45,032 DeMo.train INFO: mAP: 71.4%
+2025-05-23 18:00:45,032 DeMo.train INFO: CMC curve, Rank-1  :75.0%
+2025-05-23 18:00:45,032 DeMo.train INFO: CMC curve, Rank-5  :79.7%
+2025-05-23 18:00:45,032 DeMo.train INFO: CMC curve, Rank-10 :82.9%
+2025-05-23 18:00:45,033 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:00:45,034 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:00:45,034 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:00:45,034 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:01:05,685 DeMo.train INFO: Validation Results - Epoch: 40
+2025-05-23 18:01:05,686 DeMo.train INFO: mAP: 76.2%
+2025-05-23 18:01:05,686 DeMo.train INFO: CMC curve, Rank-1  :78.9%
+2025-05-23 18:01:05,686 DeMo.train INFO: CMC curve, Rank-5  :84.2%
+2025-05-23 18:01:05,686 DeMo.train INFO: CMC curve, Rank-10 :87.8%
+2025-05-23 18:01:05,686 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:01:05,688 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:01:05,688 DeMo.train INFO: Best mAP: 76.4%
+2025-05-23 18:01:05,688 DeMo.train INFO: Best Rank-1: 79.5%
+2025-05-23 18:01:05,688 DeMo.train INFO: Best Rank-5: 84.6%
+2025-05-23 18:01:05,688 DeMo.train INFO: Best Rank-10: 88.4%
+2025-05-23 18:01:05,688 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:01:13,560 DeMo.train INFO: Epoch[41] Iteration[10/54] Loss: 0.452, Acc: 1.000, Base Lr: 2.76e-05
+2025-05-23 18:01:19,812 DeMo.train INFO: Epoch[41] Iteration[20/54] Loss: 0.451, Acc: 1.000, Base Lr: 2.76e-05
+2025-05-23 18:01:25,965 DeMo.train INFO: Epoch[41] Iteration[30/54] Loss: 0.451, Acc: 1.000, Base Lr: 2.76e-05
+2025-05-23 18:01:32,235 DeMo.train INFO: Epoch[41] Iteration[40/54] Loss: 0.451, Acc: 1.000, Base Lr: 2.76e-05
+2025-05-23 18:01:38,422 DeMo.train INFO: Epoch[41] Iteration[50/54] Loss: 0.451, Acc: 1.000, Base Lr: 2.76e-05
+2025-05-23 18:01:40,421 DeMo.train INFO: Epoch 41 done. Time per batch: 0.655[s] Speed: 97.7[samples/s]
+2025-05-23 18:01:40,423 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:01:40,423 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:01:40,424 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:02:00,101 DeMo.train INFO: Validation Results - Epoch: 41
+2025-05-23 18:02:00,101 DeMo.train INFO: mAP: 75.9%
+2025-05-23 18:02:00,101 DeMo.train INFO: CMC curve, Rank-1  :78.8%
+2025-05-23 18:02:00,101 DeMo.train INFO: CMC curve, Rank-5  :83.6%
+2025-05-23 18:02:00,101 DeMo.train INFO: CMC curve, Rank-10 :88.5%
+2025-05-23 18:02:00,102 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:02:01,223 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:02:01,224 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:02:01,224 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:02:20,115 DeMo.train INFO: Validation Results - Epoch: 41
+2025-05-23 18:02:20,116 DeMo.train INFO: mAP: 71.7%
+2025-05-23 18:02:20,116 DeMo.train INFO: CMC curve, Rank-1  :75.5%
+2025-05-23 18:02:20,116 DeMo.train INFO: CMC curve, Rank-5  :80.6%
+2025-05-23 18:02:20,116 DeMo.train INFO: CMC curve, Rank-10 :83.5%
+2025-05-23 18:02:20,116 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:02:20,118 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:02:20,118 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:02:20,118 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:02:38,979 DeMo.train INFO: Validation Results - Epoch: 41
+2025-05-23 18:02:38,980 DeMo.train INFO: mAP: 76.5%
+2025-05-23 18:02:38,980 DeMo.train INFO: CMC curve, Rank-1  :79.5%
+2025-05-23 18:02:38,980 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 18:02:38,980 DeMo.train INFO: CMC curve, Rank-10 :88.5%
+2025-05-23 18:02:38,980 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:02:42,808 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:02:42,808 DeMo.train INFO: Best mAP: 76.5%
+2025-05-23 18:02:42,808 DeMo.train INFO: Best Rank-1: 79.5%
+2025-05-23 18:02:42,808 DeMo.train INFO: Best Rank-5: 84.6%
+2025-05-23 18:02:42,808 DeMo.train INFO: Best Rank-10: 88.5%
+2025-05-23 18:02:42,808 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:02:49,899 DeMo.train INFO: Epoch[42] Iteration[10/54] Loss: 0.450, Acc: 1.000, Base Lr: 2.20e-05
+2025-05-23 18:02:55,602 DeMo.train INFO: Epoch[42] Iteration[20/54] Loss: 0.451, Acc: 1.000, Base Lr: 2.20e-05
+2025-05-23 18:03:01,305 DeMo.train INFO: Epoch[42] Iteration[30/54] Loss: 0.451, Acc: 1.000, Base Lr: 2.20e-05
+2025-05-23 18:03:07,125 DeMo.train INFO: Epoch[42] Iteration[40/54] Loss: 0.451, Acc: 1.000, Base Lr: 2.20e-05
+2025-05-23 18:03:12,799 DeMo.train INFO: Epoch[42] Iteration[50/54] Loss: 0.450, Acc: 1.000, Base Lr: 2.20e-05
+2025-05-23 18:03:14,589 DeMo.train INFO: Epoch 42 done. Time per batch: 0.600[s] Speed: 106.7[samples/s]
+2025-05-23 18:03:14,591 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:03:14,591 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:03:14,591 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:03:34,375 DeMo.train INFO: Validation Results - Epoch: 42
+2025-05-23 18:03:34,375 DeMo.train INFO: mAP: 76.1%
+2025-05-23 18:03:34,376 DeMo.train INFO: CMC curve, Rank-1  :79.1%
+2025-05-23 18:03:34,376 DeMo.train INFO: CMC curve, Rank-5  :84.1%
+2025-05-23 18:03:34,376 DeMo.train INFO: CMC curve, Rank-10 :88.8%
+2025-05-23 18:03:34,376 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:03:34,431 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:03:34,432 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:03:34,432 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:03:55,288 DeMo.train INFO: Validation Results - Epoch: 42
+2025-05-23 18:03:55,288 DeMo.train INFO: mAP: 71.9%
+2025-05-23 18:03:55,288 DeMo.train INFO: CMC curve, Rank-1  :76.0%
+2025-05-23 18:03:55,289 DeMo.train INFO: CMC curve, Rank-5  :80.9%
+2025-05-23 18:03:55,289 DeMo.train INFO: CMC curve, Rank-10 :83.7%
+2025-05-23 18:03:55,289 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:03:55,294 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:03:55,294 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:03:55,294 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:04:16,343 DeMo.train INFO: Validation Results - Epoch: 42
+2025-05-23 18:04:16,343 DeMo.train INFO: mAP: 76.6%
+2025-05-23 18:04:16,344 DeMo.train INFO: CMC curve, Rank-1  :79.5%
+2025-05-23 18:04:16,344 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 18:04:16,344 DeMo.train INFO: CMC curve, Rank-10 :88.3%
+2025-05-23 18:04:16,344 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:04:20,178 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:04:20,179 DeMo.train INFO: Best mAP: 76.6%
+2025-05-23 18:04:20,179 DeMo.train INFO: Best Rank-1: 79.5%
+2025-05-23 18:04:20,179 DeMo.train INFO: Best Rank-5: 84.6%
+2025-05-23 18:04:20,179 DeMo.train INFO: Best Rank-10: 88.3%
+2025-05-23 18:04:20,179 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:04:28,784 DeMo.train INFO: Epoch[43] Iteration[10/54] Loss: 0.459, Acc: 0.998, Base Lr: 1.70e-05
+2025-05-23 18:04:35,021 DeMo.train INFO: Epoch[43] Iteration[20/54] Loss: 0.454, Acc: 0.999, Base Lr: 1.70e-05
+2025-05-23 18:04:41,215 DeMo.train INFO: Epoch[43] Iteration[30/54] Loss: 0.452, Acc: 0.999, Base Lr: 1.70e-05
+2025-05-23 18:04:47,463 DeMo.train INFO: Epoch[43] Iteration[40/54] Loss: 0.453, Acc: 1.000, Base Lr: 1.70e-05
+2025-05-23 18:04:53,640 DeMo.train INFO: Epoch[43] Iteration[50/54] Loss: 0.453, Acc: 1.000, Base Lr: 1.70e-05
+2025-05-23 18:04:55,643 DeMo.train INFO: Epoch 43 done. Time per batch: 0.669[s] Speed: 95.6[samples/s]
+2025-05-23 18:04:55,645 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:04:55,646 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:04:55,646 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:05:14,493 DeMo.train INFO: Validation Results - Epoch: 43
+2025-05-23 18:05:14,493 DeMo.train INFO: mAP: 76.0%
+2025-05-23 18:05:14,493 DeMo.train INFO: CMC curve, Rank-1  :78.8%
+2025-05-23 18:05:14,493 DeMo.train INFO: CMC curve, Rank-5  :83.7%
+2025-05-23 18:05:14,493 DeMo.train INFO: CMC curve, Rank-10 :88.8%
+2025-05-23 18:05:14,494 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:05:14,550 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:05:14,551 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:05:14,551 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:05:35,401 DeMo.train INFO: Validation Results - Epoch: 43
+2025-05-23 18:05:35,402 DeMo.train INFO: mAP: 71.9%
+2025-05-23 18:05:35,402 DeMo.train INFO: CMC curve, Rank-1  :75.5%
+2025-05-23 18:05:35,402 DeMo.train INFO: CMC curve, Rank-5  :80.3%
+2025-05-23 18:05:35,402 DeMo.train INFO: CMC curve, Rank-10 :83.5%
+2025-05-23 18:05:35,402 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:05:35,404 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:05:35,404 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:05:35,404 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:05:56,393 DeMo.train INFO: Validation Results - Epoch: 43
+2025-05-23 18:05:56,393 DeMo.train INFO: mAP: 76.6%
+2025-05-23 18:05:56,394 DeMo.train INFO: CMC curve, Rank-1  :79.9%
+2025-05-23 18:05:56,394 DeMo.train INFO: CMC curve, Rank-5  :84.4%
+2025-05-23 18:05:56,394 DeMo.train INFO: CMC curve, Rank-10 :88.0%
+2025-05-23 18:05:56,394 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:05:56,396 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:05:56,396 DeMo.train INFO: Best mAP: 76.6%
+2025-05-23 18:05:56,396 DeMo.train INFO: Best Rank-1: 79.5%
+2025-05-23 18:05:56,396 DeMo.train INFO: Best Rank-5: 84.6%
+2025-05-23 18:05:56,396 DeMo.train INFO: Best Rank-10: 88.3%
+2025-05-23 18:05:56,396 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:06:03,411 DeMo.train INFO: Epoch[44] Iteration[10/54] Loss: 0.452, Acc: 1.000, Base Lr: 1.26e-05
+2025-05-23 18:06:09,656 DeMo.train INFO: Epoch[44] Iteration[20/54] Loss: 0.451, Acc: 1.000, Base Lr: 1.26e-05
+2025-05-23 18:06:15,835 DeMo.train INFO: Epoch[44] Iteration[30/54] Loss: 0.451, Acc: 1.000, Base Lr: 1.26e-05
+2025-05-23 18:06:22,054 DeMo.train INFO: Epoch[44] Iteration[40/54] Loss: 0.450, Acc: 1.000, Base Lr: 1.26e-05
+2025-05-23 18:06:28,261 DeMo.train INFO: Epoch[44] Iteration[50/54] Loss: 0.450, Acc: 1.000, Base Lr: 1.26e-05
+2025-05-23 18:06:30,241 DeMo.train INFO: Epoch 44 done. Time per batch: 0.639[s] Speed: 100.2[samples/s]
+2025-05-23 18:06:30,243 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:06:30,243 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:06:30,243 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:06:51,063 DeMo.train INFO: Validation Results - Epoch: 44
+2025-05-23 18:06:51,064 DeMo.train INFO: mAP: 76.2%
+2025-05-23 18:06:51,064 DeMo.train INFO: CMC curve, Rank-1  :78.9%
+2025-05-23 18:06:51,064 DeMo.train INFO: CMC curve, Rank-5  :84.1%
+2025-05-23 18:06:51,064 DeMo.train INFO: CMC curve, Rank-10 :88.8%
+2025-05-23 18:06:51,064 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:06:52,414 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:06:52,414 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:06:52,414 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:07:12,745 DeMo.train INFO: Validation Results - Epoch: 44
+2025-05-23 18:07:12,745 DeMo.train INFO: mAP: 72.1%
+2025-05-23 18:07:12,745 DeMo.train INFO: CMC curve, Rank-1  :76.0%
+2025-05-23 18:07:12,745 DeMo.train INFO: CMC curve, Rank-5  :80.6%
+2025-05-23 18:07:12,745 DeMo.train INFO: CMC curve, Rank-10 :83.9%
+2025-05-23 18:07:12,745 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:07:12,750 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:07:12,750 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:07:12,750 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:07:32,509 DeMo.train INFO: Validation Results - Epoch: 44
+2025-05-23 18:07:32,510 DeMo.train INFO: mAP: 76.8%
+2025-05-23 18:07:32,510 DeMo.train INFO: CMC curve, Rank-1  :80.1%
+2025-05-23 18:07:32,510 DeMo.train INFO: CMC curve, Rank-5  :84.7%
+2025-05-23 18:07:32,510 DeMo.train INFO: CMC curve, Rank-10 :88.6%
+2025-05-23 18:07:32,510 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:07:36,340 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:07:36,340 DeMo.train INFO: Best mAP: 76.8%
+2025-05-23 18:07:36,341 DeMo.train INFO: Best Rank-1: 80.1%
+2025-05-23 18:07:36,341 DeMo.train INFO: Best Rank-5: 84.7%
+2025-05-23 18:07:36,341 DeMo.train INFO: Best Rank-10: 88.6%
+2025-05-23 18:07:36,341 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:07:44,508 DeMo.train INFO: Epoch[45] Iteration[10/54] Loss: 0.451, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-23 18:07:50,929 DeMo.train INFO: Epoch[45] Iteration[20/54] Loss: 0.452, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-23 18:07:57,148 DeMo.train INFO: Epoch[45] Iteration[30/54] Loss: 0.450, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-23 18:08:03,295 DeMo.train INFO: Epoch[45] Iteration[40/54] Loss: 0.450, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-23 18:08:09,566 DeMo.train INFO: Epoch[45] Iteration[50/54] Loss: 0.450, Acc: 1.000, Base Lr: 8.91e-06
+2025-05-23 18:08:11,507 DeMo.train INFO: Epoch 45 done. Time per batch: 0.664[s] Speed: 96.5[samples/s]
+2025-05-23 18:08:11,510 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:08:11,510 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:08:11,510 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:08:32,355 DeMo.train INFO: Validation Results - Epoch: 45
+2025-05-23 18:08:32,355 DeMo.train INFO: mAP: 76.3%
+2025-05-23 18:08:32,355 DeMo.train INFO: CMC curve, Rank-1  :78.9%
+2025-05-23 18:08:32,355 DeMo.train INFO: CMC curve, Rank-5  :84.4%
+2025-05-23 18:08:32,355 DeMo.train INFO: CMC curve, Rank-10 :88.6%
+2025-05-23 18:08:32,355 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:08:32,434 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:08:32,434 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:08:32,434 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:08:53,371 DeMo.train INFO: Validation Results - Epoch: 45
+2025-05-23 18:08:53,371 DeMo.train INFO: mAP: 71.9%
+2025-05-23 18:08:53,371 DeMo.train INFO: CMC curve, Rank-1  :75.6%
+2025-05-23 18:08:53,371 DeMo.train INFO: CMC curve, Rank-5  :80.1%
+2025-05-23 18:08:53,372 DeMo.train INFO: CMC curve, Rank-10 :83.4%
+2025-05-23 18:08:53,372 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:08:53,373 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:08:53,373 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:08:53,373 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:09:11,168 DeMo.train INFO: Validation Results - Epoch: 45
+2025-05-23 18:09:11,168 DeMo.train INFO: mAP: 76.8%
+2025-05-23 18:09:11,168 DeMo.train INFO: CMC curve, Rank-1  :80.0%
+2025-05-23 18:09:11,168 DeMo.train INFO: CMC curve, Rank-5  :85.0%
+2025-05-23 18:09:11,168 DeMo.train INFO: CMC curve, Rank-10 :88.4%
+2025-05-23 18:09:11,168 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:09:15,001 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:09:15,002 DeMo.train INFO: Best mAP: 76.8%
+2025-05-23 18:09:15,002 DeMo.train INFO: Best Rank-1: 80.0%
+2025-05-23 18:09:15,002 DeMo.train INFO: Best Rank-5: 85.0%
+2025-05-23 18:09:15,002 DeMo.train INFO: Best Rank-10: 88.4%
+2025-05-23 18:09:15,002 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:09:23,347 DeMo.train INFO: Epoch[46] Iteration[10/54] Loss: 0.453, Acc: 1.000, Base Lr: 5.84e-06
+2025-05-23 18:09:29,023 DeMo.train INFO: Epoch[46] Iteration[20/54] Loss: 0.453, Acc: 1.000, Base Lr: 5.84e-06
+2025-05-23 18:09:34,693 DeMo.train INFO: Epoch[46] Iteration[30/54] Loss: 0.454, Acc: 1.000, Base Lr: 5.84e-06
+2025-05-23 18:09:40,426 DeMo.train INFO: Epoch[46] Iteration[40/54] Loss: 0.453, Acc: 1.000, Base Lr: 5.84e-06
+2025-05-23 18:09:46,191 DeMo.train INFO: Epoch[46] Iteration[50/54] Loss: 0.453, Acc: 1.000, Base Lr: 5.84e-06
+2025-05-23 18:09:47,935 DeMo.train INFO: Epoch 46 done. Time per batch: 0.621[s] Speed: 103.0[samples/s]
+2025-05-23 18:09:47,937 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:09:47,937 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:09:47,937 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:10:07,101 DeMo.train INFO: Validation Results - Epoch: 46
+2025-05-23 18:10:07,101 DeMo.train INFO: mAP: 76.1%
+2025-05-23 18:10:07,101 DeMo.train INFO: CMC curve, Rank-1  :79.2%
+2025-05-23 18:10:07,101 DeMo.train INFO: CMC curve, Rank-5  :84.1%
+2025-05-23 18:10:07,101 DeMo.train INFO: CMC curve, Rank-10 :88.8%
+2025-05-23 18:10:07,101 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:10:07,158 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:10:07,159 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:10:07,159 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:10:26,051 DeMo.train INFO: Validation Results - Epoch: 46
+2025-05-23 18:10:26,052 DeMo.train INFO: mAP: 72.2%
+2025-05-23 18:10:26,052 DeMo.train INFO: CMC curve, Rank-1  :75.8%
+2025-05-23 18:10:26,052 DeMo.train INFO: CMC curve, Rank-5  :81.2%
+2025-05-23 18:10:26,052 DeMo.train INFO: CMC curve, Rank-10 :84.2%
+2025-05-23 18:10:26,052 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:10:26,056 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:10:26,056 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:10:26,056 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:10:45,908 DeMo.train INFO: Validation Results - Epoch: 46
+2025-05-23 18:10:45,909 DeMo.train INFO: mAP: 76.6%
+2025-05-23 18:10:45,909 DeMo.train INFO: CMC curve, Rank-1  :80.3%
+2025-05-23 18:10:45,909 DeMo.train INFO: CMC curve, Rank-5  :84.7%
+2025-05-23 18:10:45,909 DeMo.train INFO: CMC curve, Rank-10 :88.6%
+2025-05-23 18:10:45,909 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:10:45,911 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:10:45,911 DeMo.train INFO: Best mAP: 76.8%
+2025-05-23 18:10:45,912 DeMo.train INFO: Best Rank-1: 80.0%
+2025-05-23 18:10:45,912 DeMo.train INFO: Best Rank-5: 85.0%
+2025-05-23 18:10:45,912 DeMo.train INFO: Best Rank-10: 88.4%
+2025-05-23 18:10:45,912 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:10:53,507 DeMo.train INFO: Epoch[47] Iteration[10/54] Loss: 0.452, Acc: 1.000, Base Lr: 3.45e-06
+2025-05-23 18:10:59,740 DeMo.train INFO: Epoch[47] Iteration[20/54] Loss: 0.451, Acc: 1.000, Base Lr: 3.45e-06
+2025-05-23 18:11:06,024 DeMo.train INFO: Epoch[47] Iteration[30/54] Loss: 0.451, Acc: 1.000, Base Lr: 3.45e-06
+2025-05-23 18:11:12,219 DeMo.train INFO: Epoch[47] Iteration[40/54] Loss: 0.452, Acc: 1.000, Base Lr: 3.45e-06
+2025-05-23 18:11:18,482 DeMo.train INFO: Epoch[47] Iteration[50/54] Loss: 0.453, Acc: 1.000, Base Lr: 3.45e-06
+2025-05-23 18:11:20,406 DeMo.train INFO: Epoch 47 done. Time per batch: 0.651[s] Speed: 98.3[samples/s]
+2025-05-23 18:11:20,409 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:11:20,409 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:11:20,409 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:11:41,243 DeMo.train INFO: Validation Results - Epoch: 47
+2025-05-23 18:11:41,244 DeMo.train INFO: mAP: 76.1%
+2025-05-23 18:11:41,244 DeMo.train INFO: CMC curve, Rank-1  :79.2%
+2025-05-23 18:11:41,244 DeMo.train INFO: CMC curve, Rank-5  :84.2%
+2025-05-23 18:11:41,244 DeMo.train INFO: CMC curve, Rank-10 :88.9%
+2025-05-23 18:11:41,244 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:11:41,300 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:11:41,300 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:11:41,300 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:12:02,057 DeMo.train INFO: Validation Results - Epoch: 47
+2025-05-23 18:12:02,057 DeMo.train INFO: mAP: 73.0%
+2025-05-23 18:12:02,057 DeMo.train INFO: CMC curve, Rank-1  :76.4%
+2025-05-23 18:12:02,057 DeMo.train INFO: CMC curve, Rank-5  :81.9%
+2025-05-23 18:12:02,057 DeMo.train INFO: CMC curve, Rank-10 :85.6%
+2025-05-23 18:12:02,057 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:12:02,062 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:12:02,062 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:12:02,062 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:12:22,790 DeMo.train INFO: Validation Results - Epoch: 47
+2025-05-23 18:12:22,790 DeMo.train INFO: mAP: 76.7%
+2025-05-23 18:12:22,790 DeMo.train INFO: CMC curve, Rank-1  :80.0%
+2025-05-23 18:12:22,790 DeMo.train INFO: CMC curve, Rank-5  :85.2%
+2025-05-23 18:12:22,790 DeMo.train INFO: CMC curve, Rank-10 :88.9%
+2025-05-23 18:12:22,790 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:12:22,792 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:12:22,792 DeMo.train INFO: Best mAP: 76.8%
+2025-05-23 18:12:22,793 DeMo.train INFO: Best Rank-1: 80.0%
+2025-05-23 18:12:22,793 DeMo.train INFO: Best Rank-5: 85.0%
+2025-05-23 18:12:22,793 DeMo.train INFO: Best Rank-10: 88.4%
+2025-05-23 18:12:22,793 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:12:27,891 DeMo.train INFO: Epoch[48] Iteration[10/54] Loss: 0.451, Acc: 1.000, Base Lr: 1.73e-06
+2025-05-23 18:12:33,867 DeMo.train INFO: Epoch[48] Iteration[20/54] Loss: 0.451, Acc: 1.000, Base Lr: 1.73e-06
+2025-05-23 18:12:40,064 DeMo.train INFO: Epoch[48] Iteration[30/54] Loss: 0.451, Acc: 1.000, Base Lr: 1.73e-06
+2025-05-23 18:12:46,368 DeMo.train INFO: Epoch[48] Iteration[40/54] Loss: 0.451, Acc: 1.000, Base Lr: 1.73e-06
+2025-05-23 18:12:52,572 DeMo.train INFO: Epoch[48] Iteration[50/54] Loss: 0.450, Acc: 1.000, Base Lr: 1.73e-06
+2025-05-23 18:12:54,561 DeMo.train INFO: Epoch 48 done. Time per batch: 0.599[s] Speed: 106.8[samples/s]
+2025-05-23 18:12:54,563 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:12:54,563 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:12:54,563 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:13:15,511 DeMo.train INFO: Validation Results - Epoch: 48
+2025-05-23 18:13:15,511 DeMo.train INFO: mAP: 76.2%
+2025-05-23 18:13:15,511 DeMo.train INFO: CMC curve, Rank-1  :79.1%
+2025-05-23 18:13:15,511 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 18:13:15,512 DeMo.train INFO: CMC curve, Rank-10 :88.6%
+2025-05-23 18:13:15,512 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:13:15,569 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:13:15,569 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:13:15,569 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:13:36,408 DeMo.train INFO: Validation Results - Epoch: 48
+2025-05-23 18:13:36,408 DeMo.train INFO: mAP: 72.9%
+2025-05-23 18:13:36,408 DeMo.train INFO: CMC curve, Rank-1  :77.0%
+2025-05-23 18:13:36,408 DeMo.train INFO: CMC curve, Rank-5  :82.2%
+2025-05-23 18:13:36,408 DeMo.train INFO: CMC curve, Rank-10 :85.9%
+2025-05-23 18:13:36,408 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:13:36,412 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:13:36,412 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:13:36,413 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:13:57,472 DeMo.train INFO: Validation Results - Epoch: 48
+2025-05-23 18:13:57,472 DeMo.train INFO: mAP: 76.8%
+2025-05-23 18:13:57,472 DeMo.train INFO: CMC curve, Rank-1  :80.1%
+2025-05-23 18:13:57,472 DeMo.train INFO: CMC curve, Rank-5  :85.5%
+2025-05-23 18:13:57,472 DeMo.train INFO: CMC curve, Rank-10 :88.9%
+2025-05-23 18:13:57,472 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:14:01,311 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:14:01,312 DeMo.train INFO: Best mAP: 76.8%
+2025-05-23 18:14:01,312 DeMo.train INFO: Best Rank-1: 80.1%
+2025-05-23 18:14:01,312 DeMo.train INFO: Best Rank-5: 85.5%
+2025-05-23 18:14:01,312 DeMo.train INFO: Best Rank-10: 88.9%
+2025-05-23 18:14:01,312 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:14:09,704 DeMo.train INFO: Epoch[49] Iteration[10/54] Loss: 0.450, Acc: 1.000, Base Lr: 6.95e-07
+2025-05-23 18:14:15,931 DeMo.train INFO: Epoch[49] Iteration[20/54] Loss: 0.449, Acc: 1.000, Base Lr: 6.95e-07
+2025-05-23 18:14:21,373 DeMo.train INFO: Epoch[49] Iteration[30/54] Loss: 0.449, Acc: 1.000, Base Lr: 6.95e-07
+2025-05-23 18:14:25,761 DeMo.train INFO: Epoch[49] Iteration[40/54] Loss: 0.448, Acc: 1.000, Base Lr: 6.95e-07
+2025-05-23 18:14:32,030 DeMo.train INFO: Epoch[49] Iteration[50/54] Loss: 0.449, Acc: 1.000, Base Lr: 6.95e-07
+2025-05-23 18:14:33,984 DeMo.train INFO: Epoch 49 done. Time per batch: 0.616[s] Speed: 103.8[samples/s]
+2025-05-23 18:14:33,986 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:14:33,986 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:14:33,987 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:14:55,035 DeMo.train INFO: Validation Results - Epoch: 49
+2025-05-23 18:14:55,035 DeMo.train INFO: mAP: 76.2%
+2025-05-23 18:14:55,035 DeMo.train INFO: CMC curve, Rank-1  :79.1%
+2025-05-23 18:14:55,035 DeMo.train INFO: CMC curve, Rank-5  :84.6%
+2025-05-23 18:14:55,036 DeMo.train INFO: CMC curve, Rank-10 :89.1%
+2025-05-23 18:14:55,036 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:14:55,109 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:14:55,110 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:14:55,110 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:15:15,903 DeMo.train INFO: Validation Results - Epoch: 49
+2025-05-23 18:15:15,904 DeMo.train INFO: mAP: 71.6%
+2025-05-23 18:15:15,904 DeMo.train INFO: CMC curve, Rank-1  :75.5%
+2025-05-23 18:15:15,904 DeMo.train INFO: CMC curve, Rank-5  :81.0%
+2025-05-23 18:15:15,904 DeMo.train INFO: CMC curve, Rank-10 :83.7%
+2025-05-23 18:15:15,904 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:15:15,906 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:15:15,906 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:15:15,906 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:15:36,921 DeMo.train INFO: Validation Results - Epoch: 49
+2025-05-23 18:15:36,921 DeMo.train INFO: mAP: 76.6%
+2025-05-23 18:15:36,921 DeMo.train INFO: CMC curve, Rank-1  :80.1%
+2025-05-23 18:15:36,921 DeMo.train INFO: CMC curve, Rank-5  :85.0%
+2025-05-23 18:15:36,922 DeMo.train INFO: CMC curve, Rank-10 :88.9%
+2025-05-23 18:15:36,922 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:15:36,924 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:15:36,924 DeMo.train INFO: Best mAP: 76.8%
+2025-05-23 18:15:36,924 DeMo.train INFO: Best Rank-1: 80.1%
+2025-05-23 18:15:36,925 DeMo.train INFO: Best Rank-5: 85.5%
+2025-05-23 18:15:36,925 DeMo.train INFO: Best Rank-10: 88.9%
+2025-05-23 18:15:36,925 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:15:44,190 DeMo.train INFO: Epoch[50] Iteration[10/54] Loss: 0.451, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-23 18:15:50,454 DeMo.train INFO: Epoch[50] Iteration[20/54] Loss: 0.450, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-23 18:15:56,614 DeMo.train INFO: Epoch[50] Iteration[30/54] Loss: 0.450, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-23 18:16:02,851 DeMo.train INFO: Epoch[50] Iteration[40/54] Loss: 0.450, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-23 18:16:09,077 DeMo.train INFO: Epoch[50] Iteration[50/54] Loss: 0.449, Acc: 1.000, Base Lr: 3.50e-07
+2025-05-23 18:16:11,091 DeMo.train INFO: Epoch 50 done. Time per batch: 0.645[s] Speed: 99.3[samples/s]
+2025-05-23 18:16:11,094 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:16:11,094 DeMo.train INFO: Current is the ori feature testing!
+2025-05-23 18:16:11,094 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:16:27,180 DeMo.train INFO: Validation Results - Epoch: 50
+2025-05-23 18:16:27,180 DeMo.train INFO: mAP: 76.2%
+2025-05-23 18:16:27,180 DeMo.train INFO: CMC curve, Rank-1  :79.1%
+2025-05-23 18:16:27,180 DeMo.train INFO: CMC curve, Rank-5  :84.4%
+2025-05-23 18:16:27,180 DeMo.train INFO: CMC curve, Rank-10 :88.9%
+2025-05-23 18:16:27,180 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:16:27,235 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:16:27,235 DeMo.train INFO: Current is the moe feature testing!
+2025-05-23 18:16:27,235 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:16:46,092 DeMo.train INFO: Validation Results - Epoch: 50
+2025-05-23 18:16:46,092 DeMo.train INFO: mAP: 72.1%
+2025-05-23 18:16:46,092 DeMo.train INFO: CMC curve, Rank-1  :76.0%
+2025-05-23 18:16:46,092 DeMo.train INFO: CMC curve, Rank-5  :81.1%
+2025-05-23 18:16:46,092 DeMo.train INFO: CMC curve, Rank-10 :83.7%
+2025-05-23 18:16:46,092 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:16:46,097 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:16:46,097 DeMo.train INFO: Current is the [moe,ori] feature testing!
+2025-05-23 18:16:46,097 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:17:04,782 DeMo.train INFO: Validation Results - Epoch: 50
+2025-05-23 18:17:04,782 DeMo.train INFO: mAP: 76.6%
+2025-05-23 18:17:04,782 DeMo.train INFO: CMC curve, Rank-1  :80.1%
+2025-05-23 18:17:04,782 DeMo.train INFO: CMC curve, Rank-5  :85.2%
+2025-05-23 18:17:04,782 DeMo.train INFO: CMC curve, Rank-10 :88.6%
+2025-05-23 18:17:04,782 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:17:04,784 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-05-23 18:17:04,784 DeMo.train INFO: Best mAP: 76.8%
+2025-05-23 18:17:04,785 DeMo.train INFO: Best Rank-1: 80.1%
+2025-05-23 18:17:04,785 DeMo.train INFO: Best Rank-5: 85.5%
+2025-05-23 18:17:04,785 DeMo.train INFO: Best Rank-10: 88.9%
+2025-05-23 18:17:04,785 DeMo.train INFO: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="645914fe-6a74-41ef-9154-63ac2664fef2" name="Changes" comment="newboqnewboq">
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSVR310-DeMo/sedefrom_20250429_175701/train.log" beforeDir="false" afterPath="$PROJECT_DIR$/MSVR310-DeMo/sedefrom_20250429_175701/train.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSVR310-DeMo/sedefrom_20250429_175701/train_log_2025_04_29_17_57_04.txt" beforeDir="false" afterPath="$PROJECT_DIR$/MSVR310-DeMo/sedefrom_20250429_175701/train_log_2025_04_29_17_57_04.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RGBNT100-DeMo/sedeform_20250429_175229/train.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RGBNT100-DeMo/sedeform_20250429_175229/train_log_2025_04_29_17_52_34.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RGBNT100-DeMo/sedeform_20250429_175607/train.log" beforeDir="false" afterPath="$PROJECT_DIR$/RGBNT100-DeMo/sedeform_20250429_175607/train.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RGBNT100-DeMo/sedeform_20250429_175607/train_log_2025_04_29_17_56_11.txt" beforeDir="false" afterPath="$PROJECT_DIR$/RGBNT100-DeMo/sedeform_20250429_175607/train_log_2025_04_29_17_56_11.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RGBNT201-DeMo/sedeform_20250429_175648/train.log" beforeDir="false" afterPath="$PROJECT_DIR$/RGBNT201-DeMo/sedeform_20250429_175648/train.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RGBNT201-DeMo/sedeform_20250429_175648/train_log_2025_04_29_17_56_51.txt" beforeDir="false" afterPath="$PROJECT_DIR$/RGBNT201-DeMo/sedeform_20250429_175648/train_log_2025_04_29_17_56_51.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/datasets/MSVWild863.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/datasets/MSVWild863.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layers/metric_learning.py" beforeDir="false" afterPath="$PROJECT_DIR$/layers/metric_learning.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layers/supcontrast.py" beforeDir="false" afterPath="$PROJECT_DIR$/layers/supcontrast.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mambareq.txt" beforeDir="false" afterPath="$PROJECT_DIR$/mambareq.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/cal.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/cal.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/densenet.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/densenet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/flops.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/flops.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/hacnn.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/hacnn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/inceptionresnetv2.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/inceptionresnetv2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/inceptionv4.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/inceptionv4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/mlfn.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/mlfn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/mobilenetv2.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/mobilenetv2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/mudeep.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/mudeep.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/nasnet.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/nasnet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/osnet.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/osnet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/osnet_ain.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/osnet_ain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/pcb.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/pcb.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/resnet.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/resnet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/resnet_ibn_a.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/resnet_ibn_a.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/resnet_ibn_b.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/resnet_ibn_b.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/resnetmid.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/resnetmid.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/senet.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/senet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/shufflenet.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/shufflenet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/shufflenetv2.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/shufflenetv2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/squeezenet.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/squeezenet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/xception.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/basic_cnn_params/xception.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/clip/LoRA.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/clip/LoRA.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/clip/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/clip/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/clip/bpe_simple_vocab_16e6.txt.gz" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/clip/bpe_simple_vocab_16e6.txt.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/clip/clip.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/clip/clip.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/clip/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/clip/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/clip/simple_tokenizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/clip/simple_tokenizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/cuda_v6/wkv6_cuda.cu" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/cuda_v6/wkv6_cuda.cu" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/cuda_v6/wkv6_op.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/cuda_v6/wkv6_op.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/make_model_clipreid.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/make_model_clipreid.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/meta_arch.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/meta_arch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/moe/AttnMOE.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/moe/AttnMOE.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/moe/AttnMOEbackup.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/moe/AttnMOEbackup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/moe/newboq.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/moe/newboq.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prac.py" beforeDir="false" afterPath="$PROJECT_DIR$/prac.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/Ablation.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/Ablation.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/Decoupled.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/Decoupled.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/Overall.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/Overall.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/RGBNT100_M.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/RGBNT100_M.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/RGBNT100_MSVR310.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/RGBNT100_MSVR310.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/RGBNT201.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/RGBNT201.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/RGBNT201_M.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/RGBNT201_M.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/logo.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/logo.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/rank-list.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/rank-list.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/tsne.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/tsne.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/solver/lr_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/solver/lr_scheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsne" beforeDir="false" afterPath="$PROJECT_DIR$/tsne" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/configs/MSVR310/DeMo.yml" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/engine/processor.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/modeling/make_model.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/modeling/meta_arch.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/modeling/moe/AttnMOE.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/utils/metrics.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/visualize/GradCAM.py" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="2wMMy9ecufC40e57vi3MSWJU3eO" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.GradCAM.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.test_net.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.train_net.executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/ma1/work/demorelated/DeMo/visualize&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/visualize" />
+      <recent name="$PROJECT_DIR$/modeling/moe" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.GradCAM">
+    <configuration name="GradCAM" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="DeMo" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/visualize/GradCAM.py" />
+      <option name="PARAMETERS" value="--config_file &quot;$PROJECT_DIR$/configs/RGBNT201/DeMo.yml&quot;" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="DeMo" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="test_net" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="DeMo" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_net.py" />
+      <option name="PARAMETERS" value="--config_file &quot;$PROJECT_DIR$/configs/RGBNT201/DeMo.yml&quot;" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train_net" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="DeMo" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="CUDA_VISIBLE_DEVICES" value="3" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_net.py" />
+      <option name="PARAMETERS" value="--config_file configs/RGBNT201/DeMo.yml" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.GradCAM" />
+      <item itemvalue="Python.main" />
+      <item itemvalue="Python.test_net" />
+      <item itemvalue="Python.train_net" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.test_net" />
+        <item itemvalue="Python.train_net" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-PY-241.19416.19" />
+        <option value="bundled-python-sdk-337b0a7a993a-2767605e8bc2-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.19416.19" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="645914fe-6a74-41ef-9154-63ac2664fef2" name="Changes" comment="" />
+      <created>1745847241935</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1745847241935</updated>
+      <workItem from="1745847243901" duration="87000" />
+      <workItem from="1745941137981" duration="25270000" />
+      <workItem from="1747834789092" duration="84000" />
+      <workItem from="1747834880097" duration="90000" />
+      <workItem from="1747834980230" duration="200791000" />
+      <workItem from="1749150466323" duration="15000" />
+      <workItem from="1749815217417" duration="1079000" />
+    </task>
+    <task id="LOCAL-00001" summary="1">
+      <option name="closed" value="true" />
+      <created>1746196941369</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1746196941369</updated>
+    </task>
+    <task id="LOCAL-00002" summary="menkong">
+      <option name="closed" value="true" />
+      <created>1748114118678</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1748114118678</updated>
+    </task>
+    <task id="LOCAL-00003" summary="menkong">
+      <option name="closed" value="true" />
+      <created>1748115633258</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1748115633258</updated>
+    </task>
+    <task id="LOCAL-00004" summary="xin de gate">
+      <option name="closed" value="true" />
+      <created>1748118975638</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1748118975638</updated>
+    </task>
+    <task id="LOCAL-00005" summary="3 point">
+      <option name="closed" value="true" />
+      <created>1748355990699</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1748355990700</updated>
+    </task>
+    <task id="LOCAL-00006" summary="test other">
+      <option name="closed" value="true" />
+      <created>1748474880319</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1748474880319</updated>
+    </task>
+    <task id="LOCAL-00007" summary="newboq+newdeform">
+      <option name="closed" value="true" />
+      <created>1748697968447</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1748697968447</updated>
+    </task>
+    <task id="LOCAL-00008" summary="a lot update">
+      <option name="closed" value="true" />
+      <created>1748736668439</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1748736668439</updated>
+    </task>
+    <task id="LOCAL-00009" summary="a lot update">
+      <option name="closed" value="true" />
+      <created>1748802521303</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1748802521303</updated>
+    </task>
+    <task id="LOCAL-00010" summary="a lot update">
+      <option name="closed" value="true" />
+      <created>1748814263247</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1748814263247</updated>
+    </task>
+    <task id="LOCAL-00011" summary="a lot update">
+      <option name="closed" value="true" />
+      <created>1748817067024</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1748817067024</updated>
+    </task>
+    <task id="LOCAL-00012" summary="a lot update">
+      <option name="closed" value="true" />
+      <created>1748820813357</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1748820813357</updated>
+    </task>
+    <task id="LOCAL-00013" summary="a lot update">
+      <option name="closed" value="true" />
+      <created>1748905172216</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1748905172216</updated>
+    </task>
+    <task id="LOCAL-00014" summary="a lot update">
+      <option name="closed" value="true" />
+      <created>1749050064271</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1749050064271</updated>
+    </task>
+    <task id="LOCAL-00015" summary="a lot update">
+      <option name="closed" value="true" />
+      <created>1749079709664</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1749079709664</updated>
+    </task>
+    <task id="LOCAL-00016" summary="newboqnewboq">
+      <option name="closed" value="true" />
+      <created>1749129074895</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1749129074895</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="1" />
+    <MESSAGE value="menkong" />
+    <MESSAGE value="xin de gate" />
+    <MESSAGE value="3 point" />
+    <MESSAGE value="test other" />
+    <MESSAGE value="newboq+newdeform" />
+    <MESSAGE value="a lot update" />
+    <MESSAGE value="newboqnewboq" />
+    <option name="LAST_COMMIT_MESSAGE" value="newboqnewboq" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>8</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/modeling/make_model.py</url>
+          <line>35</line>
+          <option name="timeStamp" value="40" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/modeling/moe/AttnMOE.py</url>
+          <line>5414</line>
+          <option name="timeStamp" value="53" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/modeling/moe/AttnMOE.py</url>
+          <line>2494</line>
+          <option name="timeStamp" value="56" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/modeling/moe/AttnMOE.py</url>
+          <line>5480</line>
+          <option name="timeStamp" value="58" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/modeling/moe/AttnMOE.py</url>
+          <line>5489</line>
+          <option name="timeStamp" value="59" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/modeling/moe/AttnMOE.py</url>
+          <line>4727</line>
+          <option name="timeStamp" value="61" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/modeling/moe/AttnMOE.py</url>
+          <line>5617</line>
+          <option name="timeStamp" value="72" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/modeling/moe/AttnMOE.py</url>
+          <line>5581</line>
+          <option name="timeStamp" value="80" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/modeling/make_model.py</url>
+          <line>163</line>
+          <option name="timeStamp" value="81" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/visualize/GradCAM.py</url>
+          <line>145</line>
+          <option name="timeStamp" value="88" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/visualize/GradCAM.py</url>
+          <line>155</line>
+          <option name="timeStamp" value="95" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/visualize/GradCAM.py</url>
+          <line>82</line>
+          <option name="timeStamp" value="96" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/modeling/moe/newboq.py</url>
+          <option name="timeStamp" value="97" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/DeMo$train_net.coverage" NAME="train_net Coverage Results" MODIFIED="1748956434439" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DeMo$test_net.coverage" NAME="test_net Coverage Results" MODIFIED="1749077728529" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DeMo$GradCAM.coverage" NAME="GradCAM Coverage Results" MODIFIED="1749079202481" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>

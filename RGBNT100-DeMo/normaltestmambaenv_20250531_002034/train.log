@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/home/ma1/work/demorelated/DeMo/train_net.py", line 3, in <module>
+    from modeling import make_model
+  File "/home/ma1/work/demorelated/DeMo/modeling/__init__.py", line 1, in <module>
+    from .make_model import make_model
+  File "/home/ma1/work/demorelated/DeMo/modeling/make_model.py", line 8, in <module>
+    from modeling.meta_arch import build_transformer, weights_init_classifier, weights_init_kaiming,VRWKV6, build_transformer_new
+  File "/home/ma1/work/demorelated/DeMo/modeling/meta_arch.py", line 591, in <module>
+    @BACKBONES.register_module()
+NameError: name 'BACKBONES' is not defined
