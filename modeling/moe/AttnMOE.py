@@ -3024,7 +3024,7 @@ class AdaptiveBoQAblation(torch.nn.Module):
     """AdaptiveBoQ with Ablation Study Interface """
 
     def __init__(self, input_dim=512, num_queries=32, num_layers=2, row_dim=32,
-                 use_positional_encoding=False, ablation_config=None):
+                 use_positional_encoding=True, ablation_config=None):
         super().__init__()
 
         self.use_positional_encoding = use_positional_encoding
@@ -4425,7 +4425,7 @@ class GeneralFusion(nn.Module):
             self.deformselectablation = DAttentionEnhancedAblation(
                 q_size=q_size, n_heads=1, n_head_channels=512, n_groups=1,
                 attn_drop=0.0, proj_drop=0.0, stride=2,
-                offset_range_factor=5.0, ksize=4, share=True,
+                offset_range_factor=5.0, ksize=4, share=False,
                 ablation_config=configdeform
             )
         elif self.combineway == 'cmeboqablation':
